@@ -10,307 +10,8 @@ from aryaxai.core.project import Project
 from openinference.instrumentation.langchain import get_current_span
 from opentelemetry import trace
 import time
+from .guard_template import Guard
 
-
-class Guard:
-    """Predefined guardrail configurations for common use cases"""
-    
-    @staticmethod
-    def detect_pii(entities: List[str] = None) -> Dict[str, Any]:
-        """Template for PII detection guardrail
-        
-        Args:
-            entities: List of PII entity types to detect
-        """
-        if entities is None:
-            entities = ["EMAIL_ADDRESS", "PHONE_NUMBER", "PERSON", "ADDRESS"]
-        
-        return {
-            "name": "Detect PII",
-            "config": {
-                "pii_entities": entities
-            }
-        }
-    
-    @staticmethod
-    def nsfw_text(threshold: float = 0.8, validation_method: str = "sentence") -> Dict[str, Any]:
-        """Template for NSFW text detection guardrail
-        
-        Args:
-            threshold: Confidence threshold for detection (0.0-1.0)
-            validation_method: "sentence", "paragraph", or "document"
-        """
-        return {
-            "name": "NSFW Text",
-            "config": {
-                "threshold": threshold,
-                "validation_method": validation_method
-            }
-        }
-    @staticmethod
-    def ban_list(banned_words: List[str]) -> Dict[str, Any]:
-        """Template for banned words guardrail"""
-        return {
-            "name": "Ban List",
-            "config": {
-                "banned_words": banned_words
-            }
-        }
-    @staticmethod
-    def bias_check(threshold: float = 0.9) -> Dict[str, Any]:
-        """Template for bias check guardrail"""
-        return {
-            "name": "Bias Check",
-            "config": {
-                "threshold": threshold
-            }
-        }
-    
-    @staticmethod
-    def competitor_check(competitors: List[str]) -> Dict[str, Any]:
-        """Template for competitor guardrail"""
-        return {
-            "name": "Competitor Check",
-            "config": {
-                "competitors": competitors
-            }
-        }
-    
-    @staticmethod
-    def correct_language(expected_language_iso: str = "en", threshold: float = 0.75) -> Dict[str, Any]:
-        """Template for correct language guardrail"""
-        return {
-            "name": "Correct Language",
-            "config": {
-                "expected_language_iso": expected_language_iso,
-                "threshold": threshold
-            }
-        }
-    
-    @staticmethod
-    def gibberish_text(threshold: float = 0.5, validation_method: str = "sentence") -> Dict[str, Any]:
-        """Template for gibberish text guardrail"""
-        return {
-            "name": "Gibberish Text",
-            "config": {
-                "threshold": threshold,
-                "validation_method": validation_method
-            }
-        }
-    
-    @staticmethod
-    def profanity_free() -> Dict[str, Any]:
-        """Template for profanity free guardrail"""
-        return {
-            "name": "Profanity Free",
-            "config": {}
-        }
-    
-    @staticmethod
-    def secrets_present() -> Dict[str, Any]:
-        """Template for secrets present guardrail"""
-        return {
-            "name": "Secrets Present",
-            "config": {}
-        }
-    
-    @staticmethod
-    def toxic_language(threshold: float = 0.5, validation_method: str = "sentence") -> Dict[str, Any]:
-        """Template for toxic language guardrail"""
-        return {
-            "name": "Toxic Language",
-            "config": {
-                "threshold": threshold,
-                "validation_method": validation_method
-            }
-        }
-
-    @staticmethod
-    def contains_string(substring: str) -> Dict[str, Any]:
-        """Template for contains string guardrail"""
-        return {
-            "name": "Contains String",
-            "config": {
-                "substring": substring
-            }
-        }
-
-    @staticmethod
-    def detect_jailbreak(threshold: float = 0.0) -> Dict[str, Any]:
-        """Template for detect jailbreak guardrail"""
-        return {
-            "name": "Detect Jailbreak",
-            "config": {
-                "threshold": threshold
-            }
-        }
-
-    @staticmethod
-    def endpoint_is_reachable() -> Dict[str, Any]:
-        """Template for endpoint is reachable guardrail"""
-        return {
-            "name": "Endpoint Is Reachable",
-            "config": {}
-        }
-    
-    @staticmethod
-    def ends_with(end: str) -> Dict[str, Any]:
-        """Template for ends with guardrail"""
-        return {
-            "name": "Ends With",
-            "config": {
-                "end": end
-            }
-        }
-
-    @staticmethod
-    def has_url() -> Dict[str, Any]:
-        """Template for has url guardrail"""
-        return {
-            "name": "Has Url",
-            "config": {}
-        }
-
-    @staticmethod
-    def lower_case() -> Dict[str, Any]:
-        """Template for lower case guardrail"""
-        return {
-            "name": "Lower Case",
-            "config": {}
-        }
-
-    @staticmethod
-    def mentions_drugs() -> Dict[str, Any]:
-        """Template for mentions drugs guardrail"""
-        return {
-            "name": "Mentions Drugs",
-            "config": {}
-        }
-
-    @staticmethod
-    def one_line() -> Dict[str, Any]:
-        """Template for one line guardrail"""
-        return {
-            "name": "One Line",
-            "config": {}
-        }
-
-    @staticmethod
-    def reading_time(reading_time: float) -> Dict[str, Any]:
-        """Template for reading time guardrail"""
-        return {
-            "name": "Reading Time",
-            "config": {
-                "reading_time": reading_time
-            }
-        }
-
-    @staticmethod
-    def redundant_sentences(threshold: int = 70) -> Dict[str, Any]:
-        """Template for redundant sentences guardrail"""
-        return {
-            "name": "Redundant Sentences",
-            "config": {
-                "threshold": threshold
-            }
-        }
-
-    @staticmethod
-    def regex_match(regex: str, match_type: str = "search") -> Dict[str, Any]:
-        """Template for regex match guardrail"""
-        return {
-            "name": "Regex Match",
-            "config": {
-                "regex": regex,
-                "match_type": match_type
-            }
-        }
-
-    @staticmethod
-    def sql_column_presence(cols: List[str]) -> Dict[str, Any]:
-        """Template for SQL column presence guardrail"""
-        return {
-            "name": "Sql Column Presence",
-            "config": {
-                "cols": cols
-            }
-        }
-
-    @staticmethod
-    def two_words() -> Dict[str, Any]:
-        """Template for two words guardrail"""
-        return {
-            "name": "Two Words",
-            "config": {}
-        }
-
-    @staticmethod
-    def upper_case() -> Dict[str, Any]:
-        """Template for upper case guardrail"""
-        return {
-            "name": "Upper Case",
-            "config": {}
-        }
-
-    @staticmethod
-    def valid_choices(choices: List[str]) -> Dict[str, Any]:
-        """Template for valid choices guardrail"""
-        return {
-            "name": "Valid Choices",
-            "config": {
-                "choices": choices
-            }
-        }
-
-    @staticmethod
-    def valid_json() -> Dict[str, Any]:
-        """Template for valid json guardrail"""
-        return {
-            "name": "Valid Json",
-            "config": {}
-        }
-
-    @staticmethod
-    def valid_length(min: Optional[int] = None, max: Optional[int] = None) -> Dict[str, Any]:
-        """Template for valid length guardrail"""
-        config = {}
-        if min is not None:
-            config['min'] = min
-        if max is not None:
-            config['max'] = max
-        return {
-            "name": "Valid Length",
-            "config": config
-        }
-
-    @staticmethod
-    def valid_range(min: Optional[int] = None, max: Optional[int] = None) -> Dict[str, Any]:
-        """Template for valid range guardrail"""
-        config = {}
-        if min is not None:
-            config['min'] = min
-        if max is not None:
-            config['max'] = max
-        return {
-            "name": "Valid Range",
-            "config": config
-        }
-
-    @staticmethod
-    def valid_url() -> Dict[str, Any]:
-        """Template for valid url guardrail"""
-        return {
-            "name": "Valid URL",
-            "config": {}
-        }
-    
-    @staticmethod
-    def web_sanitization() -> Dict[str, Any]:
-        """Template for web sanitization guardrail"""
-        return {
-            "name": "Web Sanitization",
-            "config": {}
-        }
 
 class GuardrailRunResult(TypedDict, total=False):
     success: bool
@@ -341,14 +42,13 @@ class LangGraphGuardrail:
         self,
         project: Optional[Project],
         default_apply_on: str = "input",
-        llm: Optional[Any] = None,  # Add LLM parameter
+        llm: Optional[Any] = None,
     ) -> None:
         if project is not None:
             self.client = project.api_client
             self.project_name = project.project_name
             
         self.default_apply_on = default_apply_on
-
         self.logs: List[Dict[str, Any]] = []
         self.max_retries = 1
         self.retry_delay = 1.0 
@@ -360,7 +60,9 @@ class LangGraphGuardrail:
         guards: Union[List[str], List[Dict[str, Any]], str, Dict[str, Any], None] = None,
         action: str = "block",
         apply_to: str = "both",
-        apply_on: Optional[str] = None,
+        input_key: Optional[str] = None,
+        output_key: Optional[str] = None,
+        # process_entire_state: bool = False,
     ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
         """
         Decorator factory.
@@ -370,7 +72,9 @@ class LangGraphGuardrail:
           - retry: replace with sanitized output when available
           - warn: keep content, log only
         - apply_to: 'input' | 'output' | 'both'
-        - apply_on (configured mode): 'input' | 'output'; defaults to self.default_apply_on
+        - input_key: Optional key in state to apply guardrail to for input (defaults to checking 'messages' or 'input')
+        - output_key: Optional key in result to apply guardrail to for output (defaults to checking 'messages' or treating as str)
+        - process_entire_state: If True, applies guardrails to all strings in the state/result recursively (overrides input_key/output_key)
         """
 
         if isinstance(guards, (str, dict)):
@@ -383,57 +87,76 @@ class LangGraphGuardrail:
                 node_name = getattr(func, "__name__", "unknown_node")
 
                 # Pre-process input
-                if state and apply_to in ("input", "both"):
-                    # Check if state has messages (LangGraph format)
-                    if "messages" in state:
-                        state["messages"] = self._process_content(
-                            content=state["messages"],
+                if state and apply_to in ("input", "both"): 
+                    input_content = self._get_content(state, input_key, is_input=True)
+                    if input_content is not None:
+                        processed = self._process_content(
+                            content=input_content,
                             node_name=node_name,
                             content_type="input",
                             action=action,
                             guards=guards,
-                            apply_on=(apply_on or self.default_apply_on),
                         )
-                    # Also check for direct input field
-                    elif "input" in state:
-                        state["input"] = self._process_content(
-                            content=state["input"],
-                            node_name=node_name,
-                            content_type="input",
-                            action=action,
-                            guards=guards,
-                            apply_on=(apply_on or self.default_apply_on),
-                        )
+                        self._set_content(state, processed, input_key, is_input=True)
 
                 result = func(*args, **kwargs)
 
                 # Post-process output
                 if apply_to in ("output", "both"):
-                    if isinstance(result, dict) and "messages" in result:
-                        result_output = result["messages"]
-                        result["messages"] = self._process_content(
-                            content=result_output,
+                    
+                    output_content = self._get_content(result, output_key, is_input=False)
+                    if output_content is not None:
+                        processed = self._process_content(
+                            content=output_content,
                             node_name=node_name,
                             content_type="output",
                             action=action,
                             guards=guards,
-                            apply_on=(apply_on or self.default_apply_on),
+                            
                         )
-                    elif isinstance(result, str):
-                        result = self._process_content(
-                            content=result,
-                            node_name=node_name,
-                            content_type="output",
-                            action=action,
-                            guards=guards,
-                            apply_on=(apply_on or self.default_apply_on),
-                        )
+                        if output_key is not None:
+                            if isinstance(result, dict):
+                                result[output_key] = processed
+                        else:
+                            if isinstance(result, dict):
+                                if "messages" in result:
+                                    result["messages"] = processed
+                            elif isinstance(result, str):
+                                result = processed
 
                 return result
 
             return wrapper
 
         return decorator
+
+    def _get_content(self, data: Any, key: Optional[str], is_input: bool) -> Any:
+        if key is not None:
+            if isinstance(data, dict) and key in data:
+                return data[key]
+            return None
+        else:
+            # Default behavior
+            if isinstance(data, dict):
+                if "messages" in data:
+                    return data["messages"]
+                elif is_input and "input" in data:
+                    return data["input"]
+            if not is_input and isinstance(data, str):
+                return data
+            return None  # No content to process
+
+    def _set_content(self, data: Any, processed: Any, key: Optional[str], is_input: bool) -> None:
+        if key is not None:
+            if isinstance(data, dict):
+                data[key] = processed
+        else:
+            # Default set
+            if isinstance(data, dict):
+                if "messages" in data:
+                    data["messages"] = processed
+                elif is_input and "input" in data:
+                    data["input"] = processed
 
     def _process_content(
         self,
@@ -442,7 +165,6 @@ class LangGraphGuardrail:
         content_type: str,
         action: str,
         guards: Optional[List[Union[str, Dict[str, Any]]]],
-        apply_on: str,
     ) -> Any:
         if not guards:
             return content
@@ -457,6 +179,8 @@ class LangGraphGuardrail:
             return content
 
         current_content = content_to_process
+
+        # current_content = content
         for guard in guards:
             if isinstance(guard, str):
                 guard_spec: Dict[str, Any] = {"name": guard}
@@ -470,12 +194,13 @@ class LangGraphGuardrail:
                 content_type=content_type,
                 action=action,
             )
-
         if is_list:
             content[-1].content = current_content
             return content
         else:
             return current_content
+
+        # return current_content
 
     def _apply_guardrail_with_retry(
         self,
@@ -538,19 +263,14 @@ class LangGraphGuardrail:
             )
 
     # --------- HTTP calls ---------
-    def _call_run_guardrail(self, input_data: Any, guard: Dict[str, Any] , content_type :Any) -> GuardrailRunResult:
-        # Try different possible endpoints
-        
-        uri=RUN_GUARDRAILS_URI
-        
+    def _call_run_guardrail(self, input_data: Any, guard: Dict[str, Any], content_type: Any) -> GuardrailRunResult:
+        uri = RUN_GUARDRAILS_URI
         input = input_data
         
         start_time = datetime.now()
         try:
             body = {"input_data": input, "guard": guard}
-
             data = self.client.post(uri, body)
-            
             end_time = datetime.now()
             
             details = data.get("details", {}) if isinstance(data, dict) else {}
@@ -598,10 +318,6 @@ class LangGraphGuardrail:
     ) -> Any:
         validation_passed = bool(run_result.get("validation_passed", True))
         detected_issue = not validation_passed or not run_result.get("success", True)
-        sanitized_output = run_result.get("sanitized_output")
-
-
-        # Minimal event attributes (keep events clean)
 
         if detected_issue:
             on_fail_action = action
@@ -615,7 +331,6 @@ class LangGraphGuardrail:
                     try:
                         ctx = trace.set_span_in_context(parent_span)
                         with self.tracer.start_as_current_span(f"guardrail: {guard_name}", context=ctx) as gr_span:
-                            # Span-level attributes (timing, status, values)
                             gr_span.set_attribute("component", str(node_name))
                             gr_span.set_attribute("guard", str(guard_name))
                             gr_span.set_attribute("content_type", str(content_type))
@@ -628,7 +343,6 @@ class LangGraphGuardrail:
                             gr_span.set_attribute("output.value", self._safe_str(run_result.get("response")))
                     except Exception:
                         pass
-                # Block action: raise after recording the event
                 raise ValueError(f"Guardrail '{guard_name}' detected an issue in {content_type}. Operation blocked.")
 
             elif "retry" in on_fail_action:
@@ -648,23 +362,20 @@ class LangGraphGuardrail:
                             gr_span.set_attribute("output.value", self._safe_str(run_result.get("response")))
                     except Exception:
                         pass
-                # Return sanitized content for retry
-                return original
+                return run_result.get("sanitized_output", original)
 
             else:  # default or warn: keep content, log only
                 if parent_span is not None:
                     try:
                         ctx = trace.set_span_in_context(parent_span)
                         with self.tracer.start_as_current_span(f"guardrail: {guard_name}", context=ctx) as gr_span:
-                            start_time = run_result.get("start_time", "")
-                            end_time = run_result.get("end_time", "")
                             gr_span.set_attribute("component", str(node_name))
                             gr_span.set_attribute("guard", str(guard_name))
                             gr_span.set_attribute("content_type", str(content_type))
                             gr_span.set_attribute("detected", True)
                             gr_span.set_attribute("action", "warn")
-                            gr_span.set_attribute("start_time", start_time)
-                            gr_span.set_attribute("end_time", end_time)
+                            gr_span.set_attribute("start_time", str(run_result.get("start_time", "")))
+                            gr_span.set_attribute("end_time", str(run_result.get("end_time", "")))
                             gr_span.set_attribute("duration", float(run_result.get("duration", 0.0)))
                             gr_span.set_attribute("input.value", self._safe_str(run_result.get("input")))
                             gr_span.set_attribute("output.value", self._safe_str(run_result.get("response")))
@@ -695,10 +406,6 @@ class LangGraphGuardrail:
         return original
 
     def _build_sanitize_prompt(self, guard_name: str, content: Any, content_type: str) -> str:
-        """
-        Build a prompt for the LLM to sanitize the content according to the guardrail type.
-        The prompt instructs the LLM to only sanitize, not change anything else.
-        """
         instructions = {
             "Detect PII": "Sanitize the following text by removing or masking any personally identifiable information (PII). Do not change anything else.",
             "NSFW Text": "Sanitize the following text by removing or masking any not safe for work (NSFW) content. Do not change anything else.",
@@ -739,19 +446,14 @@ class LangGraphGuardrail:
     def _safe_str(value: Any) -> str:
         try:
             if isinstance(value, (str, int, float, bool)) or value is None:
-                s = str(value)
-                return s
+                return str(value)
             if hasattr(value, "content"):
-                s = str(getattr(value, "content", ""))
-                return s
-            
+                return str(getattr(value, "content", ""))
             if isinstance(value, (list, tuple)):
                 parts = []
                 for item in value:
                     parts.append(Guard._safe_str(item) if hasattr(Guard, "_safe_str") else str(item))
-                s = ", ".join(parts)
-                return s
-            
+                return ", ".join(parts)
             if isinstance(value, dict):
                 safe_dict: Dict[str, Any] = {}
                 for k, v in value.items():
@@ -762,10 +464,8 @@ class LangGraphGuardrail:
                         safe_dict[key] = str(getattr(v, "content", ""))
                     else:
                         safe_dict[key] = str(v)
-                s = json.dumps(safe_dict, ensure_ascii=False)
-                return s
-            s = str(value)
-            return s
+                return json.dumps(safe_dict, ensure_ascii=False)
+            return str(value)
         except Exception:
             return "<unserializable>"
 
