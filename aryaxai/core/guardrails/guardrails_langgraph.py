@@ -5,6 +5,7 @@ from datetime import datetime
 from typing import Any, Callable, Dict, List, Optional, Tuple, TypedDict, Union
 from aryaxai.common.xai_uris import (
     RUN_GUARDRAILS_URI,
+    RUN_GUARDRAILS_PARALLEL_URI
 )
 from aryaxai.core.project import Project
 from openinference.instrumentation.langchain import get_current_span
@@ -175,32 +176,123 @@ class LangGraphGuardrail:
         elif isinstance(content, str):
             content_to_process = content
         else:
-            # If not list or str, return as is
             return content
 
         current_content = content_to_process
+        
+        try:
+            parent_span = get_current_span()
+            if parent_span is not None:
+                ctx = trace.set_span_in_context(parent_span)
+                # Create parent span for input/output guardrails with node name for better tracing
+                with self.tracer.start_as_current_span(f"guardrails:{content_type}", context=ctx) as parent_gr_span:
+                    # Set parent span attributes
+                    parent_gr_span.set_attribute("node", str(node_name))  # Add node attribute
+                    parent_gr_span.set_attribute("component", str(node_name))
+                    parent_gr_span.set_attribute("content_type", str(content_type))
+                    
+                    # Run all guardrails in parallel
+                    parallel_result = self._apply_guardrail_parallel(current_content, guards)
+                    
+                    if not parallel_result.get("success", False):
+                        return current_content
 
-        # current_content = content
-        for guard in guards:
-            if isinstance(guard, str):
-                guard_spec: Dict[str, Any] = {"name": guard}
+                    # Set timing attributes only on parent span
+                    parent_gr_span.set_attribute("start_time", str(parallel_result.get("start_time", "")))
+                    parent_gr_span.set_attribute("end_time", str(parallel_result.get("end_time", "")))
+                    parent_gr_span.set_attribute("duration", float(parallel_result.get("duration", 0.0)))
+
+                    for guard_result in parallel_result.get("details", []):
+                        guard_name = guard_result.get("name", "unknown")
+                        
+                        run_result: GuardrailRunResult = {
+                            "success": parallel_result.get("success"),
+                            "details": guard_result,
+                            "validated_output": guard_result.get("validated_output"),
+                            "validation_passed": guard_result.get("validation_passed", False),
+                            "sanitized_output": guard_result.get("sanitized_output", current_content),
+                            "duration": guard_result.get("duration", 0.0),
+                            "latency": guard_result.get("latency", "0 ms"),
+                            "start_time": parallel_result.get("start_time", ""),
+                            "end_time": parallel_result.get("end_time", ""),
+                            "retry_count": 0,
+                            "max_retries": self.max_retries
+                        }
+                        
+                        run_result["response"] = guard_result
+                        run_result["input"] = current_content
+                        
+                        # Process each guard result with child spans
+                        current_content = self._handle_action(
+                            original=current_content,
+                            run_result=run_result,
+                            action=action,
+                            node_name=node_name,
+                            content_type=content_type,
+                            guard_name=guard_name,
+                            parent_span=parent_gr_span  # Pass parent span
+                        )
+
+            if is_list:
+                content[-1].content = current_content
+                return content
             else:
-                guard_spec = dict(guard)
-
-            current_content = self._apply_guardrail_with_retry(
-                content=current_content,
-                guard_spec=guard_spec,
-                node_name=node_name,
-                content_type=content_type,
-                action=action,
-            )
-        if is_list:
-            content[-1].content = current_content
+                return current_content
+                
+        except Exception as e:
             return content
-        else:
-            return current_content
 
-        # return current_content
+    def _apply_guardrail_parallel(
+        self,
+        content: Any,
+        guards: List[Union[str, Dict[str, Any]]],
+    ) -> Any:
+        """
+        Run multiple guardrails in parallel using batch endpoint
+        
+        Args:
+            content: Content to validate against multiple guardrails
+            guards: List of guardrails to run in parallel
+                
+        Returns:
+            Dictionary containing success status and validation details
+        """
+        try:
+            # Convert string guards to proper dict format with name and class
+            guard_specs = []
+            for guard in guards:
+                guard_specs.append(guard)
+
+            # Prepare payload according to RunGuardParallelPayload schema
+            payload = {
+                "input_data": content,
+                "guards": guard_specs  # List of properly formatted guard specs
+            }
+
+            import requests
+            start_time = datetime.now()
+            response = self.client.post(
+                RUN_GUARDRAILS_PARALLEL_URI,
+                payload=payload,
+            )
+            end_time = datetime.now()
+
+            result = response
+            result.update({
+                "start_time": start_time.isoformat(),
+                "end_time": end_time.isoformat(),
+                "duration": (end_time - start_time).total_seconds()
+            })
+                    
+            return result
+
+        except Exception as e:
+            return {
+                "success": False,
+                "details": f"Failed to run guardrails in parallel: {str(e)}",
+                "start_time": datetime.now().isoformat(),
+                "end_time": datetime.now().isoformat()
+            }
 
     def _apply_guardrail_with_retry(
         self,
@@ -263,6 +355,8 @@ class LangGraphGuardrail:
             )
 
     # --------- HTTP calls ---------
+
+
     def _call_run_guardrail(self, input_data: Any, guard: Dict[str, Any], content_type: Any) -> GuardrailRunResult:
         uri = RUN_GUARDRAILS_URI
         input = input_data
@@ -315,94 +409,43 @@ class LangGraphGuardrail:
         node_name: str,
         content_type: str,
         guard_name: str,
+        parent_span: Optional[Any] = None,
     ) -> Any:
         validation_passed = bool(run_result.get("validation_passed", True))
         detected_issue = not validation_passed or not run_result.get("success", True)
 
+        def create_child_span(is_issue: bool):
+            
+            with self.tracer.start_as_current_span(
+                f"guard: {guard_name}",
+                context=trace.set_span_in_context(parent_span)
+            ) as gr_span:
+                gr_span.set_attribute("component", str(node_name))
+                gr_span.set_attribute("guard", str(guard_name))
+                gr_span.set_attribute("content_type", str(content_type))
+                gr_span.set_attribute("detected", is_issue)
+                gr_span.set_attribute("action", action)
+                
+                # Don't set timing attributes on child spans
+                gr_span.set_attribute("input.value", self._safe_str(run_result.get("input")))
+                gr_span.set_attribute("output.value", self._safe_str(run_result.get("response")))
+        
+
         if detected_issue:
-            on_fail_action = action
-            try:
-                parent_span = get_current_span()
-            except Exception:
-                parent_span = None
-
-            if on_fail_action == "block":
-                if parent_span is not None:
-                    try:
-                        ctx = trace.set_span_in_context(parent_span)
-                        with self.tracer.start_as_current_span(f"guardrail: {guard_name}", context=ctx) as gr_span:
-                            gr_span.set_attribute("component", str(node_name))
-                            gr_span.set_attribute("guard", str(guard_name))
-                            gr_span.set_attribute("content_type", str(content_type))
-                            gr_span.set_attribute("detected", True)
-                            gr_span.set_attribute("action", "block")
-                            gr_span.set_attribute("start_time", str(run_result.get("start_time", "")))
-                            gr_span.set_attribute("end_time", str(run_result.get("end_time", "")))
-                            gr_span.set_attribute("duration", float(run_result.get("duration", 0.0)))
-                            gr_span.set_attribute("input.value", self._safe_str(run_result.get("input")))
-                            gr_span.set_attribute("output.value", self._safe_str(run_result.get("response")))
-                    except Exception:
-                        pass
+            if parent_span is not None:
+                create_child_span(True)
+                
+            if action == "block":
                 raise ValueError(f"Guardrail '{guard_name}' detected an issue in {content_type}. Operation blocked.")
-
-            elif "retry" in on_fail_action:
-                if parent_span is not None:
-                    try:
-                        ctx = trace.set_span_in_context(parent_span)
-                        with self.tracer.start_as_current_span(f"guardrail: {guard_name}", context=ctx) as gr_span:
-                            gr_span.set_attribute("component", str(node_name))
-                            gr_span.set_attribute("guard", str(guard_name))
-                            gr_span.set_attribute("content_type", str(content_type))
-                            gr_span.set_attribute("detected", True)
-                            gr_span.set_attribute("action", "retry")
-                            gr_span.set_attribute("start_time", str(run_result.get("start_time", "")))
-                            gr_span.set_attribute("end_time", str(run_result.get("end_time", "")))
-                            gr_span.set_attribute("duration", float(run_result.get("duration", 0.0)))
-                            gr_span.set_attribute("input.value", self._safe_str(run_result.get("input")))
-                            gr_span.set_attribute("output.value", self._safe_str(run_result.get("response")))
-                    except Exception:
-                        pass
+            elif "retry" in action:
                 return run_result.get("sanitized_output", original)
-
-            else:  # default or warn: keep content, log only
-                if parent_span is not None:
-                    try:
-                        ctx = trace.set_span_in_context(parent_span)
-                        with self.tracer.start_as_current_span(f"guardrail: {guard_name}", context=ctx) as gr_span:
-                            gr_span.set_attribute("component", str(node_name))
-                            gr_span.set_attribute("guard", str(guard_name))
-                            gr_span.set_attribute("content_type", str(content_type))
-                            gr_span.set_attribute("detected", True)
-                            gr_span.set_attribute("action", "warn")
-                            gr_span.set_attribute("start_time", str(run_result.get("start_time", "")))
-                            gr_span.set_attribute("end_time", str(run_result.get("end_time", "")))
-                            gr_span.set_attribute("duration", float(run_result.get("duration", 0.0)))
-                            gr_span.set_attribute("input.value", self._safe_str(run_result.get("input")))
-                            gr_span.set_attribute("output.value", self._safe_str(run_result.get("response")))
-                    except Exception:
-                        pass
+            else:  # warn
                 return original
 
-        try:
-            parent_span = get_current_span()
-        except Exception:
-            parent_span = None
+        # Handle successful validation
         if parent_span is not None:
-            try:
-                ctx = trace.set_span_in_context(parent_span)
-                with self.tracer.start_as_current_span(f"guardrail: {guard_name}", context=ctx) as gr_span:
-                    gr_span.set_attribute("component", str(node_name))
-                    gr_span.set_attribute("guard", str(guard_name))
-                    gr_span.set_attribute("content_type", str(content_type))
-                    gr_span.set_attribute("detected", False)
-                    gr_span.set_attribute("action", "passed")
-                    gr_span.set_attribute("start_time", str(run_result.get("start_time", "")))
-                    gr_span.set_attribute("end_time", str(run_result.get("end_time", "")))
-                    gr_span.set_attribute("duration", float(run_result.get("duration", 0.0)))
-                    gr_span.set_attribute("input.value", self._safe_str(run_result.get("input")))
-                    gr_span.set_attribute("output.value", self._safe_str(run_result.get("response")))
-            except Exception:
-                pass
+            create_child_span(False)
+
         return original
 
     def _build_sanitize_prompt(self, guard_name: str, content: Any, content_type: str) -> str:
