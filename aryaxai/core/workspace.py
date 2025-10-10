@@ -16,6 +16,7 @@ from aryaxai.common.xai_uris import (
 )
 from aryaxai.core.project import Project
 from aryaxai.core.text import TextProject
+from aryaxai.core.agent import AgentProject
 
 
 class Workspace(BaseModel):
@@ -202,12 +203,13 @@ class Workspace(BaseModel):
 
         if not res["success"]:
             raise Exception(res["details"])
-
-        if modality != "text":
-            project = Project(api_client=self.api_client, **res["details"])
-
+        
         if modality == "text":
             project = TextProject(api_client=self.api_client, **res["details"])
+        elif modality == "agent":
+            project = AgentProject(api_client=self.api_client, **res["details"])
+        else:
+            project = Project(api_client=self.api_client, **res["details"])
 
         return project
 
