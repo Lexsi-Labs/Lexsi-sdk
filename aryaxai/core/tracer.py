@@ -18,8 +18,9 @@ import os
 
 class Tracer:
     def __init__(self):
-        self.base_url = os.getenv("XAI_API_URL", "https://apiv2.aryaxai.com")
+        self.base_url = os.getenv("XAI_API_URL", "https://apiv2.aryaxai.com")    
         self.endpoint = f"{self.base_url}"
+        self.endpoint = f"http://localhost:4317"
     def setup_langchain_tracing(self , project: object, session_id : str = None) -> None:
         """
         Sets up OpenTelemetry tracing for a given project with OTLP and console exporters.
@@ -33,7 +34,7 @@ class Tracer:
         project_name = getattr(project, 'project_name')
         # Create resource with service and project details
         resource = Resource(attributes={
-            "service.name": "langgraph-app",
+            "service.name": "Langgraph",
             "project_name": project_name,
             "session_id": session_id if session_id else "None"
         })
@@ -60,7 +61,7 @@ class Tracer:
         project_name = getattr(project, 'project_name')
         # Create resource with service and project details
         resource = Resource(attributes={
-            "service.name": "autogen-app",
+            "service.name": "Autogen",
             "project_name": project_name,
             "session_id": session_id if session_id else "None"
         })
@@ -87,7 +88,7 @@ class Tracer:
         project_name = getattr(project, 'project_name')
         # Create resource with service and project details
         resource = Resource(attributes={
-            "service.name": "crewai-app",
+            "service.name": "Crewai",
             "project_name": project_name,
             "session_id": session_id if session_id else "None"
         })
@@ -115,7 +116,7 @@ class Tracer:
         project_name = getattr(project, 'project_name')
         # Create resource with service and project details
         resource = Resource(attributes={
-            "service.name": "agents-app",
+            "service.name": "OpenAI-Agents",
             "project_name": project_name,
             "session_id": session_id if session_id else "None"
         })
@@ -143,7 +144,7 @@ class Tracer:
         project_name = getattr(project, 'project_name')
         # Create resource with service and project details
         resource = Resource(attributes={
-            "service.name": "dspy-app",
+            "service.name": "DSPy",
             "project_name": project_name,
             "session_id": session_id if session_id else "None"
         })
@@ -165,7 +166,7 @@ class Tracer:
         project_name = getattr(project, 'project_name')
         # Create resource with service and project details
         resource = Resource(attributes={
-            "service.name": "llamaindex-app",
+            "service.name": "Llamaindex",
             "project_name": project_name,
             "session_id": session_id if session_id else "None"
         })
@@ -187,7 +188,7 @@ class Tracer:
         project_name = getattr(project, 'project_name')
         # Create resource with service and project details
         resource = Resource(attributes={
-            "service.name": "smolagents",
+            "service.name": "Smolagents",
             "project_name": project_name,
             "session_id": session_id if session_id else "None"
         })

@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List, Dict, Any, Union
 from aryaxai.common.utils import poll_events
 from aryaxai.common.xai_uris import (
     AVAILABLE_GUARDRAILS_URI,
@@ -11,6 +11,8 @@ from aryaxai.common.xai_uris import (
     SESSIONS_URI,
     TRACES_URI,
     UPDATE_GUARDRAILS_STATUS_URI,
+    RUN_CHAT_COMPLETION,
+    RUN_IMAGE_GENERATION
 )
 from aryaxai.core.project import Project
 import pandas as pd
@@ -231,3 +233,77 @@ class TextProject(Project):
         if not res["success"]:
             raise Exception(res.get("details"," Failed to fetch available text models"))
         return pd.DataFrame(res.get("details"))
+    
+    async def chat_completion(
+        self,
+        model: str,
+        messages: List[Dict[str, Any]],
+        x_provider: str,
+        api_key: str,
+        max_tokens: Optional[int] = 1024,
+        stream: Optional[bool] = False,
+    ) -> dict:
+        """Chat completion endpoint wrapper
+
+        :param model: name of the model
+        :param messages: list of chat messages
+        :param max_tokens: maximum tokens to generate
+        :param stream: whether to stream the response
+        :param x_provider: provider header
+        :param api_key: API key header
+        :return: chat completion response
+        """
+        payload = {
+            "model": model,
+            "messages": messages,
+            "max_tokens": max_tokens,
+            "stream": stream,
+            "project_name": self.project_name
+        }
+        
+        headers = {}
+        if x_provider:
+            headers["x-provider"] = x_provider
+        if api_key:
+            headers["api_key"] = api_key
+
+        res = self.api_client.post(RUN_CHAT_COMPLETION, payload=payload, headers=headers)
+        if not res["success"]:
+            raise Exception(res.get("details", "Chat completion failed"))
+            
+        return res.get("details")
+    
+    async def image_generation(
+        self,
+        model: str,
+        prompt: str,
+        x_provider: str,
+        api_key: str,
+    ) -> dict:
+        """Chat completion endpoint wrapper
+
+        :param model: name of the model
+        :param messages: list of chat messages
+        :param max_tokens: maximum tokens to generate
+        :param stream: whether to stream the response
+        :param x_provider: provider header
+        :param api_key: API key header
+        :return: chat completion response
+        """
+        payload = {
+            "model": model,
+            "prompt" : prompt,
+            "project_name": self.project_name
+        }
+        
+        headers = {}
+        if x_provider:
+            headers["x-provider"] = x_provider
+        if api_key:
+            headers["api_key"] = api_key
+
+        res = self.api_client.post(RUN_IMAGE_GENERATION, payload=payload, headers=headers)
+        if not res["success"]:
+            raise Exception(res.get("details", "Chat completion failed"))
+            
+        return res

@@ -335,7 +335,7 @@ class OpenAIAgentsGuardrail:
                     gr_span.set_attribute("detected", detected_issue)
                     gr_span.set_attribute("action", action)
                     gr_span.set_attribute("input.value", self._safe_str(run_result.get("input")))
-                    gr_span.set_attribute("output.value", self._safe_str(run_result.get("response")))
+                    gr_span.set_attribute("output.value", json.dumps(run_result.get("response")))
                     gr_span.set_attribute("start_time", str(run_result.get("start_time", "")))
                     gr_span.set_attribute("end_time", str(run_result.get("end_time", "")))
                     gr_span.set_attribute("duration", float(run_result.get("duration", 0.0)))

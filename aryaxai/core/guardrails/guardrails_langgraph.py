@@ -15,7 +15,6 @@ from .guard_template import Guard
 
 
 class GuardrailRunResult(TypedDict, total=False):
-    success: bool
     details: Dict[str, Any]
     validated_output: Any
     validation_passed: bool
@@ -206,7 +205,6 @@ class LangGraphGuardrail:
                         guard_name = guard_result.get("name", "unknown")
                         
                         run_result: GuardrailRunResult = {
-                            "success": parallel_result.get("success"),
                             "details": guard_result,
                             "validated_output": guard_result.get("validated_output"),
                             "validation_passed": guard_result.get("validation_passed", False),
@@ -276,7 +274,6 @@ class LangGraphGuardrail:
                 payload=payload,
             )
             end_time = datetime.now()
-
             result = response
             result.update({
                 "start_time": start_time.isoformat(),
@@ -428,7 +425,7 @@ class LangGraphGuardrail:
                 
                 # Don't set timing attributes on child spans
                 gr_span.set_attribute("input.value", self._safe_str(run_result.get("input")))
-                gr_span.set_attribute("output.value", self._safe_str(run_result.get("response")))
+                gr_span.set_attribute("output.value", json.dumps(run_result.get("response")))
         
 
         if detected_issue:
