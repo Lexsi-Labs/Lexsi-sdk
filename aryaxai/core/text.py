@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List, Dict, Any, Union
 from aryaxai.common.utils import poll_events
 from aryaxai.common.xai_uris import (
     AVAILABLE_GUARDRAILS_URI,
@@ -11,11 +11,17 @@ from aryaxai.common.xai_uris import (
     SESSIONS_URI,
     TRACES_URI,
     UPDATE_GUARDRAILS_STATUS_URI,
+    RUN_CHAT_COMPLETION,
+    RUN_IMAGE_GENERATION
 )
 from aryaxai.core.project import Project
 import pandas as pd
 
 from aryaxai.core.wrapper import AryaModels, monitor
+import json
+import aiohttp
+from typing import AsyncIterator, Iterator
+import requests
 
 
 class TextProject(Project):
@@ -231,3 +237,76 @@ class TextProject(Project):
         if not res["success"]:
             raise Exception(res.get("details"," Failed to fetch available text models"))
         return pd.DataFrame(res.get("details"))
+    
+    def chat_completion(
+        self,
+        model: str,
+        messages: List[Dict[str, Any]],
+        provider: str,
+        api_key: str,
+        max_tokens: Optional[int] = None,
+        stream: Optional[bool] = False,
+    ) -> Union[dict, Iterator[str]]:
+        """Chat completion endpoint wrapper
+
+        :param model: name of the model
+        :param messages: list of chat messages
+        :param provider: model provider (e.g., "openai", "anthropic")
+        :param api_key: API key for the provider
+        :param max_tokens: maximum tokens to generate
+        :param stream: whether to stream the response
+        :return: chat completion response or stream iterator
+        """
+        payload = {
+            "model": model,
+            "messages": messages,
+            "max_tokens": max_tokens,
+            "stream": stream,
+            "project_name": self.project_name,
+            "provider": provider,
+            "api_key": api_key
+        }
+
+        if not stream:
+            return self.api_client.post(RUN_CHAT_COMPLETION, payload=payload)
+        
+        def stream_response() -> Iterator[str]:
+            url = f"{self.api_client.base_url}/{RUN_CHAT_COMPLETION}"
+            with requests.post(url, json=payload, stream=True) as response:
+                for line in response.iter_lines():
+                    if line:
+                        decoded_line = line.decode('utf-8')
+                        if decoded_line.startswith('data: '):
+                            if decoded_line.strip() == 'data: [DONE]':
+                                break
+                            chunk_data = json.loads(decoded_line[6:])
+                            yield chunk_data
+
+        return stream_response()
+
+    def image_generation(
+        self,
+        model: str,
+        prompt: str,
+        provider: str,
+        api_key: str,
+    ) -> dict:
+        """Image generation endpoint wrapper
+
+        :param model: name of the model
+        :param prompt: image generation prompt
+        :param provider: model provider (e.g., "openai", "stability")
+        :param api_key: API key for the provider
+        :return: image generation response
+        """
+        payload = {
+            "model": model,
+            "prompt": prompt,
+            "project_name": self.project_name,
+            "provider": provider,
+            "api_key": api_key
+        }
+
+        res = self.api_client.post(RUN_IMAGE_GENERATION, payload=payload)
+            
+        return res
