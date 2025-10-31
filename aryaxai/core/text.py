@@ -18,6 +18,9 @@ from aryaxai.core.project import Project
 import pandas as pd
 
 from aryaxai.core.wrapper import AryaModels, monitor
+import json
+import aiohttp
+from typing import AsyncIterator
 
 
 class TextProject(Project):
@@ -242,7 +245,7 @@ class TextProject(Project):
         api_key: str,
         max_tokens: Optional[int] = None,
         stream: Optional[bool] = False,
-    ) -> dict:
+    ) -> Union[dict, AsyncIterator[str]]:
         """Chat completion endpoint wrapper
 
         :param model: name of the model
@@ -251,7 +254,7 @@ class TextProject(Project):
         :param api_key: API key for the provider
         :param max_tokens: maximum tokens to generate
         :param stream: whether to stream the response
-        :return: chat completion response
+        :return: chat completion response or stream iterator
         """
         payload = {
             "model": model,
@@ -262,9 +265,25 @@ class TextProject(Project):
             "provider": provider,
             "api_key": api_key
         }
-        res = self.api_client.post(RUN_CHAT_COMPLETION, payload=payload) 
-        return res
-    
+
+        if not stream:
+            return self.api_client.post(RUN_CHAT_COMPLETION, payload=payload)
+        
+        async def stream_response() -> AsyncIterator[str]:
+            url = f"{self.api_client.base_url}/{RUN_CHAT_COMPLETION}"
+            async with aiohttp.ClientSession() as session:
+                async with session.post(url, json=payload) as response:
+                    async for line in response.content:
+                        if line:
+                            decoded_line = line.decode('utf-8')
+                            if decoded_line.startswith('data: '):
+                                if decoded_line.strip() == 'data: [DONE]':
+                                    break
+                                chunk_data = json.loads(decoded_line[6:])
+                                yield chunk_data
+
+        return stream_response()
+
     async def image_generation(
         self,
         model: str,
