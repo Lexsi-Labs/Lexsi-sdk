@@ -244,7 +244,7 @@ class TextProject(Project):
         messages: List[Dict[str, Any]],
         provider: str,
         api_key: str,
-        session_id : UUID,
+        session_id : Optional[UUID] = None,
         max_tokens: Optional[int] = None,
         stream: Optional[bool] = False,
     ) -> Union[dict, Iterator[str]]:
@@ -292,7 +292,7 @@ class TextProject(Project):
         prompt: str,
         provider: str,
         api_key: str,
-        session_id : UUID,
+        session_id : Optional[UUID] = None,
     ) -> dict:
         """Image generation endpoint wrapper
 
