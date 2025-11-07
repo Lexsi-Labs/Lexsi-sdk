@@ -722,6 +722,8 @@ class Project(BaseModel):
                         ),
                     },
                 }
+                if config.get("model_name"):
+                    payload["metadata"]["model_name"] = config.get("model_name")
 
             res = self.api_client.post(UPLOAD_DATA_WITH_CHECK_URI, payload)
 
