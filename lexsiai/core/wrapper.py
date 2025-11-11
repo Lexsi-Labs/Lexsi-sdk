@@ -429,34 +429,34 @@ class LexsiModels:
         self.project = project
         self.api_client = api_client
 
-    # def generate_text_case(
-    #     self,
-    #     model_name: str,
-    #     prompt: str,
-    #     instance_type: str = "xsmall",
-    #     serverless_instance_type: str = "gova-2",
-    #     explainability_method: list = ["DLB"],
-    #     explain_model: bool = False,
-    #     trace_id: str = None,
-    #     session_id: str = None,
-    #     min_tokens: int = 100,
-    #     max_tokens: int = 500,
-    #     stream: bool = False,
-    # ):
-    #     payload = {
-    #         "session_id": session_id,
-    #         "trace_id": trace_id,
-    #         "project_name": self.project.project_name,
-    #         "model_name": model_name,
-    #         "input_text": prompt,
-    #         "instance_type": instance_type,
-    #         "serverless_instance_type": serverless_instance_type,
-    #         "explainability_method": explainability_method,
-    #         "explain_model": explain_model,
-    #         "max_tokens": max_tokens,
-    #         "min_tokens": min_tokens,
-    #         "stream": stream,
-    #     }
+    def generate_text_case(
+        self,
+        model_name: str,
+        prompt: str,
+        instance_type: str = "xsmall",
+        serverless_instance_type: str = "gova-2",
+        explainability_method: list = ["DLB"],
+        explain_model: bool = False,
+        trace_id: str = None,
+        session_id: str = None,
+        min_tokens: int = 100,
+        max_tokens: int = 500,
+        stream: bool = False,
+    ):
+        payload = {
+            "session_id": session_id,
+            "trace_id": trace_id,
+            "project_name": self.project.project_name,
+            "model_name": model_name,
+            "input_text": prompt,
+            "instance_type": instance_type,
+            "serverless_instance_type": serverless_instance_type,
+            "explainability_method": explainability_method,
+            "explain_model": explain_model,
+            "max_tokens": max_tokens,
+            "min_tokens": min_tokens,
+            "stream": stream,
+        }
         
     #     if stream:
     #         env = Environment()
@@ -498,7 +498,6 @@ class LexsiModels:
     #             raise Exception(res.get("details"))
     #         return res
 
-    def generate_text_case(self, payload, stream: bool = False):
         if stream:
             env = Environment()
             url = env.get_base_url() + "/" + GENERATE_TEXT_CASE_STREAM_URI
