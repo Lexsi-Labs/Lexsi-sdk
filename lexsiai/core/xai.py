@@ -5,7 +5,6 @@ import httpx
 import pandas as pd
 from pydantic import BaseModel
 import requests
-from lexsiai import client
 from lexsiai.client.client import APIClient
 from lexsiai.common.environment import Environment
 from lexsiai.core.organization import Organization
