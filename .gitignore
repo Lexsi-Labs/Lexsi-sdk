@@ -25,4 +25,4 @@ _templates
 .env.testing
 
 # package version file
-aryaxai/version.py
+lexsiai/version.py
