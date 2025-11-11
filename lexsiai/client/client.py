@@ -1,12 +1,12 @@
 import requests
-from aryaxai.common.xai_uris import LOGIN_URI
+from lexsiai.common.xai_uris import LOGIN_URI
 import jwt
 from pydantic import BaseModel
 import json
 
 
 class APIClient(BaseModel):
-    """API client to interact with Arya XAI services"""
+    """API client to interact with Lexsi Ai services"""
 
     debug: bool = False
     base_url: str = ""

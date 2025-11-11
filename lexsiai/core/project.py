@@ -1,8 +1,8 @@
 from __future__ import annotations
 from pydantic import BaseModel
 from typing import Dict, List, Optional
-from aryaxai.client.client import APIClient
-from aryaxai.common.constants import (
+from lexsiai.client.client import APIClient
+from lexsiai.common.constants import (
     MODEL_TYPES,
     DATA_DRIFT_DASHBOARD_REQUIRED_FIELDS,
     DATA_DRIFT_STAT_TESTS,
@@ -12,7 +12,7 @@ from aryaxai.common.constants import (
     BIAS_MONITORING_DASHBOARD_REQUIRED_FIELDS,
     MODEL_PERF_DASHBOARD_REQUIRED_FIELDS,
 )
-from aryaxai.common.types import (
+from lexsiai.common.types import (
     DataConfig,
     ProjectConfig,
     SyntheticDataConfig,
@@ -22,9 +22,9 @@ from aryaxai.common.types import (
     GDriveConfig,
     SFTPConfig,
 )
-from aryaxai.common.utils import parse_datetime, parse_float, poll_events
-from aryaxai.common.validation import Validate
-from aryaxai.common.monitoring import (
+from lexsiai.common.utils import parse_datetime, parse_float, poll_events
+from lexsiai.common.validation import Validate
+from lexsiai.common.monitoring import (
     BiasMonitoringPayload,
     DataDriftPayload,
     ImageDashboardPayload,
@@ -34,7 +34,7 @@ from aryaxai.common.monitoring import (
 
 import pandas as pd
 
-from aryaxai.common.xai_uris import (
+from lexsiai.common.xai_uris import (
     ALL_DATA_FILE_URI,
     AVAILABLE_BATCH_SERVERS_URI,
     AVAILABLE_CUSTOM_SERVERS_URI,
@@ -131,16 +131,16 @@ from aryaxai.common.xai_uris import (
 )
 import json
 import io
-from aryaxai.core.alert import Alert
+from lexsiai.core.alert import Alert
 
-from aryaxai.core.case import Case, CaseText
-from aryaxai.core.model_summary import ModelSummary
+from lexsiai.core.case import Case, CaseText
+from lexsiai.core.model_summary import ModelSummary
 
-from aryaxai.core.dashboard import DASHBOARD_TYPES, Dashboard
+from lexsiai.core.dashboard import DASHBOARD_TYPES, Dashboard
 from datetime import datetime
 import re
-from aryaxai.core.utils import build_url, build_list_data_connector_url
-from aryaxai.core.synthetic import SyntheticDataTag, SyntheticModel, SyntheticPrompt
+from lexsiai.core.utils import build_url, build_list_data_connector_url
+from lexsiai.core.synthetic import SyntheticDataTag, SyntheticModel, SyntheticPrompt
 
 
 class Project(BaseModel):
@@ -1034,7 +1034,7 @@ class Project(BaseModel):
         explainability_method: Optional[list] = ["shap"],
         feature_list: Optional[list] = None,
     ):
-        """Uploads your custom model on AryaXAI
+        """Uploads your custom model on Lexsi.ai
 
         :param model_path: path of the model
         :param model_architecture: architecture of model ["machine_learning", "deep_learning"]
@@ -1135,7 +1135,7 @@ class Project(BaseModel):
         bucket_name: Optional[str] = None,
         file_path: Optional[str] = None,
     ):
-        """Uploads your custom model on AryaXAI
+        """Uploads your custom model on Lexsi.ai
 
         :param data_connector_name: name of the data connector
         :param model_architecture: architecture of model ["machine_learning", "deep_learning"]

@@ -5,7 +5,7 @@ API_VERSION = os.getenv("XAI_API_VERSION", "v1")
 API_VERSION_V2 = "v2"
 
 # APP
-XAI_APP_URI = "https://beta.aryaxai.com"
+XAI_APP_URI = "https://console.lexsi.ai"
 
 # URIs of XAI base service starts here
 # Auth

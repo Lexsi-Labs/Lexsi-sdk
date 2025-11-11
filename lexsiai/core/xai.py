@@ -4,10 +4,10 @@ from typing import List, Optional
 import pandas as pd
 from pydantic import BaseModel
 import requests
-from aryaxai.client.client import APIClient
-from aryaxai.common.environment import Environment
-from aryaxai.core.organization import Organization
-from aryaxai.common.xai_uris import (
+from lexsiai.client.client import APIClient
+from lexsiai.common.environment import Environment
+from lexsiai.core.organization import Organization
+from lexsiai.common.xai_uris import (
     AVAILABLE_BATCH_SERVERS_URI,
     AVAILABLE_CUSTOM_SERVERS_URI,
     AVAILABLE_SYNTHETIC_CUSTOM_SERVERS_URI,
@@ -23,7 +23,7 @@ import getpass
 
 
 class XAI(BaseModel):
-    """Base class to connect with AryaXAI platform"""
+    """Base class to connect with Lexsi.ai platform"""
 
     env: Environment = Environment()
     api_client: APIClient = APIClient()
@@ -37,12 +37,12 @@ class XAI(BaseModel):
         self.api_client = APIClient(debug=debug, base_url=base_url)
 
     def login(self):
-        """login to AryaXAI platform
+        """login to Lexsi.ai platform
 
         :param api_key: API key, defaults to XAI_ACCESS_TOKEN environment variable
         """
         access_token = os.environ.get("XAI_ACCESS_TOKEN", None) or getpass.getpass(
-            "Enter your Arya XAI Access Token: "
+            "Enter your Lexsi Ai Access Token: "
         )
 
         if not access_token:

@@ -1,6 +1,6 @@
 from typing import Optional, List, Dict, Any, Union
-from aryaxai.common.utils import poll_events
-from aryaxai.common.xai_uris import (
+from lexsiai.common.utils import poll_events
+from lexsiai.common.xai_uris import (
     AVAILABLE_GUARDRAILS_URI,
     CONFIGURE_GUARDRAILS_URI,
     DELETE_GUARDRAILS_URI,
@@ -14,10 +14,10 @@ from aryaxai.common.xai_uris import (
     RUN_CHAT_COMPLETION,
     RUN_IMAGE_GENERATION
 )
-from aryaxai.core.project import Project
+from lexsiai.core.project import Project
 import pandas as pd
 
-from aryaxai.core.wrapper import AryaModels, monitor
+from lexsiai.core.wrapper import LexsiModels, monitor
 import json
 import aiohttp
 from typing import AsyncIterator, Iterator
@@ -213,7 +213,7 @@ class TextProject(Project):
         :return: response
         """
         llm = monitor(
-            project=self, client=AryaModels(project=self, api_client=self.api_client), session_id=session_id
+            project=self, client=LexsiModels(project=self, api_client=self.api_client), session_id=session_id
         )
         res = llm.generate_text_case(
             model_name=model_name,

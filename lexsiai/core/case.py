@@ -5,8 +5,8 @@ from pydantic import BaseModel, ConfigDict
 import plotly.graph_objects as go
 import pandas as pd
 from IPython.display import SVG, display
-from aryaxai.client.client import APIClient
-from aryaxai.common.xai_uris import EXPLAINABILITY_SUMMARY, GET_TRIGGERS_DAYS_URI
+from lexsiai.client.client import APIClient
+from lexsiai.common.xai_uris import EXPLAINABILITY_SUMMARY, GET_TRIGGERS_DAYS_URI
 import base64
 from PIL import Image
 

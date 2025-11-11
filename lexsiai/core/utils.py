@@ -1,4 +1,4 @@
-from aryaxai.client.client import APIClient
+from lexsiai.client.client import APIClient
 
 def build_url(base_url, data_connector_name, project_name, organization_id):
     url = None

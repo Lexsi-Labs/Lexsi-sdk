@@ -1,10 +1,10 @@
 import pandas as pd
 from pydantic import BaseModel
 from typing import Optional
-from aryaxai.client.client import APIClient
-from aryaxai.common.enums import UserRole
-from aryaxai.common.validation import Validate
-from aryaxai.common.xai_uris import (
+from lexsiai.client.client import APIClient
+from lexsiai.common.enums import UserRole
+from lexsiai.common.validation import Validate
+from lexsiai.common.xai_uris import (
     AVAILABLE_CUSTOM_SERVERS_URI,
     CREATE_PROJECT_URI,
     GET_WORKSPACES_DETAILS_URI,
@@ -14,13 +14,13 @@ from aryaxai.common.xai_uris import (
     GET_NOTIFICATIONS_URI,
     CLEAR_NOTIFICATIONS_URI,
 )
-from aryaxai.core.project import Project
-from aryaxai.core.text import TextProject
-from aryaxai.core.agent import AgentProject
+from lexsiai.core.project import Project
+from lexsiai.core.text import TextProject
+from lexsiai.core.agent import AgentProject
 
 
 class Workspace(BaseModel):
-    """Class to work with AryaXAI workspaces"""
+    """Class to work with Lexsi.ai workspaces"""
 
     organization_id: Optional[str] = None
     created_by: str

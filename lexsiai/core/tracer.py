@@ -18,7 +18,7 @@ import os
 
 class Tracer:
     def __init__(self):
-        self.base_url = os.getenv("XAI_API_URL", "https://apiv2.aryaxai.com")    
+        self.base_url = os.getenv("XAI_API_URL", "https://apiv1.lexsi.ai")    
         self.endpoint = f"{self.base_url}"
     def setup_langchain_tracing(self , project: object, session_id : str = None) -> None:
         """

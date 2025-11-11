@@ -1,9 +1,9 @@
 import pandas as pd
 from pydantic import BaseModel
 from typing import Dict, List, Optional
-from aryaxai.client.client import APIClient
-from aryaxai.common.validation import Validate
-from aryaxai.common.xai_uris import (
+from lexsiai.client.client import APIClient
+from lexsiai.common.validation import Validate
+from lexsiai.common.xai_uris import (
     AVAILABLE_CUSTOM_SERVERS_URI,
     CREATE_WORKSPACE_URI,
     GET_WORKSPACES_URI,
@@ -11,9 +11,9 @@ from aryaxai.common.xai_uris import (
     ORGANIZATION_MEMBERS_URI,
     REMOVE_USER_ORGANIZATION_URI,
 )
-from aryaxai.core.workspace import Workspace
-from aryaxai.common.types import GCSConfig, S3Config, GDriveConfig, SFTPConfig
-from aryaxai.common.xai_uris import (
+from lexsiai.core.workspace import Workspace
+from lexsiai.common.types import GCSConfig, S3Config, GDriveConfig, SFTPConfig
+from lexsiai.common.xai_uris import (
     AVAILABLE_CUSTOM_SERVERS_URI,
     CREATE_DATA_CONNECTORS,
     LIST_DATA_CONNECTORS,
@@ -24,11 +24,11 @@ from aryaxai.common.xai_uris import (
     LIST_FILEPATHS,
     COMPUTE_CREDIT_URI,
 )
-from aryaxai.core.utils import build_url, build_list_data_connector_url
+from lexsiai.core.utils import build_url, build_list_data_connector_url
 
 
 class Organization(BaseModel):
-    """Class to work with AryaXAI organizations"""
+    """Class to work with Lexsi ai organizations"""
 
     organization_id: Optional[str] = None
     name: str

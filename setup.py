@@ -7,15 +7,15 @@ with open('requirements.txt', 'r', encoding='utf-8') as pr:
     install_requires = pr.readlines()
 
 setup(
-    name='aryaxai',
+    name='lexsiai',
     use_scm_version=True,
     setup_requires=['setuptools_scm'],
-    description='Full stack ML Observability with AryaXAI',
+    description='Full stack ML Observability with Lexsi.ai',
     long_description=long_description,
     long_description_content_type='text/markdown',
-    keywords='aryaxai, ML observability',
+    keywords='lexsiai, ML observability',
     license='MIT',
-    url='https://xai.arya.ai/docs/introduction',
+    url='https://docs.lexsi.ai',
     classifiers=[
         'Intended Audience :: Developers',
         'Intended Audience :: Science/Research',

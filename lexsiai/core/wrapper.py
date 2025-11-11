@@ -12,9 +12,9 @@ from mistralai import Mistral
 from pydantic import BaseModel
 
 import requests
-from aryaxai.client.client import APIClient
-from aryaxai.common.environment import Environment
-from aryaxai.common.xai_uris import CASE_INFO_TEXT_URI, GENERATE_TEXT_CASE_STREAM_URI, GENERATE_TEXT_CASE_URI
+from lexsiai.client.client import APIClient
+from lexsiai.common.environment import Environment
+from lexsiai.common.xai_uris import CASE_INFO_TEXT_URI, GENERATE_TEXT_CASE_STREAM_URI, GENERATE_TEXT_CASE_URI
 
 from together import Together
 from groq import Groq
@@ -259,7 +259,7 @@ class Wrapper:
                     input_data = kwargs.get("messages")
                     # model_name = kwargs.get("model")
                     model_name = provider
-                elif method_name == "client.generate_text_case":  # AryaModels
+                elif method_name == "client.generate_text_case":  # LexsiModels
                     input_data = kwargs.get("prompt")
                     model_name = kwargs.get("model_name")
                 elif method_name == "client.run":
@@ -357,7 +357,7 @@ class Wrapper:
                     output_data = result.choices[0].message.content
                 elif method_name == "client.chat.complete_async": # Mistral Async
                     output_data = result.choices[0].message.content
-                elif method_name == "client.generate_text_case":  # AryaModels
+                elif method_name == "client.generate_text_case":  # LexsiModels
                     output_data = result.get("details", {}).get("result", {}).get("output")
                 elif method_name == "client.run":   # Replicate
                     output_data == result
@@ -423,7 +423,7 @@ class Wrapper:
             return wrapper
 
 
-class AryaModels:
+class LexsiModels:
     def __init__(self, project, api_client: APIClient):
         self.project = project
         self.api_client = api_client
@@ -594,12 +594,12 @@ def monitor(project, client, session_id=None):
         
         client.chat.create = wrapped_chat_create
 
-    elif isinstance(client, AryaModels):
+    elif isinstance(client, LexsiModels):
         client.generate_text_case = wrapper._get_wrapper(
             original_method=client.generate_text_case,
             method_name="client.generate_text_case",
             session_id=session_id,
-            provider="Arya"
+            provider='Lexsi'
         )
     else:
         raise Exception("Not a valid SDK to monitor")
