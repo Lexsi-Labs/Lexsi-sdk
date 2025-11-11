@@ -1,4 +1,5 @@
 import requests
+import httpx
 from lexsiai.common.xai_uris import LOGIN_URI
 import jwt
 from pydantic import BaseModel
@@ -77,13 +78,22 @@ class APIClient(BaseModel):
         """
         url = f"{self.base_url}/{uri}"
         try:
-            response = requests.request(
-                method,
-                url,
+            # response = requests.request(
+            #     method,
+            #     url,
+            #     headers=self.headers,
+            #     json=payload,
+            #     files=files,
+            #     stream=stream,
+            # )
+            response = httpx.request(
+                method=method,
+                url=url,
                 headers=self.headers,
                 json=payload,
                 files=files,
-                stream=stream,
+                timeout=None,        # optional, match your original behavior
+                stream=stream        # True → return a streaming Response object
             )
             res = None
             try:

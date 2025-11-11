@@ -1,9 +1,11 @@
 import json
 import os
 from typing import List, Optional
+import httpx
 import pandas as pd
 from pydantic import BaseModel
 import requests
+from lexsiai import client
 from lexsiai.client.client import APIClient
 from lexsiai.common.environment import Environment
 from lexsiai.core.organization import Organization
@@ -242,12 +244,23 @@ class XAI(BaseModel):
         files = {}
         if file_path:
             files["in_file"] = open(file_path, "rb")
-        response = requests.post(
-            self.env.get_base_url() + "/" + UPLOAD_DATA_PROJECT_URI,
-            data=form_data,
-            files=files if files else None,
-            headers=headers
-        ).json()
+        # response = requests.post(
+        #     self.env.get_base_url() + "/" + UPLOAD_DATA_PROJECT_URI,
+        #     data=form_data,
+        #     files=files if files else None,
+        #     headers=headers
+        # ).json()
+
+        with httpx.Client(http2=True, timeout=None) as client:
+            response = client.post(
+                self.env.get_base_url() + "/" + UPLOAD_DATA_PROJECT_URI,
+                data=form_data,
+                files=files or None,
+                headers=headers,
+            )
+            response.raise_for_status()
+            response = response.json()
+
         if files:
             files["in_file"].close()
         return response
@@ -273,9 +286,19 @@ class XAI(BaseModel):
             "xai": xai,
             "refresh": refresh
         }
-        res = requests.post(
-            self.env.get_base_url() + "/" + GET_CASE_PROFILE_URI,
-            headers=headers,
-            json=payload
-        ).json()
+        # res = requests.post(
+        #     self.env.get_base_url() + "/" + GET_CASE_PROFILE_URI,
+        #     headers=headers,
+        #     json=payload
+        # ).json()
+
+        with httpx.Client(http2=True, timeout=None) as client:
+            res = client.post(
+                self.env.get_base_url() + "/" + GET_CASE_PROFILE_URI,
+                headers=headers,
+                json=payload,
+            )
+            res.raise_for_status()
+            res = res.json()
+
         return res["details"]

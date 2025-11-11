@@ -1,4 +1,6 @@
 from typing import Optional, List, Dict, Any, Union
+
+import httpx
 from lexsiai.common.utils import poll_events
 from lexsiai.common.xai_uris import (
     AVAILABLE_GUARDRAILS_URI,
@@ -272,14 +274,31 @@ class TextProject(Project):
         if not stream:
             return self.api_client.post(RUN_CHAT_COMPLETION, payload=payload)
         
-        def stream_response() -> Iterator[str]:
+        # def stream_response() -> Iterator[str]:
+        #     url = f"{self.api_client.base_url}/{RUN_CHAT_COMPLETION}"
+        #     with requests.post(url, json=payload, stream=True) as response:
+        #         for line in response.iter_lines():
+        #             if line:
+        #                 decoded_line = line.decode('utf-8')
+        #                 if decoded_line.startswith('data: '):
+        #                     if decoded_line.strip() == 'data: [DONE]':
+        #                         break
+        #                     chunk_data = json.loads(decoded_line[6:])
+        #                     yield chunk_data
+
+        def stream_response() -> Iterator[dict]:
             url = f"{self.api_client.base_url}/{RUN_CHAT_COMPLETION}"
-            with requests.post(url, json=payload, stream=True) as response:
-                for line in response.iter_lines():
-                    if line:
-                        decoded_line = line.decode('utf-8')
-                        if decoded_line.startswith('data: '):
-                            if decoded_line.strip() == 'data: [DONE]':
+
+            # Use a persistent client if you want to reuse connections
+            with httpx.Client(http2=True, timeout=None) as client:
+                with client.stream("POST", url, json=payload) as response:
+                    for line in response.iter_lines():
+                        if not line:
+                            continue
+
+                        decoded_line = line.decode("utf-8")
+                        if decoded_line.startswith("data: "):
+                            if decoded_line.strip() == "data: [DONE]":
                                 break
                             chunk_data = json.loads(decoded_line[6:])
                             yield chunk_data
