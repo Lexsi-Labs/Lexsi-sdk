@@ -86,15 +86,15 @@ class APIClient(BaseModel):
             #     files=files,
             #     stream=stream,
             # )
-            response = httpx.request(
-                method=method,
-                url=url,
-                headers=self.headers,
-                json=payload,
-                files=files,
-                timeout=None,        # optional, match your original behavior
-                stream=stream        # True → return a streaming Response object
-            )
+            with httpx.Client(http2=True, timeout=None) as client:
+                response = client.request(
+                    method=method,
+                    url=url,
+                    headers=self.headers,
+                    json=payload,
+                    files=files or None,
+                    stream=stream,   # If True → streaming Response, otherwise full content
+                )
             res = None
             try:
                 res = response.json().get("details") or response.json()
