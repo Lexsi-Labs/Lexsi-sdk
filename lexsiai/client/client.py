@@ -111,7 +111,6 @@ class APIClient(BaseModel):
                         files=files or None,
                     )
                     response.raise_for_status()
-                    print(response.text)
             res = None
             try:
                 res = response.json().get("details") or response.json()
