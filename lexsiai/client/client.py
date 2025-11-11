@@ -86,15 +86,32 @@ class APIClient(BaseModel):
             #     files=files,
             #     stream=stream,
             # )
+            import httpx
+
             with httpx.Client(http2=True, timeout=None) as client:
-                response = client.request(
-                    method=method,
-                    url=url,
-                    headers=self.headers,
-                    json=payload,
-                    files=files or None,
-                    stream=stream,   # If True → streaming Response, otherwise full content
-                )
+                if stream:
+                    # STREAMING MODE
+                    with client.stream(
+                        method=method,
+                        url=url,
+                        headers=self.headers,
+                        json=payload,
+                        files=files or None,
+                    ) as response:
+                        response.raise_for_status()
+                        for line in response.iter_lines():
+                            print(line)
+                else:
+                    # NORMAL MODE
+                    response = client.request(
+                        method=method,
+                        url=url,
+                        headers=self.headers,
+                        json=payload,
+                        files=files or None,
+                    )
+                    response.raise_for_status()
+                    print(response.text)
             res = None
             try:
                 res = response.json().get("details") or response.json()
