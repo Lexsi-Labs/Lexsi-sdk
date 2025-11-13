@@ -2399,6 +2399,11 @@ class Project(BaseModel):
         model_type: str,
         data_config: Optional[DataConfig] = None,
         model_config: Optional[dict] = None,
+        tunning_config: Optional[dict] = None,
+        peft_config: Optional[dict] = None,
+        processor_config: Optional[dict] = None,
+        finetune_mode: Optional[dict] = None,
+        tunning_strategy: Optional[str] = None,
         instance_type: Optional[str] = None,
     ) -> str:
         """Train new model
@@ -2519,32 +2524,51 @@ class Project(BaseModel):
             model_parameters = model_params.get(model_name)
 
             if model_parameters:
-                for model_config_param in model_config.keys():
-                    model_param = model_parameters.get(model_config_param)
-                    model_config_param_value = model_config[model_config_param]
+                def validate_params(param_group, config_group):
+                    if config_group:
+                        for param_name, param_value in config_group.items():
+                            model_param = param_group.get(param_name)
+                            if not model_param:
+                            # raise Exception(
+                            #     f"Invalid model config for {model_type} \n {json.dumps(model_parameters)}"
+                            # )
+                                continue
 
-                    if not model_param:
-                        # raise Exception(
-                        #     f"Invalid model config for {model_type} \n {json.dumps(model_parameters)}"
-                        # )
-                        continue
+                            param_type = model_param["type"]
 
-                    if model_param["type"] == "select":
-                        Validate.value_against_list(
-                            model_config_param,
-                            model_config_param_value,
-                            model_param["value"],
-                        )
-                    elif model_param["type"] == "input":
-                        if model_config_param_value > model_param["max"]:
-                            raise Exception(
-                                f"{model_config_param} value cannot be greater than {model_param['max']}"
-                            )
-                        if model_config_param_value < model_param["min"]:
-                            raise Exception(
-                                f"{model_config_param} value cannot be less than {model_param['min']}"
-                            )
+                            if param_type == "select":
+                                Validate.value_against_list(
+                                    param_name, param_value, model_param["value"]
+                                )
+                            elif param_type == "input":
+                                if param_value > model_param["max"]:
+                                    raise Exception(
+                                        f"{param_name} value cannot be greater than {model_param['max']}"
+                                    )
+                                if param_value < model_param["min"]:
+                                    raise Exception(
+                                        f"{param_name} value cannot be less than {model_param['min']}"
+                                    )
 
+                if model_type in ["TabPFN", "TabICL", "TabDPT", "OrionMSP", "OrionBix", "Mitra", "ContextTab"]:
+                    validate_params(model_parameters.get("model_params", {}), model_config)
+                    validate_params(model_parameters.get("tunning_params", {}), tunning_config)
+                    validate_params(model_parameters.get("processor_params", {}), processor_config)
+                    validate_params(model_parameters.get("peft_params", {}), peft_config)
+                else:
+                    validate_params(model_parameters, model_config)
+        if finetune_mode:
+            Validate.value_against_list(
+                "finetune_mode",
+                finetune_mode,
+                ["meta-learning", "sft"],
+            )
+        if tunning_strategy:
+            Validate.value_against_list(
+                "tunning_strategy",
+                tunning_strategy,
+                ["base-ft", "inference", "peft", "finetune"],
+            )
         data_conf = data_config or {}
 
         feature_exclude = [
@@ -2611,6 +2635,17 @@ class Project(BaseModel):
                 "lime_explainability_iterations"
             ),
         }
+
+        if tunning_config:
+            payload["metadata"]["tunning_parameters"] = tunning_config
+        if peft_config:
+            payload["metadata"]["peft_parameters"] = peft_config
+        if processor_config:
+            payload["metadata"]["processor_parameters"] = processor_config
+        if finetune_mode:
+            payload["metadata"]["finetune_mode"] = finetune_mode
+        if tunning_strategy:
+            payload["metadata"]["tunning_strategy"] = tunning_strategy
 
         if instance_type:
             payload["instance_type"] = instance_type
