@@ -725,6 +725,8 @@ class Project(BaseModel):
                 if config.get("model_name"):
                     payload["metadata"]["model_name"] = config.get("model_name")
 
+            if self.metadata.get("explainability_methods"):
+                payload["metadata"]["explainability_method"] = config.get("explainability_method")
             res = self.api_client.post(UPLOAD_DATA_WITH_CHECK_URI, payload)
 
             if not res["success"]:
