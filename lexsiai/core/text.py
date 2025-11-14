@@ -1,6 +1,9 @@
+from datetime import datetime
+import io
 from typing import Optional, List, Dict, Any, Union
 
 import httpx
+from lexsiai.common.types import InferenceCompute, InferenceSettings
 from lexsiai.common.utils import poll_events
 from lexsiai.common.xai_uris import (
     AVAILABLE_GUARDRAILS_URI,
@@ -9,16 +12,23 @@ from lexsiai.common.xai_uris import (
     GET_AVAILABLE_TEXT_MODELS_URI,
     GET_GUARDRAILS_URI,
     INITIALIZE_TEXT_MODEL_URI,
+    LIST_DATA_CONNECTORS,
     MESSAGES_URI,
+    QUANTIZE_MODELS_URI,
     SESSIONS_URI,
+    TEXT_MODEL_INFERENCE_SETTINGS_URI,
     TRACES_URI,
     UPDATE_GUARDRAILS_STATUS_URI,
+    UPLOAD_DATA_FILE_URI,
+    UPLOAD_DATA_URI,
+    UPLOAD_FILE_DATA_CONNECTORS,
     RUN_CHAT_COMPLETION,
     RUN_IMAGE_GENERATION
 )
 from lexsiai.core.project import Project
 import pandas as pd
 
+from lexsiai.core.utils import build_list_data_connector_url
 from lexsiai.core.wrapper import LexsiModels, monitor
 import json
 import aiohttp
@@ -166,7 +176,16 @@ class TextProject(Project):
 
         return res.get("details")
 
-    def initialize_text_model(self, model_provider: str, model_name: str, model_task_type:str, model_type: str, serverless_instance_type: Optional[str] = "gova-2", assets: Optional[dict] = None) -> str:
+    def initialize_text_model(
+        self, 
+        model_provider: str, 
+        model_name: str, 
+        model_task_type:str, 
+        model_type: str,  
+        inference_compute: InferenceCompute,
+        inference_settings: InferenceSettings,
+        assets: Optional[dict] = None,
+    ) -> str:
         """Initialize text model
 
         :param model_provider: model of provider
@@ -180,7 +199,8 @@ class TextProject(Project):
             "model_task_type": model_task_type,
             "project_name": self.project_name,
             "model_type": model_type,
-            "instance_type": serverless_instance_type
+            "inference_compute": inference_compute,
+            "inference_settings": inference_settings
         }
         if assets:
             payload["assets"] = assets
@@ -188,6 +208,30 @@ class TextProject(Project):
         if not res["success"]:
             raise Exception(res.get("details", "Model Initialization Failed"))
         poll_events(self.api_client, self.project_name, res["event_id"])
+
+    def model_inference_settings(
+        self,  
+        model_name: str,
+        inference_compute: InferenceCompute,
+        inference_settings: InferenceSettings,
+    ) -> str:
+        """Model Inference Settings
+
+        :param model_provider: model of provider
+        :param model_name: name of the model to be initialized
+        :param model_task_type: task type of model
+        :return: response
+        """
+        payload = {
+            "model_name": model_name,
+            "project_name": self.project_name,
+            "inference_compute": inference_compute,
+            "inference_settings": inference_settings
+        }
+
+        res = self.api_client.post(f"{TEXT_MODEL_INFERENCE_SETTINGS_URI}", payload)
+        if not res["success"]:
+            raise Exception(res.get("details", "Failed to update inference settings"))
 
     def generate_text_case(
         self,
@@ -240,6 +284,163 @@ class TextProject(Project):
             raise Exception(res.get("details"," Failed to fetch available text models"))
         return pd.DataFrame(res.get("details"))
     
+    def upload_data(
+        self, 
+        data: str | pd.DataFrame,
+        tag: str,
+    ) -> str:
+        def build_upload_data(data):
+            if isinstance(data, str):
+                file = open(data, "rb")
+                return file
+            elif isinstance(data, pd.DataFrame):
+                csv_buffer = io.BytesIO()
+                data.to_csv(csv_buffer, index=False, encoding="utf-8")
+                csv_buffer.seek(0)
+                file_name = f"{tag}_sdk_{datetime.now().replace(microsecond=0)}.csv"
+                file = (file_name, csv_buffer.getvalue())
+                return file
+            else:
+                raise Exception("Invalid Data Type")
+
+        def upload_file_and_return_path(data, data_type, tag=None) -> str:
+            files = {"in_file": build_upload_data(data)}
+            res = self.api_client.file(
+                f"{UPLOAD_DATA_FILE_URI}?project_name={self.project_name}&data_type={data_type}&tag={tag}",
+                files,
+            )
+
+            if not res["success"]:
+                raise Exception(res.get("details"))
+            uploaded_path = res.get("metadata").get("filepath")
+
+            return uploaded_path
+        
+        uploaded_path = upload_file_and_return_path(data, "data", tag)
+
+        payload = {
+            "path": uploaded_path,
+            "tag": tag,
+            "type": "data",
+            "project_name": self.project_name,
+        }
+        res = self.api_client.post(UPLOAD_DATA_URI, payload)
+
+        if not res["success"]:
+            self.delete_file(uploaded_path)
+            raise Exception(res.get("details"))
+
+        return res.get("details")
+
+    def upload_data_dataconnectors(
+        self,
+        data_connector_name: str,
+        tag: str,
+        bucket_name: Optional[str] = None,
+        file_path: Optional[str] = None,
+        dataset_name: Optional[str] = None
+    ):
+        def get_connector() -> str | pd.DataFrame:
+            url = build_list_data_connector_url(
+                LIST_DATA_CONNECTORS, self.project_name, self.organization_id
+            )
+            res = self.api_client.post(url)
+
+            if res["success"]:
+                df = pd.DataFrame(res["details"])
+                filtered_df = df.loc[df["link_service_name"] == data_connector_name]
+                if filtered_df.empty:
+                    return "No data connector found"
+                return filtered_df
+
+            return res["details"]
+
+        connectors = get_connector()
+        if isinstance(connectors, pd.DataFrame):
+            value = connectors.loc[
+                connectors["link_service_name"] == data_connector_name,
+                "link_service_type",
+            ].values[0]
+            ds_type = value
+
+            if ds_type == "s3" or ds_type == "gcs":
+                if not bucket_name:
+                    return "Missing argument bucket_name"
+                if not file_path:
+                    return "Missing argument file_path"
+        else:
+            return connectors
+
+        def upload_file_and_return_path(file_path, data_type, tag=None) -> str:
+            if not self.project_name:
+                return "Missing Project Name"
+            query_params = f"project_name={self.project_name}&link_service_name={data_connector_name}&data_type={data_type}&tag={tag}&bucket_name={bucket_name}&file_path={file_path}&dataset_name={dataset_name}"
+            if self.organization_id:
+                query_params += f"&organization_id={self.organization_id}"
+            res = self.api_client.post(f"{UPLOAD_FILE_DATA_CONNECTORS}?{query_params}")
+            if not res["success"]:
+                raise Exception(res.get("details"))
+            uploaded_path = res.get("metadata").get("filepath")
+
+            return uploaded_path
+        
+        uploaded_path = upload_file_and_return_path(file_path, "data", tag)
+        
+        payload = {
+            "path": uploaded_path,
+            "tag": tag,
+            "type": "data",
+            "project_name": self.project_name,
+        }
+        res = self.api_client.post(UPLOAD_DATA_URI, payload)
+
+        if not res["success"]:
+            self.delete_file(uploaded_path)
+            raise Exception(res.get("details"))
+
+        return res.get("details")
+    
+
+    def quantize_model(
+        self,
+        model_name:str,
+        quant_name:str,
+        quantization_type:str,
+        qbit: int,
+        instance_type: str,
+        tag: Optional[str] = None,
+        input_column: Optional[str] = None,
+        no_of_samples: Optional[str] = None,
+    ):
+        """Quantize Model
+
+        :param model_name: name of the model
+        :param quant_name: quant name of the model
+        :param quantization_type: type of quantization 
+        :param qbit: quantization bit
+        :param instance_type: instance type for the quantization 
+        :param tag: tag name to pass
+        :param input_column: input column for the data
+        :param no_of_samples: no of samples for quantization to perform 
+        :return: response
+        """
+        payload = {
+            "project_name": self.project_name,
+            "model_name": model_name,
+            "quant_name": quant_name,
+            "quantization_type": quantization_type,
+            "qbit": qbit,
+            "instance_type": instance_type,
+            "tag": tag,
+            "input_column": input_column,
+            "no_of_samples": no_of_samples
+        }
+
+        res = self.api_client.post(QUANTIZE_MODELS_URI, payload)
+        if not res["success"]:
+            raise Exception(res.get("details"))
+        
+        poll_events(self.api_client, self.project_name, res.get("event_id"))
     def chat_completion(
         self,
         model: str,
