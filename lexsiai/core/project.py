@@ -725,6 +725,8 @@ class Project(BaseModel):
                 if config.get("model_name"):
                     payload["metadata"]["model_name"] = config.get("model_name")
 
+            if self.metadata.get("explainability_methods"):
+                payload["metadata"]["explainability_method"] = config.get("explainability_method")
             res = self.api_client.post(UPLOAD_DATA_WITH_CHECK_URI, payload)
 
             if not res["success"]:
@@ -2434,7 +2436,7 @@ class Project(BaseModel):
         if project_config == "Not Found":
             raise Exception("Upload files first")
 
-        available_models = self.available_models()
+        available_models, foundational_models = self.available_models()
 
         Validate.value_against_list("model_type", model_type, available_models)
 
@@ -2549,8 +2551,7 @@ class Project(BaseModel):
                                     raise Exception(
                                         f"{param_name} value cannot be less than {model_param['min']}"
                                     )
-
-                if model_type in ["TabPFN", "TabICL", "TabDPT", "OrionMSP", "OrionBix", "Mitra", "ContextTab"]:
+                if model_type in foundational_models:
                     validate_params(model_parameters.get("model_params", {}), model_config)
                     validate_params(model_parameters.get("tunning_params", {}), tunning_config)
                     validate_params(model_parameters.get("processor_params", {}), processor_config)
@@ -2706,7 +2707,7 @@ class Project(BaseModel):
             map(lambda data: data["model_name"], res["details"]["foundation_models"])
         ))
 
-        return available_models
+        return available_models, res["details"]["foundation_models"]
 
     def activate_model(self, model_name: str) -> str:
         """Sets the model to active for the project
