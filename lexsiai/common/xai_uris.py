@@ -153,6 +153,7 @@ CREATE_ORGANIZATION_URI = f"{API_VERSION_V2}/organization/create_organization"
 INVITE_USER_ORGANIZATION_URI = f"{API_VERSION_V2}/organization/invite_user"
 REMOVE_USER_ORGANIZATION_URI = f"{API_VERSION_V2}/organization/organization_user_delete"
 ORGANIZATION_MEMBERS_URI = f"{API_VERSION_V2}/organization/organization_users"
+UPDATE_ORGANIZATION_URI = f"{API_VERSION_V2}/organization/organization_user_update"
 
 # Data Connectors
 CREATE_DATA_CONNECTORS = f"{API_VERSION_V2}/linkservices/create"

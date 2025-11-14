@@ -1379,6 +1379,8 @@ class Project(BaseModel):
         res = self.api_client.post(
             f"{GET_DATA_DRIFT_DIAGNOSIS_URI}?project_name={self.project_name}"
         )
+        if not res.get("status"):
+            raise Exception(res.get("details", "Data drift diagnosis not found"))
         data_drift_diagnosis = pd.DataFrame(res["details"]["detailed_report"]).drop(
             ["current_small_hist", "ref_small_hist"], axis=1
         )

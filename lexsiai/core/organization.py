@@ -10,6 +10,7 @@ from lexsiai.common.xai_uris import (
     INVITE_USER_ORGANIZATION_URI,
     ORGANIZATION_MEMBERS_URI,
     REMOVE_USER_ORGANIZATION_URI,
+    UPDATE_ORGANIZATION_URI,
 )
 from lexsiai.core.workspace import Workspace
 from lexsiai.common.types import GCSConfig, S3Config, GDriveConfig, SFTPConfig
@@ -502,3 +503,26 @@ class Organization(BaseModel):
         )
         res = self.api_client.get(url)
         return res["details"]
+
+    def update_user_access_for_organization(
+        self,
+        user_email: str,
+        access_type: str = ["admin", "user"],
+    ) -> str:
+        """Update user access for project
+
+        :param user_email: Email of user to be added to project.
+        :param access_type: access type to be given to user (admin | write | read)
+        :return: response
+        """
+        payload = {
+            "organization_user_email": user_email,
+            "organization_id": self.organization_id,
+            "organization_admin": True if access_type=="admin" else False,
+        }
+        res = self.api_client.post(UPDATE_ORGANIZATION_URI, payload)
+
+        if not res["success"]:
+            raise Exception(res.get("details", "Failed to update user access"))
+
+        return res.get("details", "User access updated successfully")
