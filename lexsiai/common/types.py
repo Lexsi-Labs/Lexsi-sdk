@@ -13,6 +13,7 @@ class ProjectConfig(TypedDict):
     handle_errors: Optional[bool]
     feature_encodings: Optional[dict]
     handle_data_imbalance: Optional[bool]
+    explainability_method: Optional[List[str]] = None
 
 class DataConfig(TypedDict):
     tags: List[str]
