@@ -4,7 +4,7 @@ from typing import Any
 from pydantic import BaseModel
 import json
 from IPython.display import IFrame, display, HTML
-from aryaxai.common.xai_uris import XAI_APP_URI
+from lexsiai.common.xai_uris import XAI_APP_URI
 
 DASHBOARD_TYPES = [
     "data_drift",

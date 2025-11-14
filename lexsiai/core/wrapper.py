@@ -12,9 +12,10 @@ from mistralai import Mistral
 from pydantic import BaseModel
 
 import requests
-from aryaxai.client.client import APIClient
-from aryaxai.common.environment import Environment
-from aryaxai.common.xai_uris import CASE_INFO_TEXT_URI, GENERATE_TEXT_CASE_STREAM_URI, GENERATE_TEXT_CASE_URI
+import httpx
+from lexsiai.client.client import APIClient
+from lexsiai.common.environment import Environment
+from lexsiai.common.xai_uris import CASE_INFO_TEXT_URI, GENERATE_TEXT_CASE_STREAM_URI, GENERATE_TEXT_CASE_URI
 
 from together import Together
 from groq import Groq
@@ -259,7 +260,7 @@ class Wrapper:
                     input_data = kwargs.get("messages")
                     # model_name = kwargs.get("model")
                     model_name = provider
-                elif method_name == "client.generate_text_case":  # AryaModels
+                elif method_name == "client.generate_text_case":  # LexsiModels
                     input_data = kwargs.get("prompt")
                     model_name = kwargs.get("model_name")
                 elif method_name == "client.run":
@@ -357,7 +358,7 @@ class Wrapper:
                     output_data = result.choices[0].message.content
                 elif method_name == "client.chat.complete_async": # Mistral Async
                     output_data = result.choices[0].message.content
-                elif method_name == "client.generate_text_case":  # AryaModels
+                elif method_name == "client.generate_text_case":  # LexsiModels
                     output_data = result.get("details", {}).get("result", {}).get("output")
                 elif method_name == "client.run":   # Replicate
                     output_data == result
@@ -389,21 +390,21 @@ class Wrapper:
                     output_data=output_data,
                     metadata={},
                 )
-
-                metadata = {}
-                input_tokens = 0
-                output_tokens = 0
-                if result.get("details", {}).get("result", {}).get("audit_trail", {}).get("tokens", {}).get("input_tokens", None):
-                    input_tokens = result.get("details", {}).get("result", {}).get("audit_trail", {}).get("tokens", {}).get("input_tokens")
-                elif result.get("details", {}).get("result", {}).get("audit_trail", {}).get("tokens", {}).get("input_decoded_length", None):
-                    input_tokens = result.get("details", {}).get("result", {}).get("audit_trail", {}).get("tokens", {}).get("input_decoded_length")
-                
-                if result.get("details", {}).get("result", {}).get("audit_trail", {}).get("tokens", {}).get("output_tokens", None):
-                    output_tokens = result.get("details", {}).get("result", {}).get("audit_trail", {}).get("tokens", {}).get("output_tokens")
-                elif result.get("details", {}).get("result", {}).get("audit_trail", {}).get("tokens", {}).get("output_decoded_length", None):
-                    output_tokens = result.get("details", {}).get("result", {}).get("audit_trail", {}).get("tokens", {}).get("output_decoded_length")
-                total_tokens = input_tokens + output_tokens
+                metadata = {}               
                 if method_name == "client.generate_text_case":
+                    
+                    input_tokens = 0
+                    output_tokens = 0
+                    if result.get("details", {}).get("result", {}).get("audit_trail", {}).get("tokens", {}).get("input_tokens", None):
+                        input_tokens = result.get("details", {}).get("result", {}).get("audit_trail", {}).get("tokens", {}).get("input_tokens")
+                    elif result.get("details", {}).get("result", {}).get("audit_trail", {}).get("tokens", {}).get("input_decoded_length", None):
+                        input_tokens = result.get("details", {}).get("result", {}).get("audit_trail", {}).get("tokens", {}).get("input_decoded_length")
+                    
+                    if result.get("details", {}).get("result", {}).get("audit_trail", {}).get("tokens", {}).get("output_tokens", None):
+                        output_tokens = result.get("details", {}).get("result", {}).get("audit_trail", {}).get("tokens", {}).get("output_tokens")
+                    elif result.get("details", {}).get("result", {}).get("audit_trail", {}).get("tokens", {}).get("output_decoded_length", None):
+                        output_tokens = result.get("details", {}).get("result", {}).get("audit_trail", {}).get("tokens", {}).get("output_decoded_length")
+                    total_tokens = input_tokens + output_tokens
                     metadata = {
                         "case_id":result.get("details",{}).get("case_id"),
                         "input_tokens": input_tokens,
@@ -423,7 +424,7 @@ class Wrapper:
             return wrapper
 
 
-class AryaModels:
+class LexsiModels:
     def __init__(self, project, api_client: APIClient):
         self.project = project
         self.api_client = api_client
@@ -457,41 +458,104 @@ class AryaModels:
             "stream": stream,
         }
         
+    #     if stream:
+    #         env = Environment()
+    #         url = env.get_base_url() + "/" + GENERATE_TEXT_CASE_STREAM_URI
+    #         with requests.post(
+    #             url,
+    #             headers={**self.api_client.headers, "Accept": "text/event-stream"},
+    #             json=payload,
+    #             stream=True,
+    #         ) as response:
+    #             response.raise_for_status()
+
+    #             buffer = ""
+    #             for line in response.iter_lines(decode_unicode=True):
+    #                 if not line or line.strip() == "[DONE]":
+    #                     continue
+
+    #                 if line.startswith("data:"):
+    #                     line = line[len("data:"):].strip()
+    #                 try:
+    #                     event = json.loads(line)
+    #                     text_piece = event.get("text", "")
+    #                 except Exception as e:
+    #                     text_piece = line
+    #                 buffer += text_piece
+    #                 print(text_piece, end="", flush=True)
+    #         response = {"details": {"result": {"output": buffer}}}
+    #         payload = {
+    #             "session_id": session_id,
+    #             "trace_id": trace_id,
+    #             "project_name": self.project.project_name
+    #         }
+    #         res = self.api_client.post(CASE_INFO_TEXT_URI, payload)
+    #         return res
+    #     else:
+    #         #return "Text case generation is not supported for this modality type"
+    #         res = self.api_client.post(GENERATE_TEXT_CASE_URI, payload)
+    #         if not res.get("success"):
+    #             raise Exception(res.get("details"))
+    #         return res
+
         if stream:
             env = Environment()
             url = env.get_base_url() + "/" + GENERATE_TEXT_CASE_STREAM_URI
-            with requests.post(
-                url,
-                headers={**self.api_client.headers, "Accept": "text/event-stream"},
-                json=payload,
-                stream=True,
-            ) as response:
-                response.raise_for_status()
 
-                buffer = ""
-                for line in response.iter_lines(decode_unicode=True):
-                    if not line or line.strip() == "[DONE]":
-                        continue
+            headers = {
+                **self.api_client.headers,
+                "Accept": "text/event-stream",
+            }
 
-                    if line.startswith("data:"):
-                        line = line[len("data:"):].strip()
-                    try:
-                        event = json.loads(line)
-                        text_piece = event.get("text", "")
-                    except Exception as e:
-                        text_piece = line
-                    buffer += text_piece
-                    print(text_piece, end="", flush=True)
-            response = {"details": {"result": {"output": buffer}}}
-            payload = {
+            # Use a client so we can enable HTTP/2 and connection reuse if needed
+            with httpx.Client(http2=True, timeout=None) as client:
+                with client.stream(
+                    "POST",
+                    url,
+                    headers=headers,
+                    json=payload,
+                ) as response:
+                    response.raise_for_status()
+
+                    buffer = ""
+
+                    for line in response.iter_lines():
+                        if not line:
+                            continue
+
+                        # httpx may return str or bytes depending on encoding
+                        if isinstance(line, bytes):
+                            line = line.decode("utf-8", errors="ignore")
+
+                        line = line.strip()
+                        if not line or line == "[DONE]":
+                            continue
+
+                        if line.startswith("data:"):
+                            line = line[len("data:"):].strip()
+
+                        try:
+                            event = json.loads(line)
+                            text_piece = event.get("text", "")
+                        except Exception:
+                            # Fallback: treat raw line as text content
+                            text_piece = line
+
+                        buffer += text_piece
+                        print(text_piece, end="", flush=True)
+
+            # After stream finishes, send the case info payload
+            session_id = payload.get("session_id")
+            trace_id = payload.get("trace_id")
+            payload_case = {
                 "session_id": session_id,
                 "trace_id": trace_id,
-                "project_name": self.project.project_name
+                "project_name": self.project.project_name,
             }
-            res = self.api_client.post(CASE_INFO_TEXT_URI, payload)
+            res = self.api_client.post(CASE_INFO_TEXT_URI, payload_case)
             return res
+
         else:
-            #return "Text case generation is not supported for this modality type"
             res = self.api_client.post(GENERATE_TEXT_CASE_URI, payload)
             if not res.get("success"):
                 raise Exception(res.get("details"))
@@ -594,12 +658,12 @@ def monitor(project, client, session_id=None):
         
         client.chat.create = wrapped_chat_create
 
-    elif isinstance(client, AryaModels):
+    elif isinstance(client, LexsiModels):
         client.generate_text_case = wrapper._get_wrapper(
             original_method=client.generate_text_case,
             method_name="client.generate_text_case",
             session_id=session_id,
-            provider="Arya"
+            provider='Lexsi'
         )
     else:
         raise Exception("Not a valid SDK to monitor")

@@ -1,4 +1,4 @@
-from aryaxai.common.xai_uris import (
+from lexsiai.common.xai_uris import (
     AVAILABLE_GUARDRAILS_URI,
     CONFIGURE_GUARDRAILS_URI,
     DELETE_GUARDRAILS_URI,
@@ -10,10 +10,10 @@ from aryaxai.common.xai_uris import (
     TRACES_URI,
     UPDATE_GUARDRAILS_STATUS_URI,
 )
-from aryaxai.core.project import Project
+from lexsiai.core.project import Project
 import pandas as pd
 
-from aryaxai.core.wrapper import  monitor
+from lexsiai.core.wrapper import  monitor
 
 
 class AgentProject(Project):

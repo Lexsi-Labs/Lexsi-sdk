@@ -59,10 +59,10 @@ jobs:
           # Slack channel id, channel name, or user id to post message.
           # See also: https://api.slack.com/methods/chat.postMessage#channels
           # You can pass in multiple channels to post to by providing a comma-delimited list of channel IDs.
-          channel-id: "aryaxai-sdk-release"
+          channel-id: "Lexsi-sdk-release"
           payload: |
             {
-              "text": "AryaXAI SDK release",
+              "text": "Lexsi SDK release",
               "blocks": [
                 {
                   "type": "section",
@@ -82,7 +82,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "*PyPI URL:* https://pypi.org/project/aryaxai/${{ steps.release_notes.outputs.TAG_NAME }}"
+                    "text": "*PyPI URL:* https://pypi.org/project/lexsiai/${{ steps.release_notes.outputs.TAG_NAME }}"
                   }
                 }
               ]

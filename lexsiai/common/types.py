@@ -4,6 +4,7 @@ from typing import List, Optional, TypedDict, Dict
 
 class ProjectConfig(TypedDict):
     project_type: str
+    model_name: Optional[str] = None
     unique_identifier: str
     true_label: str
     tag: str
@@ -13,6 +14,7 @@ class ProjectConfig(TypedDict):
     handle_errors: Optional[bool]
     feature_encodings: Optional[dict]
     handle_data_imbalance: Optional[bool]
+    explainability_method: Optional[List[str]] = None
 
 class DataConfig(TypedDict):
     tags: List[str]

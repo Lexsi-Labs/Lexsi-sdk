@@ -1,8 +1,8 @@
 from __future__ import annotations
 from pydantic import BaseModel
 from typing import Dict, List, Optional
-from aryaxai.client.client import APIClient
-from aryaxai.common.constants import (
+from lexsiai.client.client import APIClient
+from lexsiai.common.constants import (
     MODEL_TYPES,
     DATA_DRIFT_DASHBOARD_REQUIRED_FIELDS,
     DATA_DRIFT_STAT_TESTS,
@@ -12,7 +12,7 @@ from aryaxai.common.constants import (
     BIAS_MONITORING_DASHBOARD_REQUIRED_FIELDS,
     MODEL_PERF_DASHBOARD_REQUIRED_FIELDS,
 )
-from aryaxai.common.types import (
+from lexsiai.common.types import (
     DataConfig,
     ProjectConfig,
     SyntheticDataConfig,
@@ -22,9 +22,9 @@ from aryaxai.common.types import (
     GDriveConfig,
     SFTPConfig,
 )
-from aryaxai.common.utils import parse_datetime, parse_float, poll_events
-from aryaxai.common.validation import Validate
-from aryaxai.common.monitoring import (
+from lexsiai.common.utils import parse_datetime, parse_float, poll_events
+from lexsiai.common.validation import Validate
+from lexsiai.common.monitoring import (
     BiasMonitoringPayload,
     DataDriftPayload,
     ImageDashboardPayload,
@@ -34,7 +34,7 @@ from aryaxai.common.monitoring import (
 
 import pandas as pd
 
-from aryaxai.common.xai_uris import (
+from lexsiai.common.xai_uris import (
     ALL_DATA_FILE_URI,
     AVAILABLE_BATCH_SERVERS_URI,
     AVAILABLE_CUSTOM_SERVERS_URI,
@@ -131,16 +131,16 @@ from aryaxai.common.xai_uris import (
 )
 import json
 import io
-from aryaxai.core.alert import Alert
+from lexsiai.core.alert import Alert
 
-from aryaxai.core.case import Case, CaseText
-from aryaxai.core.model_summary import ModelSummary
+from lexsiai.core.case import Case, CaseText
+from lexsiai.core.model_summary import ModelSummary
 
-from aryaxai.core.dashboard import DASHBOARD_TYPES, Dashboard
+from lexsiai.core.dashboard import DASHBOARD_TYPES, Dashboard
 from datetime import datetime
 import re
-from aryaxai.core.utils import build_url, build_list_data_connector_url
-from aryaxai.core.synthetic import SyntheticDataTag, SyntheticModel, SyntheticPrompt
+from lexsiai.core.utils import build_url, build_list_data_connector_url
+from lexsiai.core.synthetic import SyntheticDataTag, SyntheticModel, SyntheticPrompt
 
 
 class Project(BaseModel):
@@ -722,7 +722,11 @@ class Project(BaseModel):
                         ),
                     },
                 }
+                if config.get("model_name"):
+                    payload["metadata"]["model_name"] = config.get("model_name")
 
+            if self.metadata.get("explainability_methods"):
+                payload["metadata"]["explainability_method"] = config.get("explainability_method")
             res = self.api_client.post(UPLOAD_DATA_WITH_CHECK_URI, payload)
 
             if not res["success"]:
@@ -1032,7 +1036,7 @@ class Project(BaseModel):
         explainability_method: Optional[list] = ["shap"],
         feature_list: Optional[list] = None,
     ):
-        """Uploads your custom model on AryaXAI
+        """Uploads your custom model on Lexsi.ai
 
         :param model_path: path of the model
         :param model_architecture: architecture of model ["machine_learning", "deep_learning"]
@@ -1133,7 +1137,7 @@ class Project(BaseModel):
         bucket_name: Optional[str] = None,
         file_path: Optional[str] = None,
     ):
-        """Uploads your custom model on AryaXAI
+        """Uploads your custom model on Lexsi.ai
 
         :param data_connector_name: name of the data connector
         :param model_architecture: architecture of model ["machine_learning", "deep_learning"]
@@ -2397,6 +2401,11 @@ class Project(BaseModel):
         model_type: str,
         data_config: Optional[DataConfig] = None,
         model_config: Optional[dict] = None,
+        tunning_config: Optional[dict] = None,
+        peft_config: Optional[dict] = None,
+        processor_config: Optional[dict] = None,
+        finetune_mode: Optional[dict] = None,
+        tunning_strategy: Optional[str] = None,
         instance_type: Optional[str] = None,
     ) -> str:
         """Train new model
@@ -2427,7 +2436,7 @@ class Project(BaseModel):
         if project_config == "Not Found":
             raise Exception("Upload files first")
 
-        available_models = self.available_models()
+        available_models, foundational_models = self.available_models()
 
         Validate.value_against_list("model_type", model_type, available_models)
 
@@ -2517,32 +2526,50 @@ class Project(BaseModel):
             model_parameters = model_params.get(model_name)
 
             if model_parameters:
-                for model_config_param in model_config.keys():
-                    model_param = model_parameters.get(model_config_param)
-                    model_config_param_value = model_config[model_config_param]
+                def validate_params(param_group, config_group):
+                    if config_group:
+                        for param_name, param_value in config_group.items():
+                            model_param = param_group.get(param_name)
+                            if not model_param:
+                            # raise Exception(
+                            #     f"Invalid model config for {model_type} \n {json.dumps(model_parameters)}"
+                            # )
+                                continue
 
-                    if not model_param:
-                        # raise Exception(
-                        #     f"Invalid model config for {model_type} \n {json.dumps(model_parameters)}"
-                        # )
-                        continue
+                            param_type = model_param["type"]
 
-                    if model_param["type"] == "select":
-                        Validate.value_against_list(
-                            model_config_param,
-                            model_config_param_value,
-                            model_param["value"],
-                        )
-                    elif model_param["type"] == "input":
-                        if model_config_param_value > model_param["max"]:
-                            raise Exception(
-                                f"{model_config_param} value cannot be greater than {model_param['max']}"
-                            )
-                        if model_config_param_value < model_param["min"]:
-                            raise Exception(
-                                f"{model_config_param} value cannot be less than {model_param['min']}"
-                            )
-
+                            if param_type == "select":
+                                Validate.value_against_list(
+                                    param_name, param_value, model_param["value"]
+                                )
+                            elif param_type == "input":
+                                if param_value > model_param["max"]:
+                                    raise Exception(
+                                        f"{param_name} value cannot be greater than {model_param['max']}"
+                                    )
+                                if param_value < model_param["min"]:
+                                    raise Exception(
+                                        f"{param_name} value cannot be less than {model_param['min']}"
+                                    )
+                if model_type in foundational_models:
+                    validate_params(model_parameters.get("model_params", {}), model_config)
+                    validate_params(model_parameters.get("tunning_params", {}), tunning_config)
+                    validate_params(model_parameters.get("processor_params", {}), processor_config)
+                    validate_params(model_parameters.get("peft_params", {}), peft_config)
+                else:
+                    validate_params(model_parameters, model_config)
+        if finetune_mode:
+            Validate.value_against_list(
+                "finetune_mode",
+                finetune_mode,
+                ["meta-learning", "sft"],
+            )
+        if tunning_strategy:
+            Validate.value_against_list(
+                "tunning_strategy",
+                tunning_strategy,
+                ["base-ft", "inference", "peft", "finetune"],
+            )
         data_conf = data_config or {}
 
         feature_exclude = [
@@ -2610,6 +2637,17 @@ class Project(BaseModel):
             ),
         }
 
+        if tunning_config:
+            payload["metadata"]["tunning_parameters"] = tunning_config
+        if peft_config:
+            payload["metadata"]["peft_parameters"] = peft_config
+        if processor_config:
+            payload["metadata"]["processor_parameters"] = processor_config
+        if finetune_mode:
+            payload["metadata"]["finetune_mode"] = finetune_mode
+        if tunning_strategy:
+            payload["metadata"]["tunning_strategy"] = tunning_strategy
+
         if instance_type:
             payload["instance_type"] = instance_type
 
@@ -2665,7 +2703,11 @@ class Project(BaseModel):
             map(lambda data: data["model_name"], res["details"]["available"])
         )
 
-        return available_models
+        available_models.extend(list(
+            map(lambda data: data["model_name"], res["details"]["foundation_models"])
+        ))
+
+        return available_models, res["details"]["foundation_models"]
 
     def activate_model(self, model_name: str) -> str:
         """Sets the model to active for the project

@@ -5,7 +5,7 @@ API_VERSION = os.getenv("XAI_API_VERSION", "v1")
 API_VERSION_V2 = "v2"
 
 # APP
-XAI_APP_URI = "https://beta.aryaxai.com"
+XAI_APP_URI = "https://console.lexsi.ai"
 
 # URIs of XAI base service starts here
 # Auth
@@ -189,3 +189,6 @@ GET_AVAILABLE_TEXT_MODELS_URI = f"{API_VERSION_V2}/users/get_available_text_mode
 QUANTIZE_MODELS_URI = f"{API_VERSION_V2}/ai-models/run_quantization_on_model"
 INITIALIZE_TEXT_MODEL_URI = f"{API_VERSION_V2}/users/initalize_text_model"
 TEXT_MODEL_INFERENCE_SETTINGS_URI = f"{API_VERSION_V2}/ai-models/update_inference_settings"
+RUN_GUARDRAILS_PARALLEL_URI=f"guardrails/run_guardrail_parallel"
+RUN_CHAT_COMPLETION = f"gateway/v1/chat/completions" 
+RUN_IMAGE_GENERATION = f"gateway/v1/images/generations"

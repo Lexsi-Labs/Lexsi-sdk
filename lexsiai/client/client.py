@@ -1,12 +1,13 @@
 import requests
-from aryaxai.common.xai_uris import LOGIN_URI
+import httpx
+from lexsiai.common.xai_uris import LOGIN_URI
 import jwt
 from pydantic import BaseModel
 import json
 
 
 class APIClient(BaseModel):
-    """API client to interact with Arya XAI services"""
+    """API client to interact with Lexsi Ai services"""
 
     debug: bool = False
     base_url: str = ""
@@ -67,7 +68,7 @@ class APIClient(BaseModel):
             ).json()
             self.update_headers(response["access_token"])
 
-    def base_request(self, method, uri, payload={}, files=None, stream=False):
+    def base_request(self, method, uri, payload={}, files=None):
         """makes request to xai base service
 
         :param uri: api uri
@@ -77,14 +78,26 @@ class APIClient(BaseModel):
         """
         url = f"{self.base_url}/{uri}"
         try:
-            response = requests.request(
-                method,
-                url,
-                headers=self.headers,
-                json=payload,
-                files=files,
-                stream=stream,
-            )
+            # response = requests.request(
+            #     method,
+            #     url,
+            #     headers=self.headers,
+            #     json=payload,
+            #     files=files,
+            #     stream=stream,
+            # )
+
+            with httpx.Client(http2=True, timeout=None) as client:
+                response = client.request(
+                    method=method,
+                    url=url,
+                    headers=self.headers,
+                    json=payload,
+                    files=files or None,
+                )
+                response.raise_for_status()
+                return response
+
             res = None
             try:
                 res = response.json().get("details") or response.json()
@@ -130,22 +143,41 @@ class APIClient(BaseModel):
 
         return response.json()
 
+    # def stream(self, uri):
+    #     """makes streaming request to xai base service
+
+    #     :param uri: api uri
+    #     :param payload: api payload, defaults to {}
+    #     :raises Exception: Request exception
+    #     :return: JSON response
+    #     """
+
+    #     self.refresh_bearer_token()
+    #     response = self.base_request("GET", uri, stream=True)
+    #     for res in response.iter_lines(decode_unicode=True):
+    #         if res:
+    #             if res.startswith("data: "):
+    #                 res = res.split("data: ")[1]
+    #             yield json.loads(res)
+
     def stream(self, uri):
-        """makes streaming request to xai base service
-
-        :param uri: api uri
-        :param payload: api payload, defaults to {}
-        :raises Exception: Request exception
-        :return: JSON response
-        """
-
+        """Server-Sent Events / line-streaming endpoint."""
         self.refresh_bearer_token()
-        response = self.base_request("GET", uri, stream=True)
-        for res in response.iter_lines(decode_unicode=True):
-            if res:
-                if res.startswith("data: "):
-                    res = res.split("data: ")[1]
-                yield json.loads(res)
+        url = f"{self.base_url}/{uri}"
+        # if SSE, this header helps
+        headers = {**self.headers, "Accept": "text/event-stream"}
+
+        with httpx.Client(http2=True, timeout=None) as client:
+            # streaming MUST be consumed inside the context
+            with client.stream("GET", url, headers=headers) as response:
+                response.raise_for_status()
+                for line in response.iter_lines():  # no decode_unicode arg in httpx
+                    if not line:
+                        continue
+                    # httpx.iter_lines() yields str lines
+                    if line.startswith("data: "):      # typical SSE prefix
+                        line = line[6:]
+                    yield json.loads(line)
 
     def file(self, uri, files):
         """makes multipart request to send files
