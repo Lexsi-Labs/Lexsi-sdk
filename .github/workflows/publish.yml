@@ -58,7 +58,7 @@ jobs:
         id: slack
         uses: slackapi/slack-github-action@v1.24.0
         with:
-          channel-id: "lexsi-sdk-release"
+          channel-id: "lexsiai-sdk-release"
           payload: |
             {
               "text": "Lexsi SDK release",
