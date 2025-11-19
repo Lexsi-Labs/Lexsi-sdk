@@ -26,3 +26,4 @@ _templates
 
 # package version file
 lexsiai/version.py
+/workingtest/

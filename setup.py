@@ -14,8 +14,8 @@ setup(
     description="Full stack ML Observability with Lexsi.ai",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    keywords="lexsiai, ML observability, observability, machine learning",
-    license="MIT",
+    keywords="lexsi, lexsiai, ML observability, observability, machine learning",
+    license="Lexsi Labs Source Available License (LSAL) v1.0",
     url="https://docs.lexsi.ai",
     project_urls={
         "Homepage": "https://docs.lexsi.ai",
