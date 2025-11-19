@@ -25,4 +25,4 @@ jobs:
       - name: Create new patch release
         run: .github/scripts/release.py
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
