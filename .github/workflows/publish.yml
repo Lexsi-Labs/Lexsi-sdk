@@ -9,7 +9,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-
+    env:
+      SETUPTOOLS_SCM_PRETEND_VERSION: ${{ github.event.release.tag_name }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
