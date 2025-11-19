@@ -1,9 +1,41 @@
 [build-system]
-requires = ["setuptools>=68", "setuptools_scm>=8", "wheel"]
+requires = ["setuptools>=68", "setuptools_scm[toml]>=8", "wheel"]
 build-backend = "setuptools.build_meta"
 
+[project]
+name = "lexsiai"
+description = "Full stack ML Observability with Lexsi.ai"
+readme = "readme.md"
+requires-python = ">=3.8"
+dynamic = ["version", "dependencies"]  # 👈 version comes ONLY from setuptools-scm
+
+authors = [
+  { name = "Lexsi Labs", email = "support@lexsi.ai" }
+]
+
+keywords = ["lexsi", "lexsiai", "ML observability", "observability", "machine learning"]
+
+license = { text = "Lexsi Labs Source Available License (LSAL) v1.0" }
+
+classifiers = [
+  "Intended Audience :: Developers",
+  "Intended Audience :: Science/Research",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Development Status :: 3 - Alpha",
+  "Topic :: Scientific/Engineering :: Information Analysis",
+]
+
+[tool.setuptools.dynamic]
+dependencies = { file = ["requirements.txt"] }
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["lexsiai*"]
+
 [tool.setuptools_scm]
-# e.g., tags: 0.1.2 or v0.1.2
 version_scheme = "guess-next-dev"
 local_scheme = "no-local-version"
 write_to = "lexsiai/version.py"
