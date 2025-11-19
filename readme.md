@@ -1,4 +1,4 @@
-## Lexsi Ai: ML Observability for mission-critical ‘AI’
+## [Lexsi ai](https://lexsi.ai): ML Observability for mission-critical ‘AI’
 
 Lexsi Ai is a full-stack ML Observability platform that integrates with your MLOPs platform to Explain, Monitor, Audit and Improve your ML models.
 
