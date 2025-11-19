@@ -44,5 +44,6 @@ In this section, you can review the examples of implementation of Lexsi Ai-SDK.
 1. [Full features overview of Lexsi Ai](https://colab.research.google.com/drive/1Dy5eL-FJVnFV0K5yOfGGVoAmiS_Icaz3?usp=sharing)
 2. Using Lexsi Ai in Loan Underwriting (Coming Soon)
 
+
 ### Contribution guidelines:
 At Lexsi Ai, we're passionate about open source and value community contributions! Explore our contribution guide for insights into the development workflow and Lexsi Ai library internals. For bug reports or feature requests, head to GitHub Issues or reach out to us at [support@Lexsi Ai.com](support@Lexsi Ai.com).
