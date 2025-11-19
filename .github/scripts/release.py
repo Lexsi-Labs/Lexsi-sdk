@@ -5,20 +5,16 @@ default_version = "0.1.0"
 
 def get_last_version() -> str:
     """Return the version number of the last release."""
-    tag_info = (
-        subprocess.run(
-            "gh release list | grep -E -v '^.+\\.dev\\d*' | head -n 1",
-            shell=True,
-            check=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
-        )
-        .stdout.decode("utf8")
-        .strip()
+    result = subprocess.run(
+        ["gh", "release", "list", "--limit", "1", "--json", "tagName", "--jq", ".[0].tagName"],
+        check=False,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
     )
-    tag_fields = tag_info.split('\t')
-    tag = tag_fields[2] if len(tag_fields) > 2 else default_version
-
+    tag = result.stdout.strip()
+    if not tag:
+        return default_version
     return tag
 
 
