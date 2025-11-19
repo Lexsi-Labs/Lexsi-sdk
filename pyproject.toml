@@ -36,6 +36,6 @@ where = ["."]
 include = ["lexsiai*"]
 
 [tool.setuptools_scm]
-version_scheme = "guess-next-dev"
+version_scheme = "no-guess-dev"
 local_scheme = "no-local-version"
 write_to = "lexsiai/version.py"
