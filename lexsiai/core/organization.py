@@ -528,6 +528,8 @@ class Organization(BaseModel):
         :param access_type: access type to be given to user (admin | write | read)
         :return: response
         """
+        if access_type not in ["admin", "user"]:
+            raise ValueError("access_type must be either 'admin' or 'user'")
         payload = {
             "organization_user_email": user_email,
             "organization_id": self.organization_id,
