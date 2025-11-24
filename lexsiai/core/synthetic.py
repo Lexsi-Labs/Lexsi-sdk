@@ -18,6 +18,7 @@ from lexsiai.common.xai_uris import (
 
 
 class SyntheticDataTag(BaseModel):
+    """Representation of a generated synthetic data tag and its quality."""
     api_client: APIClient
     project_name: str
     project: Any
@@ -36,6 +37,7 @@ class SyntheticDataTag(BaseModel):
     model_config = ConfigDict(protected_namespaces=())
 
     def __init__(self, **kwargs):
+        """Bind API client reference for follow-up requests."""
         super().__init__(**kwargs)
         self.api_client = kwargs.get("api_client")
 
@@ -57,13 +59,16 @@ class SyntheticDataTag(BaseModel):
         return self.metadata
 
     def __print__(self) -> str:
+        """User-friendly string representation."""
         created_at = pretty_date(self.created_at)
         return f"SyntheticDataTag(model_name={self.model_name}, tag={self.tag}, created_at={created_at})"
 
     def __str__(self) -> str:
+        """Return printable representation."""
         return self.__print__()
 
     def __repr__(self) -> str:
+        """Return developer-friendly representation."""
         return self.__print__()
 
 
@@ -93,6 +98,7 @@ class SyntheticModel(BaseModel):
     model_config = ConfigDict(protected_namespaces=())
 
     def __init__(self, **kwargs):
+        """Bind API client reference for this synthetic model."""
         super().__init__(**kwargs)
         self.api_client = kwargs.get("api_client")
 
@@ -286,18 +292,22 @@ class SyntheticModel(BaseModel):
         return pd.DataFrame(res["details"]["scores"], index=[0])
 
     def __print__(self) -> str:
+        """User-friendly string representation."""
         created_at = pretty_date(self.created_at)
 
         return f"SyntheticModel(model_name={self.model_name}, status={self.status}, created_by={self.created_by}, created_at={created_at})"
 
     def __str__(self) -> str:
+        """Return printable representation."""
         return self.__print__()
 
     def __repr__(self) -> str:
+        """Return developer-friendly representation."""
         return self.__print__()
 
 
 class SyntheticPrompt(BaseModel):
+    """Metadata container for a reusable synthetic prompt definition."""
     api_client: APIClient
     project: Any
 
@@ -313,6 +323,7 @@ class SyntheticPrompt(BaseModel):
     updated_at: str
 
     def __init__(self, **kwargs):
+        """Bind API client reference for prompt actions."""
         super().__init__(**kwargs)
         self.api_client = kwargs.get("api_client")
 
@@ -361,13 +372,16 @@ class SyntheticPrompt(BaseModel):
     """
 
     def __print__(self) -> str:
+        """User-friendly string representation."""
         created_at = pretty_date(self.created_at)
         updated_at = pretty_date(self.updated_at)
 
         return f"SyntheticPrompt(prompt_name={self.prompt_name}, prompt_id={self.prompt_id}, status={self.status}, created_by={self.created_by}, created_at={created_at}, updated_at={updated_at})"
 
     def __str__(self) -> str:
+        """Return printable representation."""
         return self.__print__()
 
     def __repr__(self) -> str:
+        """Return developer-friendly representation."""
         return self.__print__()

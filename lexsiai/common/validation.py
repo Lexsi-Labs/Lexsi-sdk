@@ -3,13 +3,17 @@ from typing import List, Optional, Callable
 
 
 class Validate:
+    """Lightweight validation helpers for SDK inputs."""
+
     @staticmethod
     def string(field_name: str, value: str):
+        """Ensure a non-empty string was provided for the given field."""
         if not (value and value.strip()):
             raise Exception(f"{field_name} is not valid, cannot be empty")
 
     @staticmethod
     def list(field_name: str, value: List):
+        """Ensure a list value is provided and not empty."""
         if not value:
             raise Exception(f"{field_name} is required, cannot be empty list")
 
@@ -20,6 +24,7 @@ class Validate:
         valid_list: List,
         handle_error: Optional[Callable] = None,
     ):
+        """Validate whether a value (or list of values) exists in a whitelist."""
         try:
             if isinstance(value, str):
                 if value not in valid_list:
@@ -40,6 +45,7 @@ class Validate:
 
     @staticmethod
     def check_for_missing_keys(value: dict, required_keys: list):
+        """Validate that required keys are present in a dict."""
         missing_keys = [key for key in required_keys if key not in value]
 
         if missing_keys:
@@ -47,6 +53,7 @@ class Validate:
 
     @staticmethod
     def validate_date_feature_val(payload: dict, all_datetime_features: List[str]):
+        """Validate date feature payload shape and values."""
         if payload.get("date_feature", None):
             if payload["date_feature"] not in all_datetime_features:
                 raise Exception(

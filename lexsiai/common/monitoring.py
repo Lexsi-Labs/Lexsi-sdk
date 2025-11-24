@@ -2,11 +2,15 @@ from typing import List, Optional, TypedDict
 
 
 class ImageDashboardPayload(TypedDict):
+    """Payload schema for image monitoring dashboards."""
+
     base_line_tag: List[str]
     current_tag: List[str]
 
 
 class DataDriftPayload(TypedDict):
+    """Payload schema for data drift dashboards."""
+
     project_name: Optional[str]
     base_line_tag: List[str]
     current_tag: List[str]
@@ -22,6 +26,8 @@ class DataDriftPayload(TypedDict):
 
 
 class TargetDriftPayload(TypedDict):
+    """Payload schema for target drift dashboards."""
+
     project_name: str
     base_line_tag: List[str]
     current_tag: List[str]
@@ -40,6 +46,8 @@ class TargetDriftPayload(TypedDict):
 
 
 class BiasMonitoringPayload(TypedDict):
+    """Payload schema for bias monitoring dashboards."""
+
     project_name: str
     base_line_tag: List[str]
 
@@ -55,6 +63,8 @@ class BiasMonitoringPayload(TypedDict):
 
 
 class ModelPerformancePayload(TypedDict):
+    """Payload schema for model performance dashboards."""
+
     project_name: str
     base_line_tag: List[str]
     current_tag: List[str]

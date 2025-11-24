@@ -1,6 +1,8 @@
 from typing import List, Optional, TypedDict
     
 class DataDriftTriggerPayload(TypedDict):
+    """Payload schema for creating data drift alert triggers."""
+
     project_name: str
     trigger_name: str
     trigger_type: str
@@ -24,6 +26,8 @@ class DataDriftTriggerPayload(TypedDict):
     
     
 class TargetDriftTriggerPayload(TypedDict):
+    """Payload schema for creating target drift alert triggers."""
+
     project_name: str
     trigger_name: str
     trigger_type: str
@@ -48,6 +52,8 @@ class TargetDriftTriggerPayload(TypedDict):
 
     
 class ModelPerfTriggerPayload(TypedDict):
+    """Payload schema for creating model performance alert triggers."""
+
     project_name: str
     trigger_name: str
     trigger_type: str

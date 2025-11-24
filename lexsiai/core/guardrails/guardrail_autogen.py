@@ -13,6 +13,7 @@ from .guard_template import Guard
 
 
 class GuardrailRunResult(Dict[str, Any]):
+    """Dictionary describing the outcome of a guardrail execution."""
     pass  # TypedDict not needed for runtime, but can add if desired
 
 class GuardrailSupervisor:
@@ -24,6 +25,7 @@ class GuardrailSupervisor:
                  project: Optional[Project] = None,
                  llm: Optional[Any] = None, 
                  ):
+        """Initialize supervisor with guard specifications and runtime context."""
         if apply_to not in ['input', 'output', 'both']:
             raise ValueError("apply_to must be one of 'input', 'output', 'both'")
         self.apply_to = apply_to
@@ -50,6 +52,7 @@ class GuardrailSupervisor:
         action: str,
         guards: List[Dict[str, Any]],
     ) -> str:
+        """Run configured guards sequentially over provided content."""
         if not guards:
             return content
 
@@ -78,6 +81,7 @@ class GuardrailSupervisor:
         content_type: str,
         action: str,
     ) -> str:
+        """Apply a guardrail with optional retries and sanitization."""
         current_content = content
         retry_count = 0
 
@@ -112,6 +116,7 @@ class GuardrailSupervisor:
             )
 
     def _call_run_guardrail(self, input_data: str, guard: Dict[str, Any], content_type: str) -> GuardrailRunResult:
+        """Call guardrail API for a single guard specification."""
         start_time = datetime.now()
         try:
             body = {"input_data": input_data, "guard": guard}
@@ -157,6 +162,7 @@ class GuardrailSupervisor:
         content_type: str,
         guard_name: str,
     ) -> str:
+        """Handle guardrail outcome according to configured action."""
         validation_passed = bool(run_result.get("validation_passed", True))
         detected_issue = not validation_passed or not run_result.get("success", True)
         sanitized_output = run_result.get("sanitized_output")
@@ -190,6 +196,7 @@ class GuardrailSupervisor:
 
     @staticmethod
     def _safe_str(value: Any) -> str:
+        """Safely stringify values for logging/telemetry."""
         try:
             if isinstance(value, (str, int, float, bool)) or value is None:
                 s = str(value)
@@ -230,11 +237,8 @@ class GuardrailSupervisor:
         instrumentation to intercept their message generation or run methods.
         It handles different agent types like `AssistantAgent` and `ConversableAgent`.
 
-        Args:
-            agents: A list of agents to be instrumented.
-        
-        Returns:
-            The list of instrumented agents.
+        :param agents: List of agents to be instrumented.
+        :return: The list of instrumented agents.
         """
         for agent in agents:
             # It's important to check for the more specific subclass first.
@@ -290,6 +294,7 @@ class GuardrailSupervisor:
         # print(f"Guardrail running on {agent.__class__.__name__}")
 
         async def wrapped_run(*args, **kwargs):
+            """Execute the agent run while applying guardrail checks."""
             # print("Guardrail intercepted run method")
             
             # Get the current span and context

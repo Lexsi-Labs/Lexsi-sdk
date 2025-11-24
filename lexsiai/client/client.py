@@ -16,6 +16,7 @@ class APIClient(BaseModel):
     headers: dict = {}
 
     def __init__(self, **kwargs):
+        """Initialize the API client with provided configuration."""
         super().__init__(**kwargs)
 
     def get_auth_token(self) -> str:
@@ -56,6 +57,7 @@ class APIClient(BaseModel):
         }
 
     def refresh_bearer_token(self):
+        """Refresh the bearer token if the current token is expired."""
         try:
             if self.auth_token:
                 jwt.decode(
@@ -113,6 +115,7 @@ class APIClient(BaseModel):
             raise e
 
     def request(self, method, uri, payload):
+        """Refresh credentials and dispatch a base request."""
         self.refresh_bearer_token()
         response = self.base_request(method, uri, payload)
         return response

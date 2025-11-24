@@ -289,7 +289,18 @@ class TextProject(Project):
         data: str | pd.DataFrame,
         tag: str,
     ) -> str:
+        """Upload text data for the current project.
+
+        :param data: File path or DataFrame containing rows to upload.
+        :param tag: Tag to associate with the uploaded data.
+        :return: Server response details.
+        """
         def build_upload_data(data):
+            """Prepare file payload from path or DataFrame.
+
+            :param data: File path or DataFrame to convert.
+            :return: Tuple or file handle suitable for multipart upload.
+            """
             if isinstance(data, str):
                 file = open(data, "rb")
                 return file
@@ -304,6 +315,13 @@ class TextProject(Project):
                 raise Exception("Invalid Data Type")
 
         def upload_file_and_return_path(data, data_type, tag=None) -> str:
+            """Upload a file and return the stored path.
+
+            :param data: Data payload (path or DataFrame).
+            :param data_type: Type of data being uploaded.
+            :param tag: Optional tag.
+            :return: File path stored on the server.
+            """
             files = {"in_file": build_upload_data(data)}
             res = self.api_client.file(
                 f"{UPLOAD_DATA_FILE_URI}?project_name={self.project_name}&data_type={data_type}&tag={tag}",
@@ -340,7 +358,20 @@ class TextProject(Project):
         file_path: Optional[str] = None,
         dataset_name: Optional[str] = None
     ):
+        """Upload text data stored in a configured data connector.
+
+        :param data_connector_name: Name of the configured connector.
+        :param tag: Tag to associate with uploaded data.
+        :param bucket_name: Bucket/location name when required by connector.
+        :param file_path: File path within the connector store.
+        :param dataset_name: Optional dataset name to persist.
+        :return: Server response details.
+        """
         def get_connector() -> str | pd.DataFrame:
+            """Fetch connector metadata for the requested link service.
+
+            :return: DataFrame of connector info or error string.
+            """
             url = build_list_data_connector_url(
                 LIST_DATA_CONNECTORS, self.project_name, self.organization_id
             )
@@ -372,6 +403,13 @@ class TextProject(Project):
             return connectors
 
         def upload_file_and_return_path(file_path, data_type, tag=None) -> str:
+            """Upload a file from connector storage and return stored path.
+
+            :param file_path: Path within the connector store.
+            :param data_type: Type of data being uploaded.
+            :param tag: Optional tag for the upload.
+            :return: Stored file path returned by the API.
+            """
             if not self.project_name:
                 return "Missing Project Name"
             query_params = f"project_name={self.project_name}&link_service_name={data_connector_name}&data_type={data_type}&tag={tag}&bucket_name={bucket_name}&file_path={file_path}&dataset_name={dataset_name}"
@@ -488,6 +526,10 @@ class TextProject(Project):
         #                     yield chunk_data
 
         def stream_response() -> Iterator[dict]:
+            """Stream chat completion responses as they arrive.
+
+            :yield: Parsed JSON chunks from the streaming endpoint.
+            """
             url = f"{self.api_client.base_url}/{RUN_CHAT_COMPLETION}"
 
             with httpx.Client(http2=True, timeout=None) as client:

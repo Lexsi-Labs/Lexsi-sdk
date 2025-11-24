@@ -7,6 +7,8 @@ from IPython.display import SVG, display
 
 
 class ModelSummary(BaseModel):
+    """Container for model metadata and visualization helpers."""
+
     project_name: str
     project_type: str
     unique_identifier: str
@@ -22,6 +24,7 @@ class ModelSummary(BaseModel):
     api_client: APIClient
 
     def __init__(self, **kwargs):
+        """Store API client reference for subsequent calls."""
         super().__init__(**kwargs)
         self.api_client = kwargs.get("api_client")
 

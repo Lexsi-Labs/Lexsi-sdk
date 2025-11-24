@@ -12,6 +12,7 @@ from PIL import Image
 
 
 class Case(BaseModel):
+    """Represents a single explainability case with plotting helpers."""
     status: str
     true_value: str | int
     pred_value: str | int
@@ -44,6 +45,7 @@ class Case(BaseModel):
     api_client: APIClient
 
     def __init__(self, **kwargs):
+        """Capture API client used to fetch additional explainability data."""
         super().__init__(**kwargs)
         self.api_client = kwargs.get("api_client")
 
@@ -257,6 +259,7 @@ class Case(BaseModel):
         return similar_cases_df
 
     def explainability_gradcam(self):
+        """Visualize Grad-CAM results for image explanations."""
         if not self.image_data.get("gradcam", None):
             return "No Gradcam method found for this case"
         fig = go.Figure()
@@ -318,6 +321,7 @@ class Case(BaseModel):
         fig.show(config={"displaylogo": False})
 
     def explainability_shap(self):
+        """Render SHAP attribution plot for image cases."""
         if not self.image_data.get("shap", None):
             return "No Shap method found for this case"
         fig = go.Figure()
@@ -346,6 +350,7 @@ class Case(BaseModel):
         fig.show(config={"displaylogo": False})
 
     def explainability_lime(self):
+        """Render LIME attribution plot for image cases."""
         if not self.image_data.get("lime", None):
             return "No Lime method found for this case"
         fig = go.Figure()
@@ -374,6 +379,7 @@ class Case(BaseModel):
         fig.show(config={"displaylogo": False})
 
     def explainability_integrated_gradients(self):
+        """Render Integrated Gradients attribution plots."""
         if not self.image_data.get("integrated_gradients", None):
             return "No Integrated Gradients method found for this case"
         fig = go.Figure()
@@ -465,6 +471,7 @@ class Case(BaseModel):
         fig.show(config={"displaylogo": False})
 
     def alerts_trail(self, page_num: Optional[int] = 1, days: Optional[int] = 7):
+        """Fetch alerts for this case over the given window."""
         if days==7:
             return pd.DataFrame(self.audit_trail.get("alerts", {}))
         resp = self.api_client.post(f"{GET_TRIGGERS_DAYS_URI}?project_name={self.project_name}&page_num={page_num}&days={days}")
@@ -474,9 +481,11 @@ class Case(BaseModel):
             return "No alerts found."
 
     def audit(self):
+        """Return stored audit trail."""
         return self.audit_trail
       
     def feature_importance(self, feature: str):
+        """Return feature importance values for a specific feature."""
         if self.shap_feature_importance:
             return self.shap_feature_importance.get(feature, {})
         elif self.lime_feature_importance:
@@ -487,6 +496,7 @@ class Case(BaseModel):
             return "No Feature Importance found for the case"
         
     def explainability_summary(self):
+        """Request or return cached explainability summary text."""
         if self.data_id and not self.summary:
             payload = {
                 "project_name": self.project_name,
@@ -502,6 +512,7 @@ class Case(BaseModel):
         return self.summary
 
 class CaseText(BaseModel):
+    """Represents text explainability output for a generated case."""
     model_name: str
     status: str
     prompt: str
@@ -574,6 +585,7 @@ class CaseText(BaseModel):
         fig.show(config={"displaylogo": False})
 
     def network_graph(self):
+        """Decode and return a base64-encoded network graph image."""
         network_graph_data = self.explainability.get("network_graph", {})
         if not network_graph_data:
             return "No Network graph found for this case"
@@ -587,6 +599,7 @@ class CaseText(BaseModel):
             return None
         
     def token_attribution_graph(self):
+        """Decode and return a base64-encoded token attribution graph."""
         relevance_data = self.explainability.get("relevance", {})
         if not relevance_data:
             return "No Token Attribution graph found for this case"
@@ -600,5 +613,6 @@ class CaseText(BaseModel):
             return None
         
     def audit(self):
+        """Return audit details for the text case."""
         return self.audit_trail
     
