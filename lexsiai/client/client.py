@@ -97,8 +97,8 @@ class APIClient(BaseModel):
                     json=payload,
                     files=files or None,
                 )
-                response.raise_for_status()
-                return response
+                #response.raise_for_status()
+                #return response
 
             res = None
             try:
