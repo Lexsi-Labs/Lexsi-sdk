@@ -31,6 +31,7 @@ class Workspace(BaseModel):
     api_client: APIClient
 
     def __init__(self, **kwargs):
+        """Attach API client for workspace operations."""
         super().__init__(**kwargs)
         self.api_client = kwargs.get("api_client")
 
@@ -312,10 +313,13 @@ class Workspace(BaseModel):
         return "Server Updated"
 
     def __print__(self) -> str:
+        """User-friendly string representation."""
         return f"Workspace(user_workspace_name='{self.user_workspace_name}', created_by='{self.created_by}', created_at='{self.created_at}')"
 
     def __str__(self) -> str:
+        """Return printable representation."""
         return self.__print__()
 
     def __repr__(self) -> str:
+        """Return developer-friendly representation."""
         return self.__print__()

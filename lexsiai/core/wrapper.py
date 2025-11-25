@@ -27,11 +27,28 @@ import botocore
 
 
 class Wrapper:
+    """Wraps SDK clients to add Lexsi tracing, logging, and guardrails."""
+
     def __init__(self, project_name, api_client):
+        """Store project context for downstream wrapper calls.
+
+        :param project_name: Name of the Lexsi project.
+        :param api_client: Initialized API client used for telemetry calls.
+        """
         self.project_name = project_name
         self.api_client = api_client
 
     def add_message(self, session_id, trace_id, input_data, output_data, metadata, duration):
+        """Persist a message with timing metadata to Lexsi tracing.
+
+        :param session_id: Session identifier returned by tracing APIs.
+        :param trace_id: Trace identifier for the current LLM call chain.
+        :param input_data: Raw input payload sent to the model.
+        :param output_data: Model output payload.
+        :param metadata: Any additional metadata to persist.
+        :param duration: End-to-end latency for the operation.
+        :return: API response from the tracing endpoint.
+        """
         payload = {
             "project_name": self.project_name,
             "session_id": session_id,
@@ -48,6 +65,17 @@ class Wrapper:
             raise e
     
     async def async_add_trace_details(self, session_id, trace_id, component, input_data, metadata, output_data=None, function_to_run=None):
+        """Create an async trace entry, optionally executing and recording a coroutine.
+
+        :param session_id: Session identifier returned by tracing APIs.
+        :param trace_id: Trace identifier for the current call.
+        :param component: Logical component name (Input, LLM, Guardrails, etc.).
+        :param input_data: Payload being traced.
+        :param metadata: Extra metadata to attach to the trace.
+        :param output_data: Optional output to store; computed if omitted.
+        :param function_to_run: Awaitable to execute and trace around.
+        :return: API response or the result of the wrapped coroutine.
+        """
         start_time = time.perf_counter()
         result = None
         if function_to_run:
@@ -79,6 +107,18 @@ class Wrapper:
         return res
 
     def add_trace_details(self, session_id, trace_id, component, input_data, metadata, is_grok = False, output_data=None, function_to_run=None):
+        """Create a trace entry for synchronous flows, executing optional callable.
+
+        :param session_id: Session identifier returned by tracing APIs.
+        :param trace_id: Trace identifier for the current call.
+        :param component: Logical component name (Input, LLM, Guardrails, etc.).
+        :param input_data: Payload being traced.
+        :param metadata: Extra metadata to attach to the trace.
+        :param is_grok: Whether the result is from Grok and needs special handling.
+        :param output_data: Optional output to store; computed if omitted.
+        :param function_to_run: Callable to execute and trace around.
+        :return: API response or the result of the wrapped callable.
+        """
         start_time = time.perf_counter()
         result = None
         if function_to_run:
@@ -128,6 +168,15 @@ class Wrapper:
         return res
 
     def run_guardrails(self, input_data, trace_id, session_id, model_name, apply_on):
+        """Invoke server-side guardrails for the provided input/output payload.
+
+        :param input_data: Payload to validate with guardrails.
+        :param trace_id: Trace identifier for this run.
+        :param session_id: Session identifier for this run.
+        :param model_name: Model identifier to supply to guardrails.
+        :param apply_on: Whether guardrails apply to input or output.
+        :return: API response from guardrails execution.
+        """
         payload = {
             "trace_id": trace_id,
             "session_id": session_id,
@@ -143,9 +192,20 @@ class Wrapper:
             raise
 
     def _get_wrapper(self, original_method: Callable, method_name: str, provider: str, session_id: Optional[str] = None, chat=None , **extra_kwargs) -> Callable:
+        """Return a callable that wraps LLM SDK methods with Lexsi telemetry.
+
+        :param original_method: SDK method being wrapped.
+        :param method_name: Identifier describing the wrapped method.
+        :param provider: Name of the model provider (OpenAI, Anthropic, etc.).
+        :param session_id: Optional session id to reuse.
+        :param chat: Optional chat object for Grok/XAI.
+        :param extra_kwargs: Extra kwargs to inject into wrapped calls.
+        :return: Wrapped callable preserving the original signature.
+        """
         if inspect.iscoroutinefunction(original_method):
             @functools.wraps(original_method)
             async def async_wrapper(*args, **kwargs):
+                """Async wrapper around SDK method to add tracing and guardrails."""
                 total_start_time = time.perf_counter()
                 trace_id = str(uuid.uuid4())
                 # model_name = kwargs.get("model")
@@ -228,6 +288,7 @@ class Wrapper:
         else:
             @functools.wraps(original_method)
             def wrapper(*args, **kwargs):
+                """Sync wrapper around SDK method to add tracing and guardrails."""
                 total_start_time = time.perf_counter()
                 trace_id = str(uuid.uuid4())
                 model_name = None
@@ -425,7 +486,14 @@ class Wrapper:
 
 
 class LexsiModels:
+    """Convenience wrapper for Lexsi hosted text models."""
+
     def __init__(self, project, api_client: APIClient):
+        """Bind project and API client for model operations.
+
+        :param project: Project instance owning the model.
+        :param api_client: API client with auth configured.
+        """
         self.project = project
         self.api_client = api_client
 
@@ -443,6 +511,21 @@ class LexsiModels:
         max_tokens: int = 500,
         stream: bool = False,
     ):
+        """Generate an explainable text case using a hosted Lexsi model.
+
+        :param model_name: Name of the deployed text model.
+        :param prompt: Input prompt for generation.
+        :param instance_type: Dedicated instance type (if applicable).
+        :param serverless_instance_type: Serverless instance flavor.
+        :param explainability_method: Methods to compute explanations with.
+        :param explain_model: Whether to explain the model behavior.
+        :param trace_id: Optional existing trace id.
+        :param session_id: Optional existing session id.
+        :param min_tokens: Minimum tokens to generate.
+        :param max_tokens: Maximum tokens to generate.
+        :param stream: Whether to stream responses.
+        :return: API response with generation details.
+        """
         payload = {
             "session_id": session_id,
             "trace_id": trace_id,
@@ -562,6 +645,13 @@ class LexsiModels:
             return res
 
 def monitor(project, client, session_id=None):
+    """Attach tracing wrappers to supported SDK clients.
+
+    :param project: Project instance providing API client and name.
+    :param client: SDK client instance to instrument.
+    :param session_id: Optional session id to reuse.
+    :return: The same client instance with wrapped methods.
+    """
     wrapper = Wrapper(project_name=project.project_name, api_client=project.api_client)
     if isinstance(client, OpenAI):
         models = project.models()["model_name"].to_list()
@@ -645,6 +735,12 @@ def monitor(project, client, session_id=None):
     # Wrap the chat.create method to return a wrapped chat object
         original_chat_create = client.chat.create 
         def wrapped_chat_create(*args, **kwargs):
+            """Wrap chat creation to instrument returned chat object.
+
+            :param args: Positional args forwarded to chat.create.
+            :param kwargs: Keyword args forwarded to chat.create.
+            :return: Wrapped chat object with instrumented sample method.
+            """
             chat = original_chat_create(*args, **kwargs)
             chat.sample = wrapper._get_wrapper(
                 chat=chat,

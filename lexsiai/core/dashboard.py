@@ -19,11 +19,13 @@ DASHBOARD_TYPES = [
 
 
 class Dashboard(BaseModel):
+    """Client-side wrapper for visualizing generated dashboards."""
     config: dict
     query_params: str
     raw_data: dict | list | str
 
     def __init__(self, **kwargs):
+        """Print configuration then render the dashboard frame."""
         super().__init__(**kwargs)
 
         self.print_config()
@@ -32,9 +34,8 @@ class Dashboard(BaseModel):
     def plot(self, width: int = "100%", height: int = 800):
         """plot the dashboard by remote url
 
-        Args:
-            width (int, optional): _description_. Defaults to 100%.
-            height (int, optional): _description_. Defaults to 650.
+        :param width: Width of the embedded frame.
+        :param height: Height of the embedded frame.
         """
         if isinstance(self.raw_data, str) and "</html>" in self.raw_data:
             display(HTML(self.raw_data))
@@ -118,10 +119,13 @@ class Dashboard(BaseModel):
         print(json.dumps(config, indent=4))
 
     def __print__(self) -> str:
+        """User-friendly string representation."""
         return f"Dashboard(config='{self.get_config()}')"
 
     def __str__(self) -> str:
+        """Return printable representation."""
         return self.__print__()
 
     def __repr__(self) -> str:
+        """Return developer-friendly representation."""
         return self.__print__()

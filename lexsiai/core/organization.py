@@ -39,6 +39,7 @@ class Organization(BaseModel):
     api_client: APIClient
 
     def __init__(self, **kwargs):
+        """Attach API client to the organization instance."""
         super().__init__(**kwargs)
         self.api_client = kwargs.get("api_client")
 
@@ -197,12 +198,15 @@ class Organization(BaseModel):
         return workspace
 
     def __print__(self) -> str:
+        """User-friendly string representation."""
         return f"Organization(name='{self.name}', created_by='{self.created_by}', created_at='{self.created_at}')"
 
     def __str__(self) -> str:
+        """Return printable representation."""
         return self.__print__()
 
     def __repr__(self) -> str:
+        """Return developer-friendly representation."""
         return self.__print__()
 
     def create_data_connectors(
@@ -472,6 +476,7 @@ class Organization(BaseModel):
             return "No Organization id found"
 
         def get_connector() -> str | pd.DataFrame:
+            """Retrieve connector metadata for the given link service name."""
             url = build_list_data_connector_url(
                 LIST_DATA_CONNECTORS, None, self.organization_id
             )
@@ -511,6 +516,7 @@ class Organization(BaseModel):
         return res["details"]
 
     def credits(self):
+        """Return available credit information for the organization."""
         url = build_list_data_connector_url(
             COMPUTE_CREDIT_URI, None, self.organization_id
         )

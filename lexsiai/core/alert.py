@@ -4,11 +4,13 @@ import pandas as pd
 
 
 class Alert(BaseModel):
+    """Represents a monitoring alert and helper views."""
     info: dict
     detailed_report: Optional[List[dict] | dict] = None
     not_used_features: Optional[List[dict]] = None
 
     def __init__(self, **kwargs):
+        """Initialize base model without extra behavior."""
         super().__init__(**kwargs)
 
     def view_info(self) -> pd.DataFrame:

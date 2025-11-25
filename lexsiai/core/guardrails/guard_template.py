@@ -7,8 +7,7 @@ class Guard:
     def detect_pii(entities: List[str] = None) -> Dict[str, Any]:
         """Template for PII detection guardrail
         
-        Args:
-            entities: List of PII entity types to detect
+        :param entities: List of PII entity types to detect.
         """
         if entities is None:
             entities = ["EMAIL_ADDRESS", "PHONE_NUMBER", "PERSON", "ADDRESS"]
@@ -24,9 +23,8 @@ class Guard:
     def nsfw_text(threshold: float = 0.8, validation_method: str = "sentence") -> Dict[str, Any]:
         """Template for NSFW text detection guardrail
         
-        Args:
-            threshold: Confidence threshold for detection (0.0-1.0)
-            validation_method: "sentence", "paragraph", or "document"
+        :param threshold: Confidence threshold for detection (0.0-1.0).
+        :param validation_method: Validation scope: "sentence", "paragraph", or "document".
         """
         return {
             "name": "NSFW Text",

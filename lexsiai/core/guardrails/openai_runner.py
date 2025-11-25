@@ -111,6 +111,7 @@ class CallModelData(Generic[TContext]):
     context: TContext | None
 
 class Runner:
+    """Orchestrates agent execution loops for OpenAI Agents."""
     @classmethod
     async def run(
         cls,
@@ -135,20 +136,16 @@ class Runner:
         1. If the max_turns is exceeded, a MaxTurnsExceeded exception is raised.
         2. If a guardrail tripwire is triggered, a GuardrailTripwireTriggered exception is raised.
         Note that only the first agent's input guardrails are run.
-        Args:
-            starting_agent: The starting agent to run.
-            input: The initial input to the agent. You can pass a single string for a user message,
-                or a list of input items.
-            context: The context to run the agent with.
-            max_turns: The maximum number of turns to run the agent for. A turn is defined as one
-                AI invocation (including any tool calls that might occur).
-            hooks: An object that receives callbacks on various lifecycle events.
-            run_config: Global settings for the entire agent run.
-            previous_response_id: The ID of the previous response, if using OpenAI models via the
-                Responses API, this allows you to skip passing in input from the previous turn.
-        Returns:
-            A run result containing all the inputs, guardrail results and the output of the last
-            agent. Agents may perform handoffs, so we don't know the specific type of the output.
+
+        :param starting_agent: The starting agent to run.
+        :param input: The initial input to the agent; string user message or list of items.
+        :param context: Optional context to run the agent with.
+        :param max_turns: Maximum number of turns to run the agent.
+        :param hooks: Callbacks for lifecycle events.
+        :param run_config: Global settings for the entire agent run.
+        :param previous_response_id: Prior response id to continue Responses API runs.
+        :param session: Optional session used by the runner.
+        :return: Run result containing inputs, guardrail results, and final output.
         """
         runner = DEFAULT_AGENT_RUNNER
         return await runner.run(
@@ -189,20 +186,16 @@ class Runner:
         1. If the max_turns is exceeded, a MaxTurnsExceeded exception is raised.
         2. If a guardrail tripwire is triggered, a GuardrailTripwireTriggered exception is raised.
         Note that only the first agent's input guardrails are run.
-        Args:
-            starting_agent: The starting agent to run.
-            input: The initial input to the agent. You can pass a single string for a user message,
-                or a list of input items.
-            context: The context to run the agent with.
-            max_turns: The maximum number of turns to run the agent for. A turn is defined as one
-                AI invocation (including any tool calls that might occur).
-            hooks: An object that receives callbacks on various lifecycle events.
-            run_config: Global settings for the entire agent run.
-            previous_response_id: The ID of the previous response, if using OpenAI models via the
-                Responses API, this allows you to skip passing in input from the previous turn.
-        Returns:
-            A run result containing all the inputs, guardrail results and the output of the last
-            agent. Agents may perform handoffs, so we don't know the specific type of the output.
+
+        :param starting_agent: The starting agent to run.
+        :param input: The initial input to the agent; string user message or list of items.
+        :param context: Optional context to run the agent with.
+        :param max_turns: Maximum number of turns to run the agent.
+        :param hooks: Callbacks for lifecycle events.
+        :param run_config: Global settings for the entire agent run.
+        :param previous_response_id: Prior response id to continue Responses API runs.
+        :param session: Optional session used by the runner.
+        :return: Run result containing inputs, guardrail results, and final output.
         """
         runner = DEFAULT_AGENT_RUNNER
         return runner.run_sync(
@@ -240,19 +233,16 @@ class Runner:
         1. If the max_turns is exceeded, a MaxTurnsExceeded exception is raised.
         2. If a guardrail tripwire is triggered, a GuardrailTripwireTriggered exception is raised.
         Note that only the first agent's input guardrails are run.
-        Args:
-            starting_agent: The starting agent to run.
-            input: The initial input to the agent. You can pass a single string for a user message,
-                or a list of input items.
-            context: The context to run the agent with.
-            max_turns: The maximum number of turns to run the agent for. A turn is defined as one
-                AI invocation (including any tool calls that might occur).
-            hooks: An object that receives callbacks on various lifecycle events.
-            run_config: Global settings for the entire agent run.
-            previous_response_id: The ID of the previous response, if using OpenAI models via the
-                Responses API, this allows you to skip passing in input from the previous turn.
-        Returns:
-            A result object that contains data about the run, as well as a method to stream events.
+
+        :param starting_agent: The starting agent to run.
+        :param input: Initial input; string user message or list of items.
+        :param context: Optional context to run the agent with.
+        :param max_turns: Maximum number of turns to run the agent.
+        :param hooks: Callbacks for lifecycle events.
+        :param run_config: Global settings for the entire agent run.
+        :param previous_response_id: Prior response id to continue Responses API runs.
+        :param session: Optional session used by the runner.
+        :return: Result object containing run data and streaming method.
         """
         runner = DEFAULT_AGENT_RUNNER
         return runner.run_streamed(
@@ -268,12 +258,14 @@ class Runner:
 
 
 class AgentRunner:
+    """Async runner that manages the OpenAI Agents control loop."""
     async def run(
         self,
         starting_agent: Agent[TContext],
         input: str | list[TResponseInputItem],
         **kwargs: Unpack[RunOptions[TContext]],
     ) -> RunResult:
+        """Run the agent workflow asynchronously until completion."""
         context = kwargs.get("context")
         max_turns = kwargs.get("max_turns", DEFAULT_MAX_TURNS)
         hooks = kwargs.get("hooks")
@@ -443,6 +435,7 @@ class AgentRunner:
         input: str | list[TResponseInputItem],
         **kwargs: Unpack[RunOptions[TContext]],
     ) -> RunResult:
+        """Synchronous wrapper that runs the async agent loop to completion."""
         context = kwargs.get("context")
         max_turns = kwargs.get("max_turns", DEFAULT_MAX_TURNS)
         hooks = kwargs.get("hooks")
@@ -469,6 +462,7 @@ class AgentRunner:
         input: str | list[TResponseInputItem],
         **kwargs: Unpack[RunOptions[TContext]],
     ) -> RunResultStreaming:
+        """Run the agent loop while streaming intermediate responses."""
         context = kwargs.get("context")
         max_turns = kwargs.get("max_turns", DEFAULT_MAX_TURNS)
         hooks = kwargs.get("hooks")
@@ -580,6 +574,7 @@ class AgentRunner:
         streamed_result: RunResultStreaming,
         parent_span: Span[Any],
     ):
+        """Run input guardrails concurrently and enqueue results during streaming."""
         queue = streamed_result._input_guardrail_queue
 
         # We'll run the guardrails and push them onto the queue as they complete
@@ -630,6 +625,7 @@ class AgentRunner:
         previous_response_id: str | None,
         session: Session | None,
     ):
+        """Primary loop for streaming agent executions."""
         if streamed_result.trace:
             streamed_result.trace.start(mark_as_current=True)
 
@@ -820,6 +816,7 @@ class AgentRunner:
         all_tools: list[Tool],
         previous_response_id: str | None,
     ) -> SingleStepResult:
+        """Execute a single streamed agent turn including tools and guardrails."""
         if should_run_agent_start_hooks:
             await asyncio.gather(
                 hooks.on_agent_start(context_wrapper, agent),
@@ -937,6 +934,7 @@ class AgentRunner:
         tool_use_tracker: AgentToolUseTracker,
         previous_response_id: str | None,
     ) -> SingleStepResult:
+        """Run one non-streaming agent turn including guardrails and tools."""
         # Ensure we run the hooks before anything else
         if should_run_agent_start_hooks:
             await asyncio.gather(
@@ -1002,6 +1000,7 @@ class AgentRunner:
         run_config: RunConfig,
         tool_use_tracker: AgentToolUseTracker,
     ) -> SingleStepResult:
+        """Process a model response and execute any resulting tool calls."""
         processed_response = RunImpl.process_model_response(
             agent=agent,
             all_tools=all_tools,
@@ -1039,6 +1038,7 @@ class AgentRunner:
         run_config: RunConfig,
         tool_use_tracker: AgentToolUseTracker,
     ) -> SingleStepResult:
+        """Process a streamed model response and enqueue resulting events."""
         original_input = streamed_result.input
         pre_step_items = streamed_result.new_items
         event_queue = streamed_result._event_queue
@@ -1082,6 +1082,7 @@ class AgentRunner:
         input: str | list[TResponseInputItem],
         context: RunContextWrapper[TContext],
     ) -> list[InputGuardrailResult]:
+        """Run configured input guardrails for a given agent."""
         if not guardrails:
             return []
 
@@ -1120,6 +1121,7 @@ class AgentRunner:
         agent_output: Any,
         context: RunContextWrapper[TContext],
     ) -> list[OutputGuardrailResult]:
+        """Run configured output guardrails for a given agent output."""
         if not guardrails:
             return []
 
@@ -1165,6 +1167,7 @@ class AgentRunner:
         previous_response_id: str | None,
         prompt_config: ResponsePromptParam | None,
     ) -> ModelResponse:
+        """Call the model provider to obtain a new response for this turn."""
         # Allow user to modify model input right before the call, if configured
         filtered = await cls._maybe_filter_model_input(
             agent=agent,
@@ -1209,6 +1212,7 @@ class AgentRunner:
 
     @classmethod
     def _get_output_schema(cls, agent: Agent[Any]) -> AgentOutputSchemaBase | None:
+        """Resolve the output schema for the provided agent."""
         if agent.output_type is None or agent.output_type is str:
             return None
         elif isinstance(agent.output_type, AgentOutputSchemaBase):
@@ -1220,6 +1224,7 @@ class AgentRunner:
     async def _get_handoffs(
         cls, agent: Agent[Any], context_wrapper: RunContextWrapper[Any]
     ) -> list[Handoff]:
+        """Collect enabled handoffs for the given agent."""
         handoffs = []
         for handoff_item in agent.handoffs:
             if isinstance(handoff_item, Handoff):
@@ -1228,6 +1233,7 @@ class AgentRunner:
                 handoffs.append(handoff(handoff_item))
 
         async def _check_handoff_enabled(handoff_obj: Handoff) -> bool:
+            """Determine whether a handoff should run for the current context."""
             attr = handoff_obj.is_enabled
             if isinstance(attr, bool):
                 return attr
@@ -1244,10 +1250,12 @@ class AgentRunner:
     async def _get_all_tools(
         cls, agent: Agent[Any], context_wrapper: RunContextWrapper[Any]
     ) -> list[Tool]:
+        """Gather all tools available to the agent from hooks and config."""
         return await agent.get_all_tools(context_wrapper)
 
     @classmethod
     def _get_model(cls, agent: Agent[Any], run_config: RunConfig) -> Model:
+        """Resolve which model to call for this agent run."""
         if isinstance(run_config.model, Model):
             return run_config.model
         elif isinstance(run_config.model, str):
@@ -1314,6 +1322,7 @@ DEFAULT_AGENT_RUNNER = AgentRunner()
 
 
 def _copy_str_or_list(input: str | list[TResponseInputItem]) -> str | list[TResponseInputItem]:
+    """Return a shallow copy of list inputs while leaving strings untouched."""
     if isinstance(input, str):
         return input
     return input.copy()

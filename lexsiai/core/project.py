@@ -144,6 +144,7 @@ from lexsiai.core.synthetic import SyntheticDataTag, SyntheticModel, SyntheticPr
 
 
 class Project(BaseModel):
+    """Central class representing a Lexsi project and its operations."""
     organization_id: Optional[str] = None
     created_by: str
     project_name: str
@@ -155,6 +156,7 @@ class Project(BaseModel):
     api_client: APIClient
 
     def __init__(self, **kwargs):
+        """Attach API client to the project instance."""
         super().__init__(**kwargs)
         self.api_client = kwargs.get("api_client")
 
@@ -573,6 +575,7 @@ class Project(BaseModel):
         """
 
         def build_upload_data(data):
+            """Convert provided path or DataFrame into uploadable file payload."""
             if isinstance(data, str):
                 file = open(data, "rb")
                 return file
@@ -587,6 +590,7 @@ class Project(BaseModel):
                 raise Exception("Invalid Data Type")
 
         def upload_file_and_return_path(data, data_type, tag=None) -> str:
+            """Upload a file and return the server-side storage path."""
             files = {"in_file": build_upload_data(data)}
             res = self.api_client.file(
                 f"{UPLOAD_DATA_FILE_URI}?project_name={self.project_name}&data_type={data_type}&tag={tag}",
@@ -764,6 +768,7 @@ class Project(BaseModel):
         """
 
         def build_upload_data():
+            """Prepare feature mapping content for upload."""
             if isinstance(data, str):
                 file = open(data, "rb")
                 return file
@@ -781,6 +786,7 @@ class Project(BaseModel):
                 raise Exception("Invalid Data Type")
 
         def upload_file_and_return_path() -> str:
+            """Upload the feature mapping file and return its stored path."""
             files = {"in_file": build_upload_data()}
             res = self.api_client.file(
                 f"{UPLOAD_DATA_FILE_URI}?project_name={self.project_name}&data_type=feature_mapping",
@@ -816,6 +822,7 @@ class Project(BaseModel):
         """
 
         def build_upload_data():
+            """Prepare data description content for upload."""
             if isinstance(data, str):
                 file = open(data, "rb")
                 return file
@@ -832,6 +839,7 @@ class Project(BaseModel):
                 raise Exception("Invalid Data Type")
 
         def upload_file_and_return_path() -> str:
+            """Upload data description file and return its stored path."""
             files = {"in_file": build_upload_data()}
             res = self.api_client.file(
                 f"{UPLOAD_DATA_FILE_URI}?project_name={self.project_name}&data_type=data_description",
@@ -874,6 +882,7 @@ class Project(BaseModel):
         """
 
         def get_connector() -> str | pd.DataFrame:
+            """Fetch connector metadata for the requested link service."""
             url = build_list_data_connector_url(
                 LIST_DATA_CONNECTORS, self.project_name, self.organization_id
             )
@@ -905,6 +914,7 @@ class Project(BaseModel):
             return connectors
 
         def upload_file_and_return_path() -> str:
+            """Upload the feature mapping file from data connector."""
             if not self.project_name:
                 return "Missing Project Name"
             if self.organization_id:
@@ -952,6 +962,7 @@ class Project(BaseModel):
         """
 
         def get_connector() -> str | pd.DataFrame:
+            """Fetch connector metadata for the requested link service."""
             url = build_list_data_connector_url(
                 LIST_DATA_CONNECTORS, self.project_name, self.organization_id
             )
@@ -983,6 +994,7 @@ class Project(BaseModel):
             return connectors
 
         def upload_file_and_return_path() -> str:
+            """Upload the data description file from data connector."""
             if not self.project_name:
                 return "Missing Project Name"
             if self.organization_id:
@@ -1051,6 +1063,7 @@ class Project(BaseModel):
         """
 
         def upload_file_and_return_path() -> str:
+            """Upload model artifact and return stored path."""
             files = {"in_file": open(model_path, "rb")}
             model_data_tags_str = ",".join(model_data_tags)
             res = self.api_client.file(
@@ -1153,6 +1166,7 @@ class Project(BaseModel):
         """
 
         def get_connector() -> str | pd.DataFrame:
+            """Fetch connector metadata for the requested link service."""
             url = build_list_data_connector_url(
                 LIST_DATA_CONNECTORS, self.project_name, self.organization_id
             )
@@ -1184,6 +1198,7 @@ class Project(BaseModel):
             return connectors
 
         def upload_file_and_return_path() -> str:
+            """Upload model artifacts from a connector and return storage path."""
             if not self.project_name:
                 return "Missing Project Name"
             model_data_tags_str = ",".join(model_data_tags)
@@ -1270,6 +1285,7 @@ class Project(BaseModel):
         hf_token: Optional[str] = None,
         file_path: Optional[str] = None,
     ):
+        """Upload a docker compose package for custom model hosting."""
         files = {"in_file": open(file_path, "rb")}
         res = self.api_client.file(
             f"{UPLOAD_DATA_FILE_URI}?project_name={self.project_name}&model_provider={model_provider}&model_name={model_name}&model_type={model_type}&model_task_type={model_task_type}&hf_token={hf_token}",
@@ -1844,6 +1860,7 @@ class Project(BaseModel):
         instance_type: Optional[str] = None,
         run_in_background: bool = False,
     ) -> Dashboard:
+        """Generate or fetch an image property drift dashboard."""
         if not payload:
             return self.get_default_dashboard("image_property_drift")
 
@@ -1889,6 +1906,7 @@ class Project(BaseModel):
         instance_type: Optional[str] = None,
         run_in_background: bool = False,
     ) -> Dashboard:
+        """Generate or fetch a label drift dashboard for image workloads."""
         if not payload:
             return self.get_default_dashboard("label_drift")
 
@@ -1934,6 +1952,7 @@ class Project(BaseModel):
         instance_type: Optional[str] = None,
         run_in_background: bool = False,
     ) -> Dashboard:
+        """Generate or fetch a property-label correlation dashboard."""
         if not payload:
             return self.get_default_dashboard("property_label_correlation")
 
@@ -1979,6 +1998,7 @@ class Project(BaseModel):
         instance_type: Optional[str] = None,
         run_in_background: bool = False,
     ) -> Dashboard:
+        """Generate or fetch an image dataset drift dashboard."""
         if not payload:
             return self.get_default_dashboard("image_dataset_drift")
 
@@ -2059,6 +2079,7 @@ class Project(BaseModel):
         return logs
     
     def get_score(self, dashboard_id, feature_name):
+        """Retrieve score details for a dashboard feature."""
         resp = self.api_client.get(f"{GET_DASHBOARD_SCORE_URI}?project_name={self.project_name}&dashboard_id={dashboard_id}&feature_name={feature_name}")
         resp = resp.get("details").get("dashboards")
         logs = pd.DataFrame(resp)
@@ -2195,6 +2216,7 @@ class Project(BaseModel):
         return monitoring_triggers
 
     def duplicate_monitoring_triggers(self, trigger_name, new_trigger_name) -> str:
+        """Duplicate an existing monitoring trigger with a new name."""
         if trigger_name == new_trigger_name:
             return "Duplicate trigger name can't be same"
         url = f"{DUPLICATE_MONITORS_URI}?project_name={self.project_name}&trigger_name={trigger_name}&new_trigger_name={new_trigger_name}"
@@ -2361,6 +2383,7 @@ class Project(BaseModel):
         )
     
     def get_monitors_alerts(self, monitor_id: str, time: int):
+        """Fetch alerts for a specific monitor within the given time window."""
         url = f"{GET_MONITORS_ALERTS}?project_name={self.project_name}&monitor_id={monitor_id}&time={time}"
         res = self.api_client.get(url)
         data = pd.DataFrame(res.get("details"))
@@ -2529,6 +2552,7 @@ class Project(BaseModel):
 
             if model_parameters:
                 def validate_params(param_group, config_group):
+                    """Validate supplied model params against allowed ranges/choices."""
                     if config_group:
                         for param_name, param_value in config_group.items():
                             model_param = param_group.get(param_name)
@@ -3218,6 +3242,7 @@ class Project(BaseModel):
             return "No Project Name or Organization id found"
 
         def get_connector() -> str | pd.DataFrame:
+            """Fetch connector metadata for the requested link service."""
             url = build_list_data_connector_url(
                 LIST_DATA_CONNECTORS, self.project_name, self.organization_id
             )
@@ -3292,6 +3317,7 @@ class Project(BaseModel):
         print("Preparing Data Upload")
 
         def get_connector() -> str | pd.DataFrame:
+            """Fetch connector metadata for the requested link service."""
             url = build_list_data_connector_url(
                 LIST_DATA_CONNECTORS, self.project_name, self.organization_id
             )
@@ -3323,6 +3349,7 @@ class Project(BaseModel):
             return connectors
 
         def upload_file_and_return_path(file_path, data_type, tag=None) -> str:
+            """Upload a file from connector storage and return stored path."""
             if not self.project_name:
                 return "Missing Project Name"
             query_params = f"project_name={self.project_name}&link_service_name={data_connector_name}&data_type={data_type}&tag={tag}&bucket_name={bucket_name}&file_path={file_path}"
@@ -3502,6 +3529,7 @@ class Project(BaseModel):
         """
 
         def get_cases():
+            """Fetch paginated cases without additional filters."""
             payload = {
                 "project_name": self.project_name,
                 "page_num": page,
@@ -3510,6 +3538,7 @@ class Project(BaseModel):
             return res
 
         def search_cases():
+            """Search cases applying identifier/tag/date filters."""
             payload = {
                 "project_name": self.project_name,
                 "unique_identifier": unique_identifier,
@@ -3854,6 +3883,7 @@ class Project(BaseModel):
         return observation_df
     
     def duplicate_observation(self, observation_name, new_observation_name) -> str:
+        """Clone an existing observation under a new name."""
         if observation_name == new_observation_name:
             return "Duplicate observation name can't be same"
         url = f"{DUPLICATE_OBSERVATION_URI}?project_name={self.project_name}&observation_name={observation_name}&new_observation_name={new_observation_name}"
@@ -4150,6 +4180,7 @@ class Project(BaseModel):
         return policy_df
     
     def duplicate_policy(self, policy_name, new_policy_name) -> str:
+        """Clone an existing policy under a new name."""
         if policy_name == new_policy_name:
             return "Duplicate observation name can't be same"
         url = f"{DUPLICATE_POLICY_URI}?project_name={self.project_name}&policy_name={policy_name}&new_policy_name={new_policy_name}"
@@ -4824,8 +4855,9 @@ class Project(BaseModel):
             raise Exception(res["message"])
 
         return res["attributions"]
-    
+
     def get_feature_importance(self, model_name: str, feature_name: str, xai_method: str):
+        """Fetch feature importance values for a model/feature combination."""
         url = f"{GET_FEATURE_IMPORTANCE_URI}?project_name={self.project_name}&model_name={model_name}&feature_name={feature_name}&xai_method={xai_method}"
         res = self.api_client.get(url)
         if not res["success"]:
@@ -4857,16 +4889,20 @@ class Project(BaseModel):
         return res.get("details")
 
     def __print__(self) -> str:
+        """User-friendly string representation."""
         return f"Project(user_project_name='{self.user_project_name}', created_by='{self.created_by}')"
 
     def __str__(self) -> str:
+        """Return printable representation."""
         return self.__print__()
 
     def __repr__(self) -> str:
+        """Return developer-friendly representation."""
         return self.__print__()
 
 
 def generate_expression(expression):
+    """Join a list of expression tokens into a single string."""
     if not expression:
         return None
     generated_expression = ""
@@ -4881,6 +4917,7 @@ def generate_expression(expression):
 
 
 def build_expression(expression_string):
+    """Parse a human expression string into metadata and configuration tokens."""
     condition_operators = {
         "!==": "_NOTEQ",
         "==": "_ISEQ",
@@ -4960,6 +4997,7 @@ def build_expression(expression_string):
 
 
 def validate_configuration(configuration, params, project_name="", api_client=APIClient(), observations=False):
+    """Validate dynamic configuration expressions against allowed parameters."""
     for expression in configuration:
         if isinstance(expression, str):
             if expression not in ["(", ")", *params.get("logical_operators")]:

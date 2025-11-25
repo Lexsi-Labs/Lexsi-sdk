@@ -30,6 +30,7 @@ class XAI(BaseModel):
     api_client: APIClient = APIClient()
 
     def __init__(self, **kwargs):
+        """Initialize the API client using environment-derived settings."""
         super().__init__(**kwargs)
 
         debug = self.env.get_debug()
@@ -220,6 +221,7 @@ class XAI(BaseModel):
         xai: Optional[str] = None,
         file_path: Optional[str] = None
     ):
+        """Register a new case entry with raw or processed payloads."""
         form_data = {
             "client_id": client_id,
             "project_name": project_name,
@@ -274,6 +276,7 @@ class XAI(BaseModel):
         xai: Optional[List[str]] = None,
         refresh: Optional[bool] = None
     ):
+        """Fetch case profile details for a given identifier and tag."""
         headers = {
             "x-api-token": token
         }

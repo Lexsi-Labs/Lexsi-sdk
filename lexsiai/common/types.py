@@ -3,6 +3,8 @@ from typing import List, Optional, TypedDict, Dict
 
 
 class ProjectConfig(TypedDict):
+    """Configuration keys required to describe a project."""
+
     project_type: str
     model_name: Optional[str] = None
     unique_identifier: str
@@ -17,6 +19,8 @@ class ProjectConfig(TypedDict):
     explainability_method: Optional[List[str]] = None
 
 class DataConfig(TypedDict):
+    """Training data configuration for tabular workloads."""
+
     tags: List[str]
     test_tags: Optional[List[str]]
     use_optuna: Optional[bool] = False
@@ -30,6 +34,8 @@ class DataConfig(TypedDict):
     handle_data_imbalance: Optional[bool]
 
 class SyntheticDataConfig(TypedDict):
+    """Configuration required when generating synthetic data."""
+
     model_name: str
     tags: List[str]
     feature_exclude: List[str]
@@ -39,6 +45,8 @@ class SyntheticDataConfig(TypedDict):
 
 
 class SyntheticModelHyperParams(TypedDict):
+    """Common hyperparameter keys for supported synthetic models."""
+
     # GPT2 hyper params
     batch_size: Optional[int]
     early_stopping_patience: Optional[int]
@@ -54,6 +62,8 @@ class SyntheticModelHyperParams(TypedDict):
     test_ratio: Optional[float]
 
 class GCSConfig(TypedDict):
+    """Google Cloud Storage connector configuration."""
+
     project_id: str
     gcp_project_name: str
     type: str
@@ -65,11 +75,15 @@ class GCSConfig(TypedDict):
     token_uri: str
 
 class S3Config(TypedDict):
+    """Amazon S3 connector configuration."""
+
     region: Optional[str] = None
     access_key: str
     secret_key: str
 
 class GDriveConfig(TypedDict):
+    """Google Drive connector configuration."""
+
     project_id: str
     type: str
     private_key_id: str
@@ -80,12 +94,16 @@ class GDriveConfig(TypedDict):
     token_uri: str
 
 class SFTPConfig(TypedDict):
+    """SFTP connector configuration."""
+
     hostname: str
     port: str
     username: str
     password: str
 
 class CustomServerConfig(TypedDict):
+    """Scheduling options when requesting dedicated inference compute."""
+
     start: Optional[datetime] = None
     stop: Optional[datetime] = None
     shutdown_after: Optional[int] = 1
@@ -93,8 +111,12 @@ class CustomServerConfig(TypedDict):
     auto_start: bool = False
 
 class InferenceCompute(TypedDict):
+    """Inference compute selection payload."""
+
     instance_type: str
     custom_server_config: Optional[CustomServerConfig] = CustomServerConfig()
 
 class InferenceSettings(TypedDict):
+    """Inference settings that can be applied to text models."""
+
     inference_engine: str

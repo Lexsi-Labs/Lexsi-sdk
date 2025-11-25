@@ -17,15 +17,18 @@ import os
 
 
 class Tracer:
+    """Helpers to instrument various agent frameworks with OpenTelemetry."""
+
     def __init__(self):
+        """Initialize exporter endpoint from environment."""
         self.base_url = os.getenv("XAI_API_URL", "https://apiv1.lexsi.ai")    
         self.endpoint = f"{self.base_url}"
     def setup_langchain_tracing(self , project: object, session_id : str = None) -> None:
         """
         Sets up OpenTelemetry tracing for a given project with OTLP and console exporters.
 
-        Args:
-            project: An object containing project details, expected to have a 'name' attribute.
+        :param project: Object containing project details; must expose project_name.
+        :param session_id: Optional session identifier to annotate spans.
         """
         
         # Extract project name or use default
@@ -51,8 +54,8 @@ class Tracer:
         """
         Sets up OpenTelemetry tracing for a given project with OTLP and console exporters.
         
-        Args:
-            project: An object containing project details, expected to have a 'name' attribute.
+        :param project: Object containing project details; must expose project_name.
+        :param session_id: Optional session identifier to annotate spans.
         """
         
         # Extract project name or use default
@@ -78,8 +81,8 @@ class Tracer:
         """
         Sets up OpenTelemetry tracing for a given project with OTLP and console exporters.
         
-        Args:
-            project: An object containing project details, expected to have a 'name' attribute.
+        :param project: Object containing project details; must expose project_name.
+        :param session_id: Optional session identifier to annotate spans.
         """
         
         # Extract project name or use default
@@ -106,8 +109,8 @@ class Tracer:
         """
         Sets up OpenTelemetry tracing for a given project with OTLP and console exporters.
         
-        Args:
-            project: An object containing project details, expected to have a 'name' attribute.
+        :param project: Object containing project details; must expose project_name.
+        :param session_id: Optional session identifier to annotate spans.
         """
         
         # Extract project name or use default
@@ -134,8 +137,8 @@ class Tracer:
         """
         Sets up OpenTelemetry tracing for a given project with OTLP and console exporters.
         
-        Args:
-            project: An object containing project details, expected to have a 'name' attribute.
+        :param project: Object containing project details; must expose project_name.
+        :param session_id: Optional session identifier to annotate spans.
         """
         
         # Extract project name or use default
@@ -159,6 +162,7 @@ class Tracer:
         DSPyInstrumentor().instrument()
     
     def setup_llamaindex_tracing(self , project : object , session_id : str = None) -> None:
+        """Enable tracing for LlamaIndex runs."""
         
         # Extract project name or use default
         
@@ -181,6 +185,7 @@ class Tracer:
         LlamaIndexInstrumentor().instrument()
 
     def setup_smolagents_tracing(self , project : object , session_id : str = None) -> None:
+        """Enable tracing for Smolagents runs."""
         
         # Extract project name or use default
         

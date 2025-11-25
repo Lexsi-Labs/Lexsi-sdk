@@ -12,6 +12,7 @@ class Environment(BaseModel):
     XAI_ENV: str = os.getenv("XAI_ENV", "prod")
 
     def __init__(self):
+        """Load environment configuration on instantiation."""
         super().__init__()
 
         self.load_environment()

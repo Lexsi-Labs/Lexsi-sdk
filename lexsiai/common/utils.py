@@ -55,6 +55,7 @@ def poll_events(
     handle_failed_event: Optional[Callable] = None,
     progress_message: str = "progress",
 ):
+    """Poll long-running event stream and print incremental progress."""
     last_message = ""
     log_length = 0
     progress = 0

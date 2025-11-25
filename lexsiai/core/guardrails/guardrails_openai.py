@@ -40,6 +40,7 @@ class GuardrailFunctionOutput:
     sanitized_content: str
 
 class GuardrailRunResult(TypedDict, total=False):
+    """Normalized response payload for guardrail execution."""
     success: bool
     details: Dict[str, Any]
     validated_output: Any
@@ -68,6 +69,7 @@ class OpenAIAgentsGuardrail:
         project: Optional[Project],
         model: Optional[Any] = None,
     ) -> None:
+        """Initialize OpenAI Agents guardrail helper with project and model context."""
         if project is not None:
             self.client = project.api_client
             self.project_name = project.project_name
@@ -87,10 +89,10 @@ class OpenAIAgentsGuardrail:
         """
         Create an input guardrail function for OpenAI Agents.
         
-        Args:
-            guards: List of guard specifications or single guard
-            action: 'block' | 'retry' | 'warn'
-            name: Name for the guardrail function
+        :param guards: List of guard specifications or single guard.
+        :param action: 'block' | 'retry' | 'warn'.
+        :param name: Name for the guardrail function.
+        :return: Callable suitable for OpenAI Agents guardrail hook.
         """
         if isinstance(guards, (str, dict)):
             guards = [guards]
@@ -101,6 +103,7 @@ class OpenAIAgentsGuardrail:
             agent: Agent, 
             input: str | list[TResponseInputItem]
         ) -> GuardrailFunctionOutput:
+            """Run configured input guardrails for an agent invocation."""
             # Convert input to string for processing
             if isinstance(input, list):
                 # Handle list of input items (messages)
@@ -142,10 +145,10 @@ class OpenAIAgentsGuardrail:
         """
         Create an output guardrail function for OpenAI Agents.
         
-        Args:
-            guards: List of guard specifications or single guard
-            action: 'block' | 'retry' | 'warn'
-            name: Name for the guardrail function
+        :param guards: List of guard specifications or single guard.
+        :param action: 'block' | 'retry' | 'warn'.
+        :param name: Name for the guardrail function.
+        :return: Callable suitable for OpenAI Agents guardrail hook.
         """
         if isinstance(guards, (str, dict)):
             guards = [guards]
@@ -156,6 +159,7 @@ class OpenAIAgentsGuardrail:
             agent: Agent, 
             output: Any
         ) -> GuardrailFunctionOutput:
+            """Run configured output guardrails for an agent response."""
             # Extract text content from output
             if hasattr(output, 'response'):
                 output_text = str(output.response)

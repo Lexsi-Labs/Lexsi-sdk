@@ -15,6 +15,7 @@ from .guard_template import Guard
 
 
 class GuardrailRunResult(TypedDict, total=False):
+    """Structured response returned from guardrail API execution."""
     details: Dict[str, Any]
     validated_output: Any
     validation_passed: bool
@@ -44,6 +45,7 @@ class LangGraphGuardrail:
         default_apply_on: str = "input",
         llm: Optional[Any] = None,
     ) -> None:
+        """Initialize guardrail helper with project context and defaults."""
         if project is not None:
             self.client = project.api_client
             self.project_name = project.project_name
@@ -81,7 +83,9 @@ class LangGraphGuardrail:
             guards = [guards]  # type: ignore[assignment]
 
         def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
+            """Decorator that wraps a LangGraph node with guardrail checks."""
             def wrapper(*args: Any, **kwargs: Any) -> Any:
+                """Execute guardrails around the wrapped node call."""
                 # In LangGraph, the first argument is the state dict
                 state = args[0] if args else kwargs.get("state")
                 node_name = getattr(func, "__name__", "unknown_node")
@@ -131,6 +135,7 @@ class LangGraphGuardrail:
         return decorator
 
     def _get_content(self, data: Any, key: Optional[str], is_input: bool) -> Any:
+        """Extract guardrail-relevant content from the input or output structure."""
         if key is not None:
             if isinstance(data, dict) and key in data:
                 return data[key]
@@ -147,6 +152,7 @@ class LangGraphGuardrail:
             return None  # No content to process
 
     def _set_content(self, data: Any, processed: Any, key: Optional[str], is_input: bool) -> None:
+        """Write processed content back into the state or result container."""
         if key is not None:
             if isinstance(data, dict):
                 data[key] = processed
@@ -166,6 +172,7 @@ class LangGraphGuardrail:
         action: str,
         guards: Optional[List[Union[str, Dict[str, Any]]]],
     ) -> Any:
+        """Run guardrails over provided content and return sanitized result when needed."""
         if not guards:
             return content
 
@@ -248,12 +255,9 @@ class LangGraphGuardrail:
         """
         Run multiple guardrails in parallel using batch endpoint
         
-        Args:
-            content: Content to validate against multiple guardrails
-            guards: List of guardrails to run in parallel
-                
-        Returns:
-            Dictionary containing success status and validation details
+        :param content: Content to validate against multiple guardrails.
+        :param guards: List of guardrails to run in parallel.
+        :return: Response dict containing success status and validation details.
         """
         try:
             # Convert string guards to proper dict format with name and class
@@ -299,6 +303,7 @@ class LangGraphGuardrail:
         content_type: str,
         action: str,
     ) -> Any:
+        """Apply a guardrail, optionally retrying with sanitized output."""
         current_content = content
         retry_count = 0
 
@@ -355,6 +360,7 @@ class LangGraphGuardrail:
 
 
     def _call_run_guardrail(self, input_data: Any, guard: Dict[str, Any], content_type: Any) -> GuardrailRunResult:
+        """Invoke the guardrail service for a single guard."""
         uri = RUN_GUARDRAILS_URI
         input = input_data
         
@@ -408,10 +414,12 @@ class LangGraphGuardrail:
         guard_name: str,
         parent_span: Optional[Any] = None,
     ) -> Any:
+        """Handle guardrail results according to configured action."""
         validation_passed = bool(run_result.get("validation_passed", True))
         detected_issue = not validation_passed or not run_result.get("success", True)
 
         def create_child_span(is_issue: bool):
+            """Record a child tracing span for a single guard result."""
             
             with self.tracer.start_as_current_span(
                 f"guard: {guard_name}",
@@ -446,6 +454,7 @@ class LangGraphGuardrail:
         return original
 
     def _build_sanitize_prompt(self, guard_name: str, content: Any, content_type: str) -> str:
+        """Construct a prompt asking the LLM to sanitize problematic content."""
         instructions = {
             "Detect PII": "Sanitize the following text by removing or masking any personally identifiable information (PII). Do not change anything else.",
             "NSFW Text": "Sanitize the following text by removing or masking any not safe for work (NSFW) content. Do not change anything else.",
@@ -484,6 +493,7 @@ class LangGraphGuardrail:
 
     @staticmethod
     def _safe_str(value: Any) -> str:
+        """Safely stringify potentially complex values for logging."""
         try:
             if isinstance(value, (str, int, float, bool)) or value is None:
                 return str(value)
