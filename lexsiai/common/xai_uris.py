@@ -193,3 +193,5 @@ TEXT_MODEL_INFERENCE_SETTINGS_URI = f"{API_VERSION_V2}/ai-models/update_inferenc
 RUN_GUARDRAILS_PARALLEL_URI=f"guardrails/run_guardrail_parallel"
 RUN_CHAT_COMPLETION = f"gateway/v1/chat/completions" 
 RUN_IMAGE_GENERATION = f"gateway/v1/images/generations"
+RUN_CREATE_EMBEDDING = f"gateway/v1/embeddings"
+RUN_COMPLETION = f"gateway/v1/completions"
