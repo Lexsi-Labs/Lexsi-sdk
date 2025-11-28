@@ -556,6 +556,8 @@ class Project(BaseModel):
         model_architecture: Optional[str] = None,
         model_type: Optional[str] = None,
         config: Optional[ProjectConfig] = None,
+        gpu: Optional[bool] = False,
+        instance_type: Optional[str] = "shared"
     ) -> str:
         """Uploads data for the current project
         :param data: file path | dataframe to be uploaded
@@ -727,6 +729,8 @@ class Project(BaseModel):
                             "handle_data_imbalance", False
                         ),
                     },
+                    "gpu": gpu,
+                    "instance_type": instance_type
                 }
                 if config.get("model_name"):
                     payload["metadata"]["model_name"] = config.get("model_name")
