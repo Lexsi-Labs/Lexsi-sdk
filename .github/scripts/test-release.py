@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import os
 import subprocess
 
 default_main_version = "0.1.0"
@@ -72,9 +73,10 @@ def create_new_dev_release():
     """Create a new dev release on GitHub based on the latest main release."""
     base_version = get_latest_main_release()
     dev_version = next_dev_version(base_version)
+    target = os.getenv("GITHUB_SHA") or "testing-main"
 
     subprocess.run(
-        ["gh", "release", "create", "--generate-notes", dev_version],
+        ["gh", "release", "create", "--generate-notes", dev_version, "--target", target],
         check=True,
     )
 
