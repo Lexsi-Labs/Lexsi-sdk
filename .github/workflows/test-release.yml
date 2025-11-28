@@ -1,10 +1,10 @@
 name: Create test release
 
 on:
-  workflow_dispatch:
   push:
     branches:
       - testing-main
+  workflow_dispatch:
 
 jobs:
   github:
@@ -14,7 +14,16 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
       - name: Create new test release
         run: .github/scripts/test-release.py
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN  }}
+          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
