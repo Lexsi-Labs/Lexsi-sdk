@@ -14,6 +14,7 @@ from lexsiai.common.constants import (
 )
 from lexsiai.common.types import (
     DataConfig,
+    InferenceCompute,
     ProjectConfig,
     SyntheticDataConfig,
     SyntheticModelHyperParams,
@@ -105,6 +106,7 @@ from lexsiai.common.xai_uris import (
     TABULAR_DL,
     TABULAR_ML,
     TAG_DATA_URI,
+    TEXT_MODEL_INFERENCE_SETTINGS_URI,
     TRAIN_MODEL_URI,
     TRAIN_SYNTHETIC_MODEL_URI,
     UPDATE_ACTIVE_MODEL_URI,
@@ -2432,6 +2434,7 @@ class Project(BaseModel):
         finetune_mode: Optional[dict] = None,
         tunning_strategy: Optional[str] = None,
         instance_type: Optional[str] = None,
+        gpu: Optional[bool] = False
     ) -> str:
         """Train new model
 
@@ -2661,6 +2664,7 @@ class Project(BaseModel):
             "lime_explainability_iterations": data_conf.get(
                 "lime_explainability_iterations"
             ),
+            "gpu": gpu
         }
 
         if tunning_config:
@@ -2770,6 +2774,28 @@ class Project(BaseModel):
             raise Exception(res["details"])
 
         return res.get("details")
+    
+    def model_inference_settings(
+        self,  
+        model_name: str,
+        inference_compute: InferenceCompute
+    ) -> str:
+        """Model Inference Settings
+
+        :param model_provider: model of provider
+        :param model_name: name of the model to be initialized
+        :param model_task_type: task type of model
+        :return: response
+        """
+        payload = {
+            "model_name": model_name,
+            "project_name": self.project_name,
+            "inference_compute": inference_compute
+        }
+
+        res = self.api_client.post(f"{TEXT_MODEL_INFERENCE_SETTINGS_URI}", payload)
+        if not res["success"]:
+            raise Exception(res.get("details", "Failed to update inference settings"))
 
     def remove_model(self, model_name: str) -> str:
         """Removes the trained model for the project
