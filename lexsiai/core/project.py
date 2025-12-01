@@ -556,6 +556,11 @@ class Project(BaseModel):
         model_architecture: Optional[str] = None,
         model_type: Optional[str] = None,
         config: Optional[ProjectConfig] = None,
+        tunning_config: Optional[dict] = None,
+        peft_config: Optional[dict] = None,
+        processor_config: Optional[dict] = None,
+        finetune_mode: Optional[dict] = None,
+        tunning_strategy: Optional[str] = None,
         gpu: Optional[bool] = False,
         instance_type: Optional[str] = "shared"
     ) -> str:
@@ -737,6 +742,16 @@ class Project(BaseModel):
 
             if config.get("explainability_method"):
                 payload["metadata"]["explainability_method"] = config.get("explainability_method")
+            if tunning_config:
+                payload["metadata"]["tunning_parameters"] = tunning_config
+            if peft_config:
+                payload["metadata"]["peft_parameters"] = peft_config
+            if processor_config:
+                payload["metadata"]["processor_parameters"] = processor_config
+            if finetune_mode:
+                payload["metadata"]["finetune_mode"] = finetune_mode
+            if tunning_strategy:
+                payload["metadata"]["tunning_strategy"] = tunning_strategy
             res = self.api_client.post(UPLOAD_DATA_WITH_CHECK_URI, payload)
 
             if not res["success"]:
@@ -2820,9 +2835,11 @@ class Project(BaseModel):
 
     def model_inference(
         self,
-        tag: str,
+        tag: Optional[str] = None,
+        file_name: Optional[str] = None,
         model_name: Optional[str] = None,
         instance_type: Optional[str] = None,
+        gpu: Optional[bool] = False
     ) -> pd.DataFrame:
         """Run model inference on data
 
@@ -2831,11 +2848,34 @@ class Project(BaseModel):
         :return: model inference dataframe
         """
 
+        if not tag and not file_name:
+            raise Exception("Either tag or file_name is required.")
+        if tag and file_name:
+            raise Exception("Provide either tag or file_name, not both.")
         available_tags = self.tags()
-        if tag not in available_tags:
+        if tag and tag not in available_tags:
             raise Exception(
                 f"{tag} tag is not valid, select valid tag from :\n{available_tags}"
             )
+        
+        files = self.api_client.get(
+            f"{ALL_DATA_FILE_URI}?project_name={self.project_name}"
+        )
+        file_names = []
+        for file in files.get("details"):
+            file_names.append(file.get("filepath").split("/")[-1])
+
+        if file_name and file_name not in file_names:
+            raise Exception(
+                f"{file_name} file name is not valid, select valid tag from :\n{file_names.join(",")}"
+            )
+
+        for file in files["details"]:
+            file_path = file["filepath"]
+            curr_file_name = file_path.split("/")[-1]
+            if file_name == curr_file_name:
+                filepath = file_path
+                break
 
         models = self.models()
 
@@ -2864,7 +2904,9 @@ class Project(BaseModel):
             "project_name": self.project_name,
             "model_name": model,
             "tags": tag,
+            "filepath": filepath,
             "instance_type": instance_type,
+            "gpu": gpu
         }
 
         run_model_res = self.api_client.post(RUN_MODEL_ON_DATA_URI, run_model_payload)
@@ -2880,8 +2922,11 @@ class Project(BaseModel):
 
         auth_token = self.api_client.get_auth_token()
 
-        uri = f"{DOWNLOAD_TAG_DATA_URI}?project_name={self.project_name}&tag={tag}_{model}_Inference&token={auth_token}"
-
+        if tag:
+            uri = f"{DOWNLOAD_TAG_DATA_URI}?project_name={self.project_name}&tag={tag}_{model}_Inference&token={auth_token}"
+        else:
+            file_name = file_name.replace(".", "_")
+            uri = f"{DOWNLOAD_TAG_DATA_URI}?project_name={self.project_name}&tag={file_name}_{model}_Inference&token={auth_token}"
         tag_data = self.api_client.base_request("GET", uri)
 
         tag_data_df = pd.read_csv(io.StringIO(tag_data.text))
