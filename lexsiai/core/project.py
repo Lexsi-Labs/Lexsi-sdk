@@ -2849,7 +2849,9 @@ class Project(BaseModel):
         """
 
         if not tag and not file_name:
-            raise Exception("Either tag or file name is mandatory")
+            raise Exception("Either tag or file_name is required.")
+        if tag and file_name:
+            raise Exception("Provide either tag or file_name, not both.")
         available_tags = self.tags()
         if tag and tag not in available_tags:
             raise Exception(
@@ -2860,7 +2862,6 @@ class Project(BaseModel):
             f"{ALL_DATA_FILE_URI}?project_name={self.project_name}"
         )
         file_names = []
-        print(files.get("details"))
         for file in files.get("details"):
             file_names.append(file.get("filepath").split("/")[-1])
 
