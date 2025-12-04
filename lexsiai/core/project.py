@@ -2492,7 +2492,7 @@ class Project(BaseModel):
             *project_config["metadata"]["feature_include"],
         ]
 
-        if instance_type:
+        if tunning_strategy!="inference" and instance_type:
             custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
             Validate.value_against_list(
                 "instance_type",
