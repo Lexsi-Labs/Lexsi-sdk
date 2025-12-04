@@ -556,6 +556,7 @@ class Project(BaseModel):
         model_architecture: Optional[str] = None,
         model_type: Optional[str] = None,
         config: Optional[ProjectConfig] = None,
+        model_config: Optional[dict] = None,
         tunning_config: Optional[dict] = None,
         peft_config: Optional[dict] = None,
         processor_config: Optional[dict] = None,
@@ -742,6 +743,8 @@ class Project(BaseModel):
 
             if config.get("explainability_method"):
                 payload["metadata"]["explainability_method"] = config.get("explainability_method")
+            if model_config:
+                payload["metadata"]["model_parameters"] = model_config
             if tunning_config:
                 payload["metadata"]["tunning_parameters"] = tunning_config
             if peft_config:
