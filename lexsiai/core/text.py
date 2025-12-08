@@ -449,8 +449,11 @@ class TextProject(Project):
         qbit: int,
         instance_type: str,
         tag: Optional[str] = None,
+        max_seq_len: Optional[int] = 400,
+        target_layers: Optional[List[str]] = ["Linear"],
+        ignore_layers: Optional[List[str]] = ["lm_head"],
         input_column: Optional[str] = None,
-        no_of_samples: Optional[str] = None,
+        no_of_samples: Optional[str] = None
     ):
         """Quantize Model
 
@@ -473,6 +476,9 @@ class TextProject(Project):
             "instance_type": instance_type,
             "tag": tag,
             "input_column": input_column,
+            "max_seq_len": max_seq_len,
+            "target_layers": target_layers,
+            "ignore_layers": ignore_layers,
             "no_of_samples": no_of_samples
         }
 
