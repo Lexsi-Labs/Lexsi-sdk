@@ -187,6 +187,8 @@ class TextProject(Project):
         inference_compute: InferenceCompute,
         inference_settings: InferenceSettings,
         assets: Optional[dict] = None,
+        requirements_file: Optional[str] = None,
+        app_file: Optional[str] = None
     ) -> str:
         """Initialize text model
 
@@ -195,19 +197,27 @@ class TextProject(Project):
         :param model_task_type: task type of model
         :return: response
         """
-        payload = {
+        data = {
             "model_provider": model_provider,
             "model_name": model_name,
             "model_task_type": model_task_type,
             "project_name": self.project_name,
             "model_type": model_type,
             "inference_compute": inference_compute,
-            "inference_settings": inference_settings
+            "inference_settings": inference_settings,
+            "assets": assets
         }
-        if assets:
-            payload["assets"] = assets
-        res = self.api_client.post(f"{INITIALIZE_TEXT_MODEL_URI}", payload)
-        if not res["success"]:
+
+        payload ={
+            "data": (None,json.dumps(data)),
+        }
+        if requirements_file:
+            payload["requirements_file"] = ("requirements.yaml", open(requirements_file, "rb"))
+        if app_file:
+            payload["app_file"] = ("app.py", open(app_file, "rb"))
+            
+        res = self.api_client.file(f"{INITIALIZE_TEXT_MODEL_URI}", payload)
+        if not res.get("success"):
             raise Exception(res.get("details", "Model Initialization Failed"))
         poll_events(self.api_client, self.project_name, res["event_id"])
 
