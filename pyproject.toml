@@ -28,6 +28,9 @@ classifiers = [
   "Topic :: Scientific/Engineering :: Information Analysis",
 ]
 
+[tool.setuptools]
+license-files = []
+
 [tool.setuptools.dynamic]
 dependencies = { file = ["requirements.txt"] }
 
