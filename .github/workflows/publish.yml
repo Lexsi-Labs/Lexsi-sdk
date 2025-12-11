@@ -74,7 +74,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "*PyPI URL:* https://pypi.org/project/lexsiai/${{ github.event.release.tag_name }}"
+                    "text": "*PyPI URL:* https://pypi.org/project/lexsi_sdk/${{ github.event.release.tag_name }}"
                   }
                 }
               ]
