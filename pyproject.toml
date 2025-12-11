@@ -3,7 +3,7 @@ requires = ["setuptools>=68", "setuptools_scm[toml]>=8", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "lexsiai"
+name = "lexsi-sdk"
 description = "Full stack ML Observability with Lexsi.ai"
 readme = "readme.md"
 requires-python = ">=3.8"
@@ -13,7 +13,7 @@ authors = [
   { name = "Lexsi Labs", email = "support@lexsi.ai" }
 ]
 
-keywords = ["lexsi", "lexsiai", "ML observability", "observability", "machine learning"]
+keywords = ["lexsi","lexsi-sdk", "lexsi_sdk", "ML observability", "observability", "machine learning"]
 
 license = { text = "Lexsi Labs Source Available License (LSAL) v1.0" }
 
@@ -36,9 +36,9 @@ dependencies = { file = ["requirements.txt"] }
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["lexsiai*"]
+include = ["lexsi_sdk*"]
 
 [tool.setuptools_scm]
 version_scheme = "no-guess-dev"
 local_scheme = "no-local-version"
-write_to = "lexsiai/version.py"
+write_to = "lexsi_sdk/version.py"

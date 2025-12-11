@@ -21,17 +21,17 @@ Get started with Lexsi Ai with a few easy steps:
 
 Once you've completed these steps, you're all set! Now, you can easily log in and start using the Lexsi Ai SDK:
 
-1. Log in by importing the "xai" object instance from the "lexsiai" package.
+1. Log in by importing the "xai" object instance from the "lexsi_sdk" package.
 2. Call the "login" method. This method automatically takes the access token value from the "XAI_ACCESS_TOKEN" environment variable and stores the JWT in the object instance. This means that all your future SDK operations will be authorized automatically, making it simple and hassle-free!
 
 
 ```
-from lexsiai import xai as lexsiai
+from lexsi_sdk import xai as lexsi
 
-## login() function authenticates user using token that can be generated in app.lexsiai.com/sdk
+## login() function authenticates user using token that can be generated in app.lexsi_sdk.com/sdk
 
 
-lexsiai.login()
+lexsi.login()
 
 
 Enter your Lexsi ai Access Token: ··········
