@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
-         <loc>https://sdk.lexsi.ai/</loc>
+         <loc>https://lexsi-labs.github.io/Lexsi-sdk/</loc>
          <lastmod>2025-12-12</lastmod>
     </url>
     <url>
-         <loc>https://sdk.lexsi.ai/api/</loc>
+         <loc>https://lexsi-labs.github.io/Lexsi-sdk/api/</loc>
          <lastmod>2025-12-12</lastmod>
     </url>
     <url>
-         <loc>https://sdk.lexsi.ai/redoc/</loc>
+         <loc>https://lexsi-labs.github.io/Lexsi-sdk/redoc/</loc>
          <lastmod>2025-12-12</lastmod>
     </url>
     <url>
-         <loc>https://sdk.lexsi.ai/sdk/</loc>
+         <loc>https://lexsi-labs.github.io/Lexsi-sdk/sdk/</loc>
          <lastmod>2025-12-12</lastmod>
     </url>
 </urlset>
