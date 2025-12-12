@@ -1,4 +1,5 @@
 site_name: SDK Documentation
+site_url: https://sdk.lexsi.ai
 theme:
   name: material
   logo: assets/LexsiLogo.svg
