@@ -27,3 +27,4 @@ _templates
 # package version file
 lexsi_sdk/version.py
 /workingtest/
+site/
