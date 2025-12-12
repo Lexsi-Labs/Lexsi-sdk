@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <strong>Official Python SDK for Lexsi AI — Fast, Secure & Developer-Friendly</strong>
+  <strong>Official Python SDK for Lexsi.ai — Fast, Secure & Developer-Friendly</strong>
 </p>
 
 <p align="center">
@@ -20,7 +20,7 @@
 
 # **lexsi-sdk**
 
-`lexsi-sdk` is the official Python SDK for interacting with the Lexsi AI platform.  
+`lexsi-sdk` is the official Python SDK for interacting with the Lexsi.ai platform.  
 It provides a clean, high-performance interface for accessing chat completions, embeddings, model management, logging, and more — optimized for production workloads, enterprise integration, and research workflows.
 
 ---

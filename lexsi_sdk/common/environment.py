@@ -32,7 +32,8 @@ class Environment(BaseModel):
 
         if logger_on:
             self.debug = logger_on
-            print(f"Connected to: {self.XAI_ENV} environment")
+            if self.XAI_ENV != "prod":
+                print(f"Connected to: {self.XAI_ENV} environment")
 
     def get_base_url(self) -> str:
         """get base url of XAI platform
