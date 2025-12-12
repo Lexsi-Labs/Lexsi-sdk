@@ -260,7 +260,7 @@ class TextProject(Project):
         :param explain_model: explain model for the case, defaults to False
         :return: response
         """
-        if explain_model:
+        if explain_model and not instance_type:
             raise Exception("instance_type required for explainability.")
         llm = monitor(
             project=self, client=LexsiModels(project=self, api_client=self.api_client), session_id=session_id

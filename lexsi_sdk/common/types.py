@@ -5,7 +5,7 @@ from typing import List, Optional, TypedDict, Dict
 class ProjectConfig(TypedDict):
     """Configuration keys required to describe a project."""
 
-    project_type: Optional[str]
+    project_type: Optional[str] = None
     model_name: Optional[str] = None
     unique_identifier: str
     true_label: str
