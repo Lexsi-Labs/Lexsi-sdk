@@ -7,7 +7,7 @@ import json
 
 
 class APIClient(BaseModel):
-    """API client to interact with Lexsi Ai services"""
+    """API client to interact with Lexsi.ai services"""
 
     debug: bool = False
     base_url: str = ""

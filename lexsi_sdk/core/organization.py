@@ -29,7 +29,7 @@ from lexsi_sdk.core.utils import build_url, build_list_data_connector_url
 
 
 class Organization(BaseModel):
-    """Class to work with Lexsi ai organizations"""
+    """Class to work with Lexsi.ai organizations"""
 
     organization_id: Optional[str] = None
     name: str

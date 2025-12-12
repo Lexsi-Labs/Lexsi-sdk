@@ -44,7 +44,7 @@ class XAI(BaseModel):
         :param api_key: API key, defaults to XAI_ACCESS_TOKEN environment variable
         """
         access_token = os.environ.get("XAI_ACCESS_TOKEN", None) or getpass.getpass(
-            "Enter your Lexsi Ai Access Token: "
+            "Enter your Lexsi.ai SDK Access Token: "
         )
 
         if not access_token:
