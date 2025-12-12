@@ -20,6 +20,8 @@ class Environment(BaseModel):
     def load_environment(self):
         """
         load current environment config
+
+        :return: None
         """
         env_file = f".env.{self.XAI_ENV}"
 

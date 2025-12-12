@@ -1,0 +1,154 @@
+:root {
+  /* Brand palette */
+  --lexsi-bg: #0d0d0d;
+  --lexsi-surface: #1a1a1a;
+  --lexsi-card: #222222;
+  --lexsi-text: #e4e6eb;
+  --lexsi-muted: #9aa0a6;
+  --lexsi-accent: #ff5c1b;
+  --lexsi-border: #2c2c2c;
+  --lexsi-success: #3e8643;
+
+  /* Map to Material variables */
+  --md-default-bg-color: var(--lexsi-bg);
+  --md-primary-fg-color: var(--lexsi-accent);
+  --md-primary-bg-color: var(--lexsi-bg);
+  --md-accent-fg-color: var(--lexsi-accent);
+  --md-accent-bg-color: var(--lexsi-bg);
+  --md-typeset-color: var(--lexsi-text);
+  --md-typeset-a-color: var(--lexsi-accent);
+  --md-code-bg-color: var(--lexsi-surface);
+  --md-code-fg-color: var(--lexsi-text);
+}
+
+/* Page background and surfaces */
+body {
+  background-color: var(--lexsi-bg);
+}
+
+.md-main,
+.md-content {
+  background-color: var(--lexsi-bg);
+}
+
+.md-typeset h1,
+.md-typeset h2,
+.md-typeset h3,
+.md-typeset h4,
+.md-typeset h5,
+.md-typeset h6 {
+  color: var(--lexsi-text);
+}
+
+.md-typeset p,
+.md-typeset li {
+  color: var(--lexsi-muted);
+}
+
+/* Navigation */
+.md-header,
+.md-tabs {
+  background-color: var(--lexsi-surface);
+  border-bottom: 1px solid var(--lexsi-border);
+  align-items: center;
+}
+
+.md-header__inner {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+}
+
+.md-header__button.md-logo img {
+  height: 36px;
+}
+
+.md-header__title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #d8d8d8;
+}
+
+.md-header-nav__title {
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.md-sidebar--primary,
+.md-sidebar--secondary {
+  background-color: var(--lexsi-surface);
+}
+
+.md-nav__item .md-nav__link--active {
+  color: var(--lexsi-accent);
+}
+
+.md-header-nav__title {
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+/* Cards and content blocks */
+.md-typeset .admonition,
+.md-typeset .highlight,
+.md-typeset pre {
+  background-color: var(--lexsi-card);
+  border: 1px solid var(--lexsi-border);
+}
+
+/* Buttons */
+.md-button {
+  background-color: transparent;
+  border: 1px solid var(--lexsi-border);
+  color: var(--lexsi-text);
+}
+
+.md-button--primary {
+  background-color: var(--lexsi-accent);
+  color: #0d0d0d;
+  border-color: var(--lexsi-accent);
+}
+
+.md-button:hover {
+  border-color: var(--lexsi-accent);
+  color: var(--lexsi-accent);
+}
+
+.md-button--primary:hover {
+  filter: brightness(1.05);
+}
+
+/* Tables */
+.md-typeset table {
+  border-color: var(--lexsi-border);
+}
+
+.md-typeset table td,
+.md-typeset table th {
+  border-color: var(--lexsi-border);
+  background-color: var(--lexsi-card);
+  color: var(--lexsi-text);
+}
+
+/* Links */
+a:hover {
+  color: #ff7a45;
+}
+
+/* Code blocks */
+.md-typeset code {
+  background-color: var(--lexsi-surface);
+  color: var(--lexsi-text);
+}
+
+/* Search dialog */
+.md-search__form,
+.md-search__input {
+  background-color: var(--lexsi-surface);
+  color: var(--lexsi-text);
+}

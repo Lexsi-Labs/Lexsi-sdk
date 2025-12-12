@@ -7,13 +7,23 @@ class Validate:
 
     @staticmethod
     def string(field_name: str, value: str):
-        """Ensure a non-empty string was provided for the given field."""
+        """Ensure a non-empty string was provided for the given field.
+
+        :param field_name: Name of the field being validated.
+        :param value: Incoming string value to validate.
+        :raises Exception: If the string is empty or only whitespace.
+        """
         if not (value and value.strip()):
             raise Exception(f"{field_name} is not valid, cannot be empty")
 
     @staticmethod
     def list(field_name: str, value: List):
-        """Ensure a list value is provided and not empty."""
+        """Ensure a list value is provided and not empty.
+
+        :param field_name: Name of the field being validated.
+        :param value: Incoming list value to validate.
+        :raises Exception: If the list is missing or empty.
+        """
         if not value:
             raise Exception(f"{field_name} is required, cannot be empty list")
 
@@ -24,7 +34,14 @@ class Validate:
         valid_list: List,
         handle_error: Optional[Callable] = None,
     ):
-        """Validate whether a value (or list of values) exists in a whitelist."""
+        """Validate whether a value (or list of values) exists in a whitelist.
+
+        :param field_name: Name of the field being validated.
+        :param value: String or list of values to check.
+        :param valid_list: Allowed set of values.
+        :param handle_error: Optional callback invoked before raising an error.
+        :raises Exception: If the provided value(s) are not in the allowed list.
+        """
         try:
             if isinstance(value, str):
                 if value not in valid_list:
@@ -45,7 +62,12 @@ class Validate:
 
     @staticmethod
     def check_for_missing_keys(value: dict, required_keys: list):
-        """Validate that required keys are present in a dict."""
+        """Validate that required keys are present in a dict.
+
+        :param value: Dictionary to inspect.
+        :param required_keys: Keys that must be present.
+        :raises Exception: If any required keys are missing.
+        """
         missing_keys = [key for key in required_keys if key not in value]
 
         if missing_keys:
@@ -53,7 +75,12 @@ class Validate:
 
     @staticmethod
     def validate_date_feature_val(payload: dict, all_datetime_features: List[str]):
-        """Validate date feature payload shape and values."""
+        """Validate date feature payload shape and values.
+
+        :param payload: Incoming date feature payload.
+        :param all_datetime_features: Valid datetime feature names.
+        :raises Exception: If the payload is malformed or contains invalid values.
+        """
         if payload.get("date_feature", None):
             if payload["date_feature"] not in all_datetime_features:
                 raise Exception(
