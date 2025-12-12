@@ -61,7 +61,8 @@ def poll_events(
     progress = 0
 
     for event in api_client.stream(
-        f"{POLL_EVENTS}?project_name={project_name}&event_id={event_id}"
+        uri=f"{POLL_EVENTS}?project_name={project_name}&event_id={event_id}",
+        method="GET"
     ):
         details = event.get("details")
 

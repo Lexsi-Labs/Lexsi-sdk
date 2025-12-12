@@ -481,12 +481,14 @@ class TextProject(Project):
             raise Exception(res.get("details"))
         
         poll_events(self.api_client, self.project_name, res.get("event_id"))
+
+
     def chat_completion(
         self,
         model: str,
         messages: List[Dict[str, Any]],
         provider: str,
-        api_key: str,
+        api_key: Optional[str] = None,
         session_id : Optional[UUID] = None,
         max_tokens: Optional[int] = None,
         stream: Optional[bool] = False,
@@ -515,42 +517,7 @@ class TextProject(Project):
         if not stream:
             return self.api_client.post(RUN_CHAT_COMPLETION, payload=payload)
         
-        # def stream_response() -> Iterator[str]:
-        #     url = f"{self.api_client.base_url}/{RUN_CHAT_COMPLETION}"
-        #     with requests.post(url, json=payload, stream=True) as response:
-        #         for line in response.iter_lines():
-        #             if line:
-        #                 decoded_line = line.decode('utf-8')
-        #                 if decoded_line.startswith('data: '):
-        #                     if decoded_line.strip() == 'data: [DONE]':
-        #                         break
-        #                     chunk_data = json.loads(decoded_line[6:])
-        #                     yield chunk_data
-
-        def stream_response() -> Iterator[dict]:
-            """Stream chat completion responses as they arrive.
-
-            :yield: Parsed JSON chunks from the streaming endpoint.
-            """
-            url = f"{self.api_client.base_url}/{RUN_CHAT_COMPLETION}"
-
-            with httpx.Client(http2=True, timeout=None) as client:
-                with client.stream("POST", url, json=payload) as response:
-                    for line in response.iter_lines():
-                        if not line:
-                            continue
-                        
-                        decoded_line = line  # already a str
-                        
-                        if decoded_line.startswith("data: "):
-                            if decoded_line.strip() == "data: [DONE]":
-                                break
-
-                            chunk_data = json.loads(decoded_line[6:])
-                            yield chunk_data
-
-
-        return stream_response()
+        return self.api_client.stream(uri=RUN_CHAT_COMPLETION, method="POST", payload=payload)
 
     def create_embeddings(
         self,
@@ -577,7 +544,7 @@ class TextProject(Project):
         model: str,
         prompt: str,
         provider: str,
-        api_key: str,
+        api_key: Optional[str] = None,
         session_id : Optional[UUID] = None,
         max_tokens: Optional[int] = None,
         stream: Optional[bool] = False,            
@@ -596,19 +563,7 @@ class TextProject(Project):
         if not stream:
             return self.api_client.post(RUN_COMPLETION, payload=payload)
         
-        def stream_response() -> Iterator[str]:
-            url = f"{self.api_client.base_url}/{RUN_COMPLETION}"
-            with requests.post(url, json=payload, stream=True) as response:
-                for line in response.iter_lines():
-                    if line:
-                        decoded_line = line.decode('utf-8')
-                        if decoded_line.startswith('data: '):
-                            if decoded_line.strip() == 'data: [DONE]':
-                                break
-                            chunk_data = json.loads(decoded_line[6:])
-                            yield chunk_data
-
-        return stream_response()
+        return self.api_client.stream(uri=RUN_COMPLETION, method="POST", payload=payload)
 
     def image_generation(
         self,
