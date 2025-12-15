@@ -3476,7 +3476,7 @@ class Project(BaseModel):
                     config["project_type"] = self.metadata.get("project_type")
                 if not config:
                     config = {
-                        "project_type": self.metadata.get("project_type"),
+                        "project_type": "",
                         "unique_identifier": "",
                         "true_label": "",
                         "pred_label": "",
