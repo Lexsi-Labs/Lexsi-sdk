@@ -732,7 +732,8 @@ class Project(BaseModel):
                         ),
                     },
                     "gpu": gpu,
-                    "instance_type": instance_type
+                    "instance_type": instance_type,
+                    "sample_percentage": config.get("sample_percentage", None)
                 }
                 if config.get("model_name"):
                     payload["metadata"]["model_name"] = config.get("model_name")
