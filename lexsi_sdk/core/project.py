@@ -3472,9 +3472,11 @@ class Project(BaseModel):
                 }
 
             if self.metadata.get("modality") == "tabular":
+                if not config.get("project_type"):
+                    config["project_type"] = self.metadata.get("project_type")
                 if not config:
                     config = {
-                        "project_type": "",
+                        "project_type": self.metadata.get("project_type"),
                         "unique_identifier": "",
                         "true_label": "",
                         "pred_label": "",
