@@ -239,8 +239,8 @@ class TextProject(Project):
         self,
         model_name: str,
         prompt: str,
-        instance_type: Optional[str] = "gova-2",
-        serverless_instance_type: Optional[str] = "xsmall",
+        serverless_instance_type: str,
+        instance_type: Optional[str] = None,
         explainability_method: Optional[list] = ["DLB"],
         explain_model: Optional[bool] = False,
         session_id: Optional[str] = None,
@@ -260,6 +260,8 @@ class TextProject(Project):
         :param explain_model: explain model for the case, defaults to False
         :return: response
         """
+        if explain_model and not instance_type:
+            raise Exception("instance_type required for explainability.")
         llm = monitor(
             project=self, client=LexsiModels(project=self, api_client=self.api_client), session_id=session_id
         )

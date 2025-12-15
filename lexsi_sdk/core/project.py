@@ -1,4 +1,6 @@
 from __future__ import annotations
+import re
+import json
 from pydantic import BaseModel
 from typing import Dict, List, Optional
 from lexsi_sdk.client.client import APIClient
@@ -732,7 +734,8 @@ class Project(BaseModel):
                         ),
                     },
                     "gpu": gpu,
-                    "instance_type": instance_type
+                    "instance_type": instance_type,
+                    "sample_percentage": config.get("sample_percentage", None)
                 }
                 if config.get("model_name"):
                     payload["metadata"]["model_name"] = config.get("model_name")
@@ -756,9 +759,11 @@ class Project(BaseModel):
             if not res["success"]:
                 self.delete_file(uploaded_path)
                 raise Exception(res.get("details"))
-
-            poll_events(self.api_client, self.project_name, res["event_id"])
-
+            try:
+                poll_events(self.api_client, self.project_name, res["event_id"])
+            except Exception as e:
+                self.delete_file(uploaded_path)
+                raise e
             return res.get("details")
 
         if project_config != "Not Found" and config:

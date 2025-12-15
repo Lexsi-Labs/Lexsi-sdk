@@ -501,7 +501,7 @@ class LexsiModels:
         self,
         model_name: str,
         prompt: str,
-        instance_type: str = "xsmall",
+        instance_type: Optional[str] = "xsmall",
         serverless_instance_type: str = "gova-2",
         explainability_method: list = ["DLB"],
         explain_model: bool = False,
