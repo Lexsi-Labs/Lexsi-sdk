@@ -70,11 +70,12 @@ class XAI(BaseModel):
         res["details"].insert(
             0,
             {
-                "name": "Personal",
+                "name": "personal",
                 "organization_owner": True,
                 "organization_admin": True,
                 "current_users": 1,
-                "created_by": "you",
+                "created_by": res.get("current_user", {}).get("username", ""),
+                "created_at": res.get("current_user", {}).get("created_at", ""),
             },
         )
 
