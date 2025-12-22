@@ -3,9 +3,9 @@ import io
 from typing import Optional, List, Dict, Any, Union
 
 import httpx
-from lexsiai.common.types import InferenceCompute, InferenceSettings
-from lexsiai.common.utils import poll_events
-from lexsiai.common.xai_uris import (
+from lexsi_sdk.common.types import InferenceCompute, InferenceSettings
+from lexsi_sdk.common.utils import poll_events
+from lexsi_sdk.common.xai_uris import (
     AVAILABLE_GUARDRAILS_URI,
     CONFIGURE_GUARDRAILS_URI,
     DELETE_GUARDRAILS_URI,
@@ -27,11 +27,11 @@ from lexsiai.common.xai_uris import (
     RUN_CREATE_EMBEDDING,
     RUN_COMPLETION
 )
-from lexsiai.core.project import Project
+from lexsi_sdk.core.project import Project
 import pandas as pd
 
-from lexsiai.core.utils import build_list_data_connector_url
-from lexsiai.core.wrapper import LexsiModels, monitor
+from lexsi_sdk.core.utils import build_list_data_connector_url
+from lexsi_sdk.core.wrapper import LexsiModels, monitor
 import json
 import aiohttp
 from typing import AsyncIterator, Iterator

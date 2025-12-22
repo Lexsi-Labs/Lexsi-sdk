@@ -13,9 +13,9 @@ from pydantic import BaseModel
 
 import requests
 import httpx
-from lexsiai.client.client import APIClient
-from lexsiai.common.environment import Environment
-from lexsiai.common.xai_uris import CASE_INFO_TEXT_URI, GENERATE_TEXT_CASE_STREAM_URI, GENERATE_TEXT_CASE_URI
+from lexsi_sdk.client.client import APIClient
+from lexsi_sdk.common.environment import Environment
+from lexsi_sdk.common.xai_uris import CASE_INFO_TEXT_URI, GENERATE_TEXT_CASE_STREAM_URI, GENERATE_TEXT_CASE_URI
 
 from together import Together
 from groq import Groq

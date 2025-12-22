@@ -4,8 +4,8 @@ from datetime import datetime
 from autogen import ConversableAgent, UserProxyAgent
 from autogen_agentchat.agents import AssistantAgent
 import time
-from lexsiai.core.project import Project
-from lexsiai.common.xai_uris import (
+from lexsi_sdk.core.project import Project
+from lexsi_sdk.common.xai_uris import (
     RUN_GUARDRAILS_URI,
 )
 from opentelemetry import trace, context

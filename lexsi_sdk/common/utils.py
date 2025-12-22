@@ -1,9 +1,9 @@
 from datetime import datetime
 from typing import Callable, Optional
-from lexsiai.client.client import APIClient
+from lexsi_sdk.client.client import APIClient
 from IPython.display import display, HTML
 
-from lexsiai.common.xai_uris import POLL_EVENTS
+from lexsi_sdk.common.xai_uris import POLL_EVENTS
 
 
 def parse_float(s):

@@ -48,7 +48,7 @@ jobs:
           import os, re, requests
 
           base = os.environ["BASE_VERSION"]
-          pkg = "lexsiai"
+          pkg = "lexsi-sdk"
 
           url = f"https://test.pypi.org/pypi/{pkg}/json"
 

@@ -1,5 +1,5 @@
 #import core modules so that they can be imported directly
 from __future__ import annotations
-from lexsiai.core.xai import XAI
+from lexsi_sdk.core.xai import XAI
 
 xai = XAI()

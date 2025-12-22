@@ -25,5 +25,5 @@ _templates
 .env.testing
 
 # package version file
-lexsiai/version.py
+lexsi_sdk/version.py
 /workingtest/

@@ -1,9 +1,9 @@
 import pandas as pd
 from pydantic import BaseModel
 from typing import Dict, List, Optional
-from lexsiai.client.client import APIClient
-from lexsiai.common.validation import Validate
-from lexsiai.common.xai_uris import (
+from lexsi_sdk.client.client import APIClient
+from lexsi_sdk.common.validation import Validate
+from lexsi_sdk.common.xai_uris import (
     AVAILABLE_CUSTOM_SERVERS_URI,
     CREATE_WORKSPACE_URI,
     GET_WORKSPACES_URI,
@@ -12,9 +12,9 @@ from lexsiai.common.xai_uris import (
     REMOVE_USER_ORGANIZATION_URI,
     UPDATE_ORGANIZATION_URI,
 )
-from lexsiai.core.workspace import Workspace
-from lexsiai.common.types import GCSConfig, S3Config, GDriveConfig, SFTPConfig
-from lexsiai.common.xai_uris import (
+from lexsi_sdk.core.workspace import Workspace
+from lexsi_sdk.common.types import GCSConfig, S3Config, GDriveConfig, SFTPConfig
+from lexsi_sdk.common.xai_uris import (
     AVAILABLE_CUSTOM_SERVERS_URI,
     CREATE_DATA_CONNECTORS,
     LIST_DATA_CONNECTORS,
@@ -25,7 +25,7 @@ from lexsiai.common.xai_uris import (
     LIST_FILEPATHS,
     COMPUTE_CREDIT_URI,
 )
-from lexsiai.core.utils import build_url, build_list_data_connector_url
+from lexsi_sdk.core.utils import build_url, build_list_data_connector_url
 
 
 class Organization(BaseModel):

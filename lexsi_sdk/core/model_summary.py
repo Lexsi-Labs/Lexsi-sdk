@@ -1,5 +1,5 @@
-from lexsiai.client.client import APIClient
-from lexsiai.common.xai_uris import GET_PROJECT_CONFIG, MODEL_SVG_URI
+from lexsi_sdk.client.client import APIClient
+from lexsi_sdk.common.xai_uris import GET_PROJECT_CONFIG, MODEL_SVG_URI
 from typing import Dict, Optional
 from pydantic import BaseModel, ConfigDict
 import plotly.graph_objects as go

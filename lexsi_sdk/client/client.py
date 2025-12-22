@@ -1,6 +1,6 @@
 import requests
 import httpx
-from lexsiai.common.xai_uris import LOGIN_URI
+from lexsi_sdk.common.xai_uris import LOGIN_URI
 import jwt
 from pydantic import BaseModel
 import json

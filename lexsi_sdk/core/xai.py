@@ -5,10 +5,10 @@ import httpx
 import pandas as pd
 from pydantic import BaseModel
 import requests
-from lexsiai.client.client import APIClient
-from lexsiai.common.environment import Environment
-from lexsiai.core.organization import Organization
-from lexsiai.common.xai_uris import (
+from lexsi_sdk.client.client import APIClient
+from lexsi_sdk.common.environment import Environment
+from lexsi_sdk.core.organization import Organization
+from lexsi_sdk.common.xai_uris import (
     AVAILABLE_BATCH_SERVERS_URI,
     AVAILABLE_CUSTOM_SERVERS_URI,
     AVAILABLE_SYNTHETIC_CUSTOM_SERVERS_URI,

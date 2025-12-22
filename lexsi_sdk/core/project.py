@@ -1,8 +1,8 @@
 from __future__ import annotations
 from pydantic import BaseModel
 from typing import Dict, List, Optional
-from lexsiai.client.client import APIClient
-from lexsiai.common.constants import (
+from lexsi_sdk.client.client import APIClient
+from lexsi_sdk.common.constants import (
     MODEL_TYPES,
     DATA_DRIFT_DASHBOARD_REQUIRED_FIELDS,
     DATA_DRIFT_STAT_TESTS,
@@ -12,7 +12,7 @@ from lexsiai.common.constants import (
     BIAS_MONITORING_DASHBOARD_REQUIRED_FIELDS,
     MODEL_PERF_DASHBOARD_REQUIRED_FIELDS,
 )
-from lexsiai.common.types import (
+from lexsi_sdk.common.types import (
     DataConfig,
     InferenceCompute,
     ProjectConfig,
@@ -23,9 +23,9 @@ from lexsiai.common.types import (
     GDriveConfig,
     SFTPConfig,
 )
-from lexsiai.common.utils import parse_datetime, parse_float, poll_events
-from lexsiai.common.validation import Validate
-from lexsiai.common.monitoring import (
+from lexsi_sdk.common.utils import parse_datetime, parse_float, poll_events
+from lexsi_sdk.common.validation import Validate
+from lexsi_sdk.common.monitoring import (
     BiasMonitoringPayload,
     DataDriftPayload,
     ImageDashboardPayload,
@@ -34,8 +34,7 @@ from lexsiai.common.monitoring import (
 )
 
 import pandas as pd
-
-from lexsiai.common.xai_uris import (
+from lexsi_sdk.common.xai_uris import (
     ALL_DATA_FILE_URI,
     AVAILABLE_BATCH_SERVERS_URI,
     AVAILABLE_CUSTOM_SERVERS_URI,
@@ -131,18 +130,15 @@ from lexsiai.common.xai_uris import (
     DROPBOX_OAUTH,
     VALIDATE_POLICY_URI,
 )
-import json
 import io
-from lexsiai.core.alert import Alert
+from lexsi_sdk.core.alert import Alert
+from lexsi_sdk.core.case import Case, CaseText
+from lexsi_sdk.core.model_summary import ModelSummary
 
-from lexsiai.core.case import Case, CaseText
-from lexsiai.core.model_summary import ModelSummary
-
-from lexsiai.core.dashboard import DASHBOARD_TYPES, Dashboard
+from lexsi_sdk.core.dashboard import DASHBOARD_TYPES, Dashboard
 from datetime import datetime
-import re
-from lexsiai.core.utils import build_url, build_list_data_connector_url
-from lexsiai.core.synthetic import SyntheticDataTag, SyntheticModel, SyntheticPrompt
+from lexsi_sdk.core.utils import build_url, build_list_data_connector_url
+from lexsi_sdk.core.synthetic import SyntheticDataTag, SyntheticModel, SyntheticPrompt
 
 
 class Project(BaseModel):
@@ -2870,7 +2866,7 @@ class Project(BaseModel):
 
         if file_name and file_name not in file_names:
             raise Exception(
-                f"{file_name} file name is not valid, select valid tag from :\n{file_names.join(",")}"
+                f"{file_name} file name is not valid, select valid tag from :\n{file_names.join(',')}"
             )
 
         for file in files["details"]:

@@ -6,10 +6,10 @@ import json
 import pandas as pd
 import plotly.graph_objects as go
 
-from lexsiai.client.client import APIClient
-from lexsiai.common.utils import poll_events, pretty_date
-from lexsiai.common.validation import Validate
-from lexsiai.common.xai_uris import (
+from lexsi_sdk.client.client import APIClient
+from lexsi_sdk.common.utils import poll_events, pretty_date
+from lexsi_sdk.common.validation import Validate
+from lexsi_sdk.common.xai_uris import (
     AVAILABLE_SYNTHETIC_CUSTOM_SERVERS_URI,
     GENERATE_ANONYMITY_SCORE_URI,
     GENERATE_SYNTHETIC_DATA_URI,

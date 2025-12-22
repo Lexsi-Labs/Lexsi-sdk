@@ -3,8 +3,8 @@ from __future__ import annotations
 import json
 from datetime import datetime
 from typing import Any, Callable, Dict, List, Optional, TypedDict, Union
-from lexsiai.common.xai_uris import RUN_GUARDRAILS_URI , RUN_GUARDRAILS_PARALLEL_URI
-from lexsiai.core.project import Project
+from lexsi_sdk.common.xai_uris import RUN_GUARDRAILS_URI , RUN_GUARDRAILS_PARALLEL_URI
+from lexsi_sdk.core.project import Project
 from opentelemetry import trace
 import time
 import asyncio
