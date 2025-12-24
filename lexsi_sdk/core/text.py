@@ -25,7 +25,7 @@ from lexsi_sdk.common.xai_uris import (
     RUN_CHAT_COMPLETION,
     RUN_IMAGE_GENERATION,
     RUN_CREATE_EMBEDDING,
-    RUN_COMPLETION
+    RUN_COMPLETION,
 )
 from lexsi_sdk.core.project import Project
 import pandas as pd
@@ -37,6 +37,7 @@ import aiohttp
 from typing import AsyncIterator, Iterator
 import requests
 from uuid import UUID
+
 
 class TextProject(Project):
     """Project for text modality
@@ -179,11 +180,11 @@ class TextProject(Project):
         return res.get("details")
 
     def initialize_text_model(
-        self, 
-        model_provider: str, 
-        model_name: str, 
-        model_task_type:str, 
-        model_type: str,  
+        self,
+        model_provider: str,
+        model_name: str,
+        model_task_type: str,
+        model_type: str,
         inference_compute: InferenceCompute,
         inference_settings: InferenceSettings,
         assets: Optional[dict] = None,
@@ -202,7 +203,7 @@ class TextProject(Project):
             "project_name": self.project_name,
             "model_type": model_type,
             "inference_compute": inference_compute,
-            "inference_settings": inference_settings
+            "inference_settings": inference_settings,
         }
         if assets:
             payload["assets"] = assets
@@ -212,7 +213,7 @@ class TextProject(Project):
         poll_events(self.api_client, self.project_name, res["event_id"])
 
     def model_inference_settings(
-        self,  
+        self,
         model_name: str,
         inference_compute: InferenceCompute,
         inference_settings: InferenceSettings,
@@ -228,7 +229,7 @@ class TextProject(Project):
             "model_name": model_name,
             "project_name": self.project_name,
             "inference_compute": inference_compute,
-            "inference_settings": inference_settings
+            "inference_settings": inference_settings,
         }
 
         res = self.api_client.post(f"{TEXT_MODEL_INFERENCE_SETTINGS_URI}", payload)
@@ -263,7 +264,9 @@ class TextProject(Project):
         if explain_model and not instance_type:
             raise Exception("instance_type required for explainability.")
         llm = monitor(
-            project=self, client=LexsiModels(project=self, api_client=self.api_client), session_id=session_id
+            project=self,
+            client=LexsiModels(project=self, api_client=self.api_client),
+            session_id=session_id,
         )
         res = llm.generate_text_case(
             model_name=model_name,
@@ -274,7 +277,7 @@ class TextProject(Project):
             explain_model=explain_model,
             max_tokens=max_tokens,
             min_tokens=min_tokens,
-            stream=stream
+            stream=stream,
         )
         return res
 
@@ -285,11 +288,13 @@ class TextProject(Project):
         """
         res = self.api_client.get(f"{GET_AVAILABLE_TEXT_MODELS_URI}")
         if not res["success"]:
-            raise Exception(res.get("details"," Failed to fetch available text models"))
+            raise Exception(
+                res.get("details", " Failed to fetch available text models")
+            )
         return pd.DataFrame(res.get("details"))
-    
+
     def upload_data(
-        self, 
+        self,
         data: str | pd.DataFrame,
         tag: str,
     ) -> str:
@@ -299,6 +304,7 @@ class TextProject(Project):
         :param tag: Tag to associate with the uploaded data.
         :return: Server response details.
         """
+
         def build_upload_data(data):
             """Prepare file payload from path or DataFrame.
 
@@ -337,7 +343,7 @@ class TextProject(Project):
             uploaded_path = res.get("metadata").get("filepath")
 
             return uploaded_path
-        
+
         uploaded_path = upload_file_and_return_path(data, "data", tag)
 
         payload = {
@@ -360,7 +366,7 @@ class TextProject(Project):
         tag: str,
         bucket_name: Optional[str] = None,
         file_path: Optional[str] = None,
-        dataset_name: Optional[str] = None
+        dataset_name: Optional[str] = None,
     ):
         """Upload text data stored in a configured data connector.
 
@@ -371,6 +377,7 @@ class TextProject(Project):
         :param dataset_name: Optional dataset name to persist.
         :return: Server response details.
         """
+
         def get_connector() -> str | pd.DataFrame:
             """Fetch connector metadata for the requested link service.
 
@@ -425,9 +432,9 @@ class TextProject(Project):
             uploaded_path = res.get("metadata").get("filepath")
 
             return uploaded_path
-        
+
         uploaded_path = upload_file_and_return_path(file_path, "data", tag)
-        
+
         payload = {
             "path": uploaded_path,
             "tag": tag,
@@ -441,13 +448,12 @@ class TextProject(Project):
             raise Exception(res.get("details"))
 
         return res.get("details")
-    
 
     def quantize_model(
         self,
-        model_name:str,
-        quant_name:str,
-        quantization_type:str,
+        model_name: str,
+        quant_name: str,
+        quantization_type: str,
         qbit: int,
         instance_type: str,
         tag: Optional[str] = None,
@@ -458,12 +464,12 @@ class TextProject(Project):
 
         :param model_name: name of the model
         :param quant_name: quant name of the model
-        :param quantization_type: type of quantization 
+        :param quantization_type: type of quantization
         :param qbit: quantization bit
-        :param instance_type: instance type for the quantization 
+        :param instance_type: instance type for the quantization
         :param tag: tag name to pass
         :param input_column: input column for the data
-        :param no_of_samples: no of samples for quantization to perform 
+        :param no_of_samples: no of samples for quantization to perform
         :return: response
         """
         payload = {
@@ -475,15 +481,14 @@ class TextProject(Project):
             "instance_type": instance_type,
             "tag": tag,
             "input_column": input_column,
-            "no_of_samples": no_of_samples
+            "no_of_samples": no_of_samples,
         }
 
         res = self.api_client.post(QUANTIZE_MODELS_URI, payload)
         if not res["success"]:
             raise Exception(res.get("details"))
-        
-        poll_events(self.api_client, self.project_name, res.get("event_id"))
 
+        poll_events(self.api_client, self.project_name, res.get("event_id"))
 
     def chat_completion(
         self,
@@ -491,7 +496,7 @@ class TextProject(Project):
         messages: List[Dict[str, Any]],
         provider: str,
         api_key: Optional[str] = None,
-        session_id : Optional[UUID] = None,
+        session_id: Optional[UUID] = None,
         max_tokens: Optional[int] = None,
         stream: Optional[bool] = False,
     ) -> Union[dict, Iterator[str]]:
@@ -513,45 +518,51 @@ class TextProject(Project):
             "project_name": self.project_name,
             "provider": provider,
             "api_key": api_key,
-            "session_id" : session_id
+            "session_id": session_id,
         }
 
         if not stream:
             return self.api_client.post(RUN_CHAT_COMPLETION, payload=payload)
-        
-        return self.api_client.stream(uri=RUN_CHAT_COMPLETION, method="POST", payload=payload)
+
+        return self.api_client.stream(
+            uri=RUN_CHAT_COMPLETION, method="POST", payload=payload
+        )
 
     def create_embeddings(
         self,
-        input : Union[str, List[str]],
+        input: Union[str, List[str]],
         model: str,
-        api_key : str,
+        api_key: str,
         provider: str,
-        session_id : Optional[UUID] = None,
-    ) -> dict:  
+        session_id: Optional[UUID] = None,
+    ) -> dict:
+        """Create a new embeddings.
+        Builds a new object or request payload and returns the created result."""
         payload = {
             "model": model,
             "input": input,
             "project_name": self.project_name,
             "provider": provider,
             "api_key": api_key,
-            "session_id" : session_id
+            "session_id": session_id,
         }
 
         res = self.api_client.post(RUN_CREATE_EMBEDDING, payload=payload)
         return res
-    
+
     def completion(
         self,
         model: str,
         prompt: str,
         provider: str,
         api_key: Optional[str] = None,
-        session_id : Optional[UUID] = None,
+        session_id: Optional[UUID] = None,
         max_tokens: Optional[int] = None,
-        stream: Optional[bool] = False,            
+        stream: Optional[bool] = False,
     ) -> dict:
-        
+        """Run completion.
+        Encapsulates a small unit of SDK logic and returns the computed result."""
+
         payload = {
             "model": model,
             "prompt": prompt,
@@ -560,12 +571,14 @@ class TextProject(Project):
             "project_name": self.project_name,
             "provider": provider,
             "api_key": api_key,
-            "session_id" : session_id
+            "session_id": session_id,
         }
         if not stream:
             return self.api_client.post(RUN_COMPLETION, payload=payload)
-        
-        return self.api_client.stream(uri=RUN_COMPLETION, method="POST", payload=payload)
+
+        return self.api_client.stream(
+            uri=RUN_COMPLETION, method="POST", payload=payload
+        )
 
     def image_generation(
         self,
@@ -573,7 +586,7 @@ class TextProject(Project):
         prompt: str,
         provider: str,
         api_key: str,
-        session_id : Optional[UUID] = None,
+        session_id: Optional[UUID] = None,
     ) -> dict:
         """Image generation endpoint wrapper
 
@@ -589,9 +602,9 @@ class TextProject(Project):
             "project_name": self.project_name,
             "provider": provider,
             "api_key": api_key,
-            "session_id" : session_id
+            "session_id": session_id,
         }
 
         res = self.api_client.post(RUN_IMAGE_GENERATION, payload=payload)
-            
+
         return res

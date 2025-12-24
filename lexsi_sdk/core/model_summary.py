@@ -24,7 +24,8 @@ class ModelSummary(BaseModel):
     api_client: APIClient
 
     def __init__(self, **kwargs):
-        """Store API client reference for subsequent calls."""
+        """Store API client reference for subsequent calls.
+        Stores configuration and prepares the object for use."""
         super().__init__(**kwargs)
         self.api_client = kwargs.get("api_client")
 
@@ -45,11 +46,12 @@ class ModelSummary(BaseModel):
         return info
 
     def feature_importance(self, xai_method: str):
-        """Global features plot"""
+        """Global features plot
+        Encapsulates a small unit of SDK logic and returns the computed result."""
         global_features = None
-        if xai_method=="shap":
+        if xai_method == "shap":
             global_features = self.model_results.get("GFI", {}).get("shap_gfi", None)
-        if xai_method=="lime":
+        if xai_method == "lime":
             global_features = self.model_results.get("GFI", {}).get("lime_gfi", None)
         # if not global_features:
         #     global_features = self.model_results.get("GFI")
@@ -81,7 +83,8 @@ class ModelSummary(BaseModel):
         fig.show(config={"displaylogo": False})
 
     def prediction_path(self):
-        """Prediction path plot"""
+        """Prediction path plot
+        Encapsulates a small unit of SDK logic and returns the computed result."""
         model_name = self.model_results.get("model_name")
         res = self.api_client.get(
             f"{MODEL_SVG_URI}?project_name={self.project_name}&model_name={model_name}"

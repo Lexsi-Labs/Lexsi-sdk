@@ -39,7 +39,8 @@ class Organization(BaseModel):
     api_client: APIClient
 
     def __init__(self, **kwargs):
-        """Attach API client to the organization instance."""
+        """Attach API client to the organization instance.
+        Stores configuration and prepares the object for use."""
         super().__init__(**kwargs)
         self.api_client = kwargs.get("api_client")
 
@@ -198,15 +199,18 @@ class Organization(BaseModel):
         return workspace
 
     def __print__(self) -> str:
-        """User-friendly string representation."""
+        """User-friendly string representation.
+        Encapsulates a small unit of SDK logic and returns the computed result."""
         return f"Organization(name='{self.name}', created_by='{self.created_by}', created_at='{self.created_at}')"
 
     def __str__(self) -> str:
-        """Return printable representation."""
+        """Return printable representation.
+        Summarizes the instance in a concise form."""
         return self.__print__()
 
     def __repr__(self) -> str:
-        """Return developer-friendly representation."""
+        """Return developer-friendly representation.
+        Includes key fields useful for logging and troubleshooting."""
         return self.__print__()
 
     def create_data_connectors(
@@ -370,13 +374,13 @@ class Organization(BaseModel):
         if data_connector_type == "HuggingFace":
             if not hf_token:
                 return "No hf_token provided"
-            
+
             payload = {
-                "link_service":{
+                "link_service": {
                     "service_name": data_connector_name,
-                    "hf_token": hf_token
+                    "hf_token": hf_token,
                 },
-                "link_service_type": data_connector_type
+                "link_service_type": data_connector_type,
             }
 
         url = build_url(
@@ -417,7 +421,8 @@ class Organization(BaseModel):
         return res["details"]
 
     def list_data_connectors(self) -> str | pd.DataFrame:
-        """List the data connectors"""
+        """List the data connectors
+        Fetches a collection and returns it in a convenient Python form."""
         url = build_list_data_connector_url(
             LIST_DATA_CONNECTORS, None, self.organization_id
         )
@@ -476,7 +481,8 @@ class Organization(BaseModel):
             return "No Organization id found"
 
         def get_connector() -> str | pd.DataFrame:
-            """Retrieve connector metadata for the given link service name."""
+            """Retrieve connector metadata for the given link service name.
+            Reads from internal state or a backend client as needed."""
             url = build_list_data_connector_url(
                 LIST_DATA_CONNECTORS, None, self.organization_id
             )
@@ -516,7 +522,8 @@ class Organization(BaseModel):
         return res["details"]
 
     def credits(self):
-        """Return available credit information for the organization."""
+        """Return available credit information for the organization.
+        Encapsulates a small unit of SDK logic and returns the computed result."""
         url = build_list_data_connector_url(
             COMPUTE_CREDIT_URI, None, self.organization_id
         )
@@ -539,7 +546,7 @@ class Organization(BaseModel):
         payload = {
             "organization_user_email": user_email,
             "organization_id": self.organization_id,
-            "organization_admin": True if access_type=="admin" else False,
+            "organization_admin": True if access_type == "admin" else False,
         }
         res = self.api_client.post(UPDATE_ORGANIZATION_URI, payload)
 
