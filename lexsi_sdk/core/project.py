@@ -2728,6 +2728,7 @@ class Project(BaseModel):
         staged_models = res["details"]["staged"]
 
         staged_models_df = pd.DataFrame(staged_models)
+        staged_models_df = staged_models_df.drop(columns=['model_provider'])
         staged_models_df = staged_models_df[
             ~staged_models_df["status"].isin(["inactive", "failed"])
         ]
@@ -2843,8 +2844,7 @@ class Project(BaseModel):
         tag: Optional[str] = None,
         file_name: Optional[str] = None,
         model_name: Optional[str] = None,
-        instance_type: Optional[str] = None,
-        gpu: Optional[bool] = False
+        instance_type: Optional[str] = None
     ) -> pd.DataFrame:
         """Run model inference on data
 
@@ -2911,8 +2911,7 @@ class Project(BaseModel):
             "model_name": model,
             "tags": tag,
             "filepath": filepath,
-            "instance_type": instance_type,
-            "gpu": gpu
+            "instance_type": instance_type
         }
 
         run_model_res = self.api_client.post(RUN_MODEL_ON_DATA_URI, run_model_payload)
