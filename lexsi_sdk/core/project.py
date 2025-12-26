@@ -2728,6 +2728,9 @@ class Project(BaseModel):
         staged_models = res["details"]["staged"]
 
         staged_models_df = pd.DataFrame(staged_models)
+        staged_models_df = staged_models_df[
+            ~staged_models_df["status"].isin(["inactive", "failed"])
+        ]
 
         return staged_models_df
 
@@ -2893,12 +2896,13 @@ class Project(BaseModel):
 
         if instance_type:
             custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
+            available_custom_batch_servers = custom_batch_servers.get("details", []) + custom_batch_servers.get("available_gpu_custom_servers", [])
             Validate.value_against_list(
                 "instance_type",
                 instance_type,
                 [
                     server["instance_name"]
-                    for server in custom_batch_servers.get("details", [])
+                    for server in available_custom_batch_servers
                 ],
             )
 
