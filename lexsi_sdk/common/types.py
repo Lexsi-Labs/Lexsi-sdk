@@ -19,6 +19,7 @@ class ProjectConfig(TypedDict):
     sample_percentage: Optional[float] = None
     explainability_method: Optional[List[str]] = None
 
+
 class DataConfig(TypedDict):
     """Training data configuration for tabular workloads."""
 
@@ -33,6 +34,7 @@ class DataConfig(TypedDict):
     lime_explainability_iterations: int
     explainability_method: List[str]
     handle_data_imbalance: Optional[bool]
+
 
 class SyntheticDataConfig(TypedDict):
     """Configuration required when generating synthetic data."""
@@ -62,6 +64,7 @@ class SyntheticModelHyperParams(TypedDict):
     epochs: Optional[int]
     test_ratio: Optional[float]
 
+
 class GCSConfig(TypedDict):
     """Google Cloud Storage connector configuration."""
 
@@ -75,12 +78,14 @@ class GCSConfig(TypedDict):
     auth_uri: str
     token_uri: str
 
+
 class S3Config(TypedDict):
     """Amazon S3 connector configuration."""
 
     region: Optional[str] = None
     access_key: str
     secret_key: str
+
 
 class GDriveConfig(TypedDict):
     """Google Drive connector configuration."""
@@ -94,6 +99,7 @@ class GDriveConfig(TypedDict):
     auth_uri: str
     token_uri: str
 
+
 class SFTPConfig(TypedDict):
     """SFTP connector configuration."""
 
@@ -101,6 +107,7 @@ class SFTPConfig(TypedDict):
     port: str
     username: str
     password: str
+
 
 class CustomServerConfig(TypedDict):
     """Scheduling options when requesting dedicated inference compute."""
@@ -111,11 +118,13 @@ class CustomServerConfig(TypedDict):
     op_hours: Optional[bool] = None
     auto_start: bool = False
 
+
 class InferenceCompute(TypedDict):
     """Inference compute selection payload."""
 
     instance_type: str
     custom_server_config: Optional[CustomServerConfig] = CustomServerConfig()
+
 
 class InferenceSettings(TypedDict):
     """Inference settings that can be applied to text models."""

@@ -70,7 +70,7 @@ def poll_events(
 
     for event in api_client.stream(
         uri=f"{POLL_EVENTS}?project_name={project_name}&event_id={event_id}",
-        method="GET"
+        method="GET",
     ):
         details = event.get("details")
 

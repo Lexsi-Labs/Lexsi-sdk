@@ -30,7 +30,8 @@ class XAI(BaseModel):
     api_client: APIClient = APIClient()
 
     def __init__(self, **kwargs):
-        """Initialize the API client using environment-derived settings."""
+        """Initialize the API client using environment-derived settings.
+        Stores configuration and prepares the object for use."""
         super().__init__(**kwargs)
 
         debug = self.env.get_debug()
@@ -108,7 +109,7 @@ class XAI(BaseModel):
                     "organization_admin": True,
                     "current_users": 1,
                     "created_by": "you",
-                }
+                },
             )
 
         organizations = self.api_client.get(USER_ORGANIZATION_URI)
@@ -202,7 +203,7 @@ class XAI(BaseModel):
         """
         res = self.api_client.get(AVAILABLE_SYNTHETIC_CUSTOM_SERVERS_URI)
         return res["details"]
-    
+
     def register_case(
         self,
         token: str,
@@ -220,9 +221,10 @@ class XAI(BaseModel):
         explain_model: Optional[bool] = False,
         session_id: Optional[str] = None,
         xai: Optional[str] = None,
-        file_path: Optional[str] = None
+        file_path: Optional[str] = None,
     ):
-        """Register a new case entry with raw or processed payloads."""
+        """Register a new case entry with raw or processed payloads.
+        Encapsulates a small unit of SDK logic and returns the computed result."""
         form_data = {
             "client_id": client_id,
             "project_name": project_name,
@@ -237,11 +239,9 @@ class XAI(BaseModel):
             "explainability_method": explainability_method,
             "explain_model": str(explain_model).lower(),
             "session_id": str(session_id).lower(),
-            "xai": xai
+            "xai": xai,
         }
-        headers = {
-            "x-api-token": token
-        }
+        headers = {"x-api-token": token}
         form_data = {k: v for k, v in form_data.items() if v is not None}
         files = {}
         if file_path:
@@ -275,19 +275,18 @@ class XAI(BaseModel):
         project_name: str = None,
         tag: str = None,
         xai: Optional[List[str]] = None,
-        refresh: Optional[bool] = None
+        refresh: Optional[bool] = None,
     ):
-        """Fetch case profile details for a given identifier and tag."""
-        headers = {
-            "x-api-token": token
-        }
+        """Fetch case profile details for a given identifier and tag.
+        Encapsulates a small unit of SDK logic and returns the computed result."""
+        headers = {"x-api-token": token}
         payload = {
             "client_id": client_id,
             "project_name": project_name,
             "unique_identifier": unique_identifier,
             "tag": tag,
             "xai": xai,
-            "refresh": refresh
+            "refresh": refresh,
         }
         # res = requests.post(
         #     self.env.get_base_url() + "/" + GET_CASE_PROFILE_URI,
