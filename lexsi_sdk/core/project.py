@@ -560,7 +560,6 @@ class Project(BaseModel):
         processor_config: Optional[dict] = None,
         finetune_mode: Optional[dict] = None,
         tunning_strategy: Optional[str] = None,
-        gpu: Optional[bool] = False,
         instance_type: Optional[str] = "shared"
     ) -> str:
         """Uploads data for the current project
@@ -733,7 +732,7 @@ class Project(BaseModel):
                             "handle_data_imbalance", False
                         ),
                     },
-                    "gpu": gpu,
+                    # "gpu": gpu,
                     "instance_type": instance_type,
                     "sample_percentage": config.get("sample_percentage", None)
                 }
@@ -2456,8 +2455,7 @@ class Project(BaseModel):
         processor_config: Optional[dict] = None,
         finetune_mode: Optional[dict] = None,
         tunning_strategy: Optional[str] = None,
-        instance_type: Optional[str] = None,
-        gpu: Optional[bool] = False
+        instance_type: Optional[str] = None
     ) -> str:
         """Train new model
 
@@ -2498,12 +2496,13 @@ class Project(BaseModel):
 
         if tunning_strategy!="inference" and instance_type:
             custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
+            available_custom_batch_servers = custom_batch_servers.get("details", []) + custom_batch_servers.get("available_gpu_custom_servers", [])
             Validate.value_against_list(
                 "instance_type",
                 instance_type,
                 [
                     server["instance_name"]
-                    for server in custom_batch_servers.get("details", [])
+                    for server in available_custom_batch_servers
                 ],
             )
 
@@ -2686,8 +2685,7 @@ class Project(BaseModel):
             ),
             "lime_explainability_iterations": data_conf.get(
                 "lime_explainability_iterations"
-            ),
-            "gpu": gpu
+            )
         }
 
         if tunning_config:
