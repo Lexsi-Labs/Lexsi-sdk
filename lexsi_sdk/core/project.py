@@ -2568,51 +2568,107 @@ class Project(BaseModel):
         tunning_strategy: Optional[str] = None,
         instance_type: Optional[str] = None
     ) -> str:
-        # """Train new model
-
-        # :param model_type: type of model
-        # :param data_config: config for the data
-        #                 {
-        #                     "tags": List[str]
-        #                     "test_tags": List[str]
-        #                     "feature_exclude": List[str]
-        #                     "feature_encodings": Dict[str, str]   # {"feature_name":"labelencode | countencode"}
-        #                     "drop_duplicate_uid": bool
-        #                     "use_optuna": bool # Allow using Optuna Framework for hyperparameter optimization
-        #                     "sample_percentage": float   # Data sample percentage to be used to train
-        #                     "explainability_sample_percentage": float  # Explainability sample percentage to be used
-        #                     "lime_explainability_iterations": int # Lime Explainability iterations to be used
-        #                     "explainability_method": str # List of explainability method ["shap", "lime"]
-        #                     "handle_data_imbalance": bool # Handle data imbalance using SMOTE
-        #                 },
-        #                 defaults to None
-        # :param model_config: config with hyper parameters for the model, defaults to None
-        # :param instance_type: instance to be used for model training
-        # :return: response
-        # """
 
         """
-        Train a new machine learning model.
+        Train a Classic ML model or a Tabular Foundational model.
 
-        This method handles data preparation, optional hyperparameter optimization,
-        model training, and explainability setup.
+        This method is the single entry-point to train models in Lexsi. It applies the full
+        training pipeline end-to-end:
 
-        :param model_type: Type of model to train
+        - selects and prepares data (filtering, sampling, feature handling, imbalance handling)
+        - applies preprocessing / feature engineering (optional)
+        - trains either a **classic ML model** or a **tabular foundation model**
+        - optionally performs hyperparameter tuning (classic or foundational depending on strategy)
+        - optionally performs fine-tuning / PEFT for foundation models
+        - produces a trained model artifact and returns its identifier/reference
+
+        Supported ``model_type`` values
+        ------------------------------
+        **Classic ML models**
+            - ``XGBoost``
+            - ``LGBoost``
+            - ``CatBoost``
+            - ``RandomForest``
+            - ``SGD``
+            - ``LogisticRegression``
+            - ``LinearRegression``
+            - ``GaussianNaiveBayes``
+
+        **Tabular foundation models (TabTune wrapper)**
+            - ``TabPFN``
+            - ``TabICL``
+            - ``TabDPT``
+            - ``OrionMSP``
+            - ``OrionBix``
+            - ``Mitra``
+            - ``ContextTab``
+
+        Parameters
+        ----------
+        :param model_type: Name of the model to train. Must be one of the supported values
+            listed above.
         :type model_type: str
 
-        :param data_config: Data + explainability configuration. See :class:`lexsi_sdk.common.types.DataConfig`.
-        :type data_config: dict, optional
+        :param data_config: Dataset selection + training-time data behavior such as:
+            tag-based filtering, train/test tags, feature exclusion/encodings, optional Optuna usage,
+            sampling fractions, and explainability controls.
+            See :class:`lexsi_sdk.common.types.DataConfig`.
+        :type data_config: DataConfig | None
 
-        :param model_config: Model-specific hyperparameters and training settings.
-        :type model_config: dict, optional
+        :param processor_config: Optional preprocessing / feature engineering configuration applied
+            before training (e.g., imputation, scaling, resampling strategy).
+            See :class:`lexsi_sdk.common.types.ProcessorParams`.
+        :type processor_config: ProcessorParams | None
 
-        :param instance_type: Compute instance type used for training (CPU/GPU).
-        :type instance_type: str
+        :param model_config: Model hyperparameters for the chosen ``model_type``.
+            Use the matching config type:
+            
+            - For ``XGBoost``: :class:`lexsi_sdk.common.types.XGBoostParams`
+            - For ``LGBoost``: :class:`lexsi_sdk.common.types.LightGBMParams`
+            - For ``CatBoost``: :class:`lexsi_sdk.common.types.CatBoostParams`
+            - For ``RandomForest``: :class:`lexsi_sdk.common.types.RandomForestParams`
+            - For foundation models (e.g., ``TabPFN``, ``TabICL``, ...):
+            :class:`lexsi_sdk.common.types.FoundationalModelParams`
 
-        :return: Training response including model artifacts, metrics, and metadata.
-        :rtype: dict
+            For models like ``SGD``, ``LogisticRegression``, ``LinearRegression``,
+            ``GaussianNaiveBayes``, parameters may be taken from defaults in the wrapper if not
+            explicitly exposed through a typed config.
+        :type model_config: XGBoostParams | LightGBMParams | CatBoostParams | RandomForestParams | FoundationalModelParams | None
+
+        :param tunning_config: Optional tuning / adaptation loop configuration.
+            Used for episodic / few-shot / fine-tuning style training and some tuning strategies.
+            See :class:`lexsi_sdk.common.types.TuningParams`.
+        :type tunning_config: TuningParams | None
+
+        :param tunning_strategy: Hyperparameter tuning strategy (when tuning is enabled).
+            Common values supported by wrappers:
+            - ``"grid"``: grid search
+            - ``"random"``: random search
+            - ``"bayesian"``: Bayesian optimization (if supported)
+            If not provided, the pipeline may use a default strategy or disable tuning.
+        :type tunning_strategy: str | None
+
+        :param finetune_mode: Fine-tuning mode for **foundation models**.
+            Common wrapper modes:
+            - ``"full"``: full fine-tuning (all trainable parameters)
+            - ``"peft"``: PEFT-based fine-tuning (e.g., LoRA)
+            - ``"freeze_backbone"``: train head/adapter while freezing the backbone (if supported)
+            This is ignored for classic ML models.
+        :type finetune_mode: str | None
+
+        :param peft_config: Parameter-efficient fine-tuning configuration (e.g., LoRA params).
+            Used only when ``finetune_mode="peft"`` and the selected foundation model supports PEFT.
+            See :class:`lexsi_sdk.common.types.PEFTParams`.
+        :type peft_config: PEFTParams | None
+
+        :param instance_type: Compute instance used for training (CPU/GPU).
+            This may be used by the orchestration layer to select the appropriate runtime.
+            Example values: ``"cpu.large"``, ``"gpu.a10"``, ``"gpu.a100"``.
+        :type instance_type: str | None
+
+        :return: Identifier or reference for the trained model artifact (e.g., model ID / artifact URI).
+        :rtype: str
         """
-
 
 
         project_config = self.config()

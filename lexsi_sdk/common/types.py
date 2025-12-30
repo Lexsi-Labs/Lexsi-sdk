@@ -116,26 +116,81 @@ class DataConfig(TypedDict):
 
 class XGBoostParams(TypedDict, total=False):
     """
-    :param objective: Learning objective. Examples: "binary:logistic", "reg:squarederror".
-    :param booster: Booster type. Options: "gbtree", "gblinear".
-    :param eval_metric: Evaluation metric. Examples: "logloss", "auc", "rmse".
-    :param grow_policy: Tree growth policy. Options: "depthwise", "lossguide".
-    :param max_depth: Maximum depth of the tree.
-    :param max_leaves: Maximum number of leaves per tree.
+    XGBoost hyperparameter configuration.
+
+    Keys correspond to common XGBoost training parameters. Provide only the keys
+    you want to override.
+
+    :param objective: Learning objective.
+        Common values:
+        ``"binary:logistic"``, ``"binary:logitraw"``, ``"multi:softprob"``,
+        ``"reg:squarederror"``, ``"reg:logistic"``, ``"rank:pairwise"``.
+    :type objective: str | None
+
+    :param booster: Booster type.
+        Allowed values: ``"gbtree"``, ``"gblinear"``.
+    :type booster: Literal["gbtree", "gblinear"] | None
+
+    :param eval_metric: Evaluation metric used during training.
+        Common values:
+        ``"logloss"``, ``"auc"``, ``"aucpr"``, ``"error"``, ``"rmse"``, ``"mae"``,
+        ``"merror"``, ``"mlogloss"``.
+    :type eval_metric: str | None
+
+    :param grow_policy: Tree growth policy (tree-based boosters).
+        Allowed values: ``"depthwise"``, ``"lossguide"``.
+    :type grow_policy: Literal["depthwise", "lossguide"] | None
+
+    :param max_depth: Maximum depth of a tree.
+        Typical range: 1–16.
+    :type max_depth: int | None
+
+    :param max_leaves: Maximum number of leaves per tree (used with ``lossguide``).
+        Typical range: 0–4096 (0 means "no limit" depending on implementation).
+    :type max_leaves: int | None
+
     :param min_child_weight: Minimum sum of instance weight needed in a child.
-    :param colsample_bytree: Subsample ratio of columns per tree.
-    :param colsample_bylevel: Subsample ratio of columns per level.
-    :param colsample_bynode: Subsample ratio of columns per node.
-    :param learning_rate: Step size shrinkage used in update to prevents overfitting.
-    :param n_estimators: Number of boosting rounds.
-    :param subsample: Subsample ratio of training instance.
-    :param alpha: L1 regularization term on weights.
-    :param lambda_: L2 regularization term on weights.
+        Higher values make the model more conservative.
+    :type min_child_weight: float | None
+
+    :param colsample_bytree: Subsample ratio of columns when constructing each tree.
+        Range: 0.0–1.0.
+    :type colsample_bytree: float | None
+
+    :param colsample_bylevel: Subsample ratio of columns for each level.
+        Range: 0.0–1.0.
+    :type colsample_bylevel: float | None
+
+    :param colsample_bynode: Subsample ratio of columns for each split/node.
+        Range: 0.0–1.0.
+    :type colsample_bynode: float | None
+
+    :param learning_rate: Step size shrinkage (eta).
+        Range: 0.0–1.0 (commonly 0.01–0.3).
+    :type learning_rate: float | None
+
+    :param n_estimators: Number of boosting rounds / trees.
+        Typical range: 50–5000.
+    :type n_estimators: int | None
+
+    :param subsample: Subsample ratio of the training instances.
+        Range: 0.0–1.0.
+    :type subsample: float | None
+
+    :param alpha: L1 regularization term on weights (reg_alpha).
+        Range: >= 0.
+    :type alpha: float | None
+
+    :param lambda_: L2 regularization term on weights (reg_lambda).
+        Range: >= 0.
+    :type lambda_: float | None
+
     :param seed: Random seed for reproducibility.
+    :type seed: int | None
     """
-    objective: Optional[str]  # 'binary:logistic', 'reg:squarederror', etc.
+    objective: Optional[str]
     booster: Optional[Literal["gbtree", "gblinear"]]
-    eval_metric: Optional[str]  # 'logloss', 'auc', 'rmse', etc.
+    eval_metric: Optional[str]
     grow_policy: Optional[Literal["depthwise", "lossguide"]]
     max_depth: Optional[int]
     max_leaves: Optional[int]
@@ -152,14 +207,64 @@ class XGBoostParams(TypedDict, total=False):
 
 class LightGBMParams(TypedDict, total=False):
     """
-    :param boosting_type: Type of boosting algorithm. Options: "gbdt", "dart".
+    LightGBM hyperparameter configuration.
+
+    Keys correspond to common LightGBM training parameters. Provide only the keys
+    you want to override.
+
+    :param boosting_type: Boosting algorithm type.
+        Allowed values: ``"gbdt"``, ``"dart"``.
+    :type boosting_type: Literal["gbdt", "dart"] | None
+
     :param num_leaves: Maximum number of leaves in one tree.
-    :param min_child_samples: Minimum number of data needed in a child.
-    :param min_child_weight: Minimum sum of instance weight in a child.
-    :param min_split_gain: Minimum gain to perform a split.
-    :param tree_learner: Tree learning algorithm. Options: "serial", "voting", "data", "feature".
-    :param class_weight: Class weights. Option: "balanced".
+        Typical range: 16–1024.
+    :type num_leaves: int | None
+
+    :param max_depth: Maximum tree depth.
+        Use -1 for no limit (LightGBM convention) if your training code supports it.
+    :type max_depth: int | None
+
+    :param learning_rate: Learning rate (shrinkage).
+        Range: 0.0–1.0 (commonly 0.01–0.3).
+    :type learning_rate: float | None
+
+    :param n_estimators: Number of boosting iterations / trees.
+        Typical range: 50–5000.
+    :type n_estimators: int | None
+
+    :param min_child_samples: Minimum number of data points in a leaf.
+        Typical range: 5–200.
+    :type min_child_samples: int | None
+
+    :param min_child_weight: Minimum sum of hessian in one leaf.
+        Range: >= 0.
+    :type min_child_weight: float | None
+
+    :param min_split_gain: Minimum gain required to make a split.
+        Range: >= 0.
+    :type min_split_gain: float | None
+
+    :param subsample: Subsample ratio of the training instances (a.k.a. bagging_fraction).
+        Range: 0.0–1.0.
+    :type subsample: float | None
+
+    :param colsample_bytree: Subsample ratio of columns when constructing each tree
+        (a.k.a. feature_fraction).
+        Range: 0.0–1.0.
+    :type colsample_bytree: float | None
+
+    :param tree_learner: Tree learning algorithm.
+        Allowed values: ``"serial"``, ``"voting"``, ``"data"``, ``"feature"``.
+    :type tree_learner: Literal["serial", "voting", "data", "feature"] | None
+
+    :param class_weight: Class weights.
+        Allowed values: ``"balanced"``.
+    :type class_weight: Literal["balanced"] | None
+
+    :param random_state: Random seed for reproducibility.
+    :type random_state: int | None
     """
+
     boosting_type: Optional[Literal["gbdt", "dart"]]
     num_leaves: Optional[int]
     max_depth: Optional[int]
@@ -176,11 +281,33 @@ class LightGBMParams(TypedDict, total=False):
 
 class CatBoostParams(TypedDict, total=False):
     """
+    CatBoost hyperparameter configuration.
+
+    Provide only the keys you want to override.
+
     :param iterations: Number of boosting iterations.
+        Typical range: 100–50000.
+    :type iterations: int | None
+
+    :param learning_rate: Learning rate.
+        Range: 0.0–1.0 (commonly 0.01–0.3).
+    :type learning_rate: float | None
+
     :param depth: Depth of the tree.
-    :param colsample_bylevel_cb: Subsample ratio of columns per level (CatBoost).
-    :param min_data_in_leaf: Minimum data in a leaf node.
+        Typical range: 1–16.
+    :type depth: int | None
+
     :param subsample_cb: Subsample ratio of training data (CatBoost).
+        Range: 0.0–1.0.
+    :type subsample_cb: float | None
+
+    :param colsample_bylevel_cb: Subsample ratio of columns per level (CatBoost).
+        Range: 0.0–1.0.
+    :type colsample_bylevel_cb: float | None
+
+    :param min_data_in_leaf: Minimum number of samples in a leaf node.
+        Typical range: 1–200.
+    :type min_data_in_leaf: int | None
     """
     iterations: Optional[int]
     learning_rate: Optional[float]
@@ -191,11 +318,43 @@ class CatBoostParams(TypedDict, total=False):
 
 class RandomForestParams(TypedDict, total=False):
     """
-    :param max_features: Maximum features considered for split. Options: int, float, "auto", "sqrt", "log2".
+    RandomForest hyperparameter configuration.
+
+    Provide only the keys you want to override.
+
+    :param max_depth: Maximum depth of the tree.
+        Use ``None`` for unlimited depth (if supported by your training wrapper).
+    :type max_depth: int | None
+
+    :param max_features: Number of features to consider when looking for the best split.
+        Allowed values:
+        - ``"auto"`` (implementation-dependent; often same as ``"sqrt"`` for classification)
+        - ``"sqrt"``
+        - ``"log2"``
+        - ``int`` (absolute number of features)
+        - ``float`` (fraction of features, 0.0–1.0)
+    :type max_features: int | float | Literal["auto", "sqrt", "log2"] | None
+
     :param max_leaf_nodes: Maximum number of leaf nodes.
-    :param min_samples_leaf: Minimum number of samples per leaf.
-    :param min_samples_split: Minimum number of samples to split a node.
-    :param criterion: Function to measure quality of split. Options: "gini", "entropy", "mse", "squared_error".
+    :type max_leaf_nodes: int | None
+
+    :param min_samples_leaf: Minimum number of samples required to be at a leaf node.
+        Typical range: 1–50.
+    :type min_samples_leaf: int | None
+
+    :param min_samples_split: Minimum number of samples required to split an internal node.
+        Typical range: 2–200.
+    :type min_samples_split: int | None
+
+    :param n_estimators: Number of trees in the forest.
+        Typical range: 10–5000.
+    :type n_estimators: int | None
+
+    :param criterion: Function to measure the quality of a split.
+        Allowed values:
+        - Classification: ``"gini"``, ``"entropy"``
+        - Regression: ``"squared_error"``, ``"mse"``
+    :type criterion: Literal["gini", "entropy", "mse", "squared_error"] | None
     """
     max_depth: Optional[int]
     max_features: Optional[Union[int, float, Literal["auto", "sqrt", "log2"]]]
@@ -207,32 +366,52 @@ class RandomForestParams(TypedDict, total=False):
 
 class FoundationalModelParams(TypedDict, total=False):
     """
-    Core model configuration parameters.
+    Tabular foundational model configuration (TabTune Library).
 
-    These parameters control model execution, reproducibility,
-    and high-level training behavior.
+    This config is used when ``model_type`` is one of the foundational models
+    (e.g., ``TabPFN``, ``TabICL``, ``TabDPT``, ``OrionMSP``, ``OrionBix``,
+    ``Mitra``, ``ContextTab``). It controls execution device, fitting behavior,
+    reproducibility, and probability calibration.
 
-    :param device: Device on which the model will run.
-        Supported values: ``"cpu"``, ``"cuda"``, ``"auto"``.
-    :type device: Literal["cpu", "cuda", "auto"]
+    Notes
+    -----
+    - This wrapper passes these fields into the underlying TabTune model runner.
+      Unsupported fields are ignored or may raise validation errors depending on
+      wrapper strictness.
+    - Some foundational models may not use all fields (e.g., ``n_estimators``).
 
-    :param fit_mode: Mode controlling how the model is trained or fitted.
-        Example values: ``"fit_preprocessors"``, ``"fit_model"``.
-    :type fit_mode: str
+    :param device: Execution device for the foundational model.
+        Supported by this wrapper:
+        - ``"cpu"``: Force CPU execution
+        - ``"cuda"``: Force GPU execution
+        - ``"auto"``: Select device automatically
+    :type device: Literal["cpu", "cuda", "auto"] | None
 
-    :param n_estimators: Number of estimators or ensemble members.
-    :type n_estimators: int
+    :param fit_mode: Controls what is "fit" during the training stage.
+        Common wrapper modes:
+        - ``"fit_preprocessors"``: fit only preprocessing / encoders
+        - ``"fit_model"``: fit the foundational model (and preprocessors if needed)
+        - ``"fit_all"``: run full pipeline fitting (preprocessors + model)
+        If your wrapper only supports a subset, document/validate accordingly.
+    :type fit_mode: str | None
 
-    :param n_jobs: Number of parallel jobs to run.
+    :param n_estimators: Number of estimators / ensemble members (if supported by the model).
+        For models that don’t use ensembles, this may be ignored.
+    :type n_estimators: int | None
+
+    :param n_jobs: Number of parallel jobs/threads to use.
         Use ``-1`` to utilize all available cores.
-    :type n_jobs: int
+    :type n_jobs: int | None
 
     :param random_state: Random seed for reproducibility.
-    :type random_state: int
+    :type random_state: int | None
 
-    :param softmax_temperature: Temperature parameter applied to softmax
-        for probability calibration.
-    :type softmax_temperature: float
+    :param softmax_temperature: Temperature applied to logits before softmax for
+        probability calibration.
+        - ``1.0`` keeps probabilities unchanged
+        - ``< 1.0`` sharpens probabilities
+        - ``> 1.0`` smooths probabilities
+    :type softmax_temperature: float | None
     """
 
     device: Optional[Literal["cpu", "cuda", "auto"]]
@@ -244,31 +423,47 @@ class FoundationalModelParams(TypedDict, total=False):
 
 class TuningParams(TypedDict, total=False):
     """
-    Hyperparameter tuning and fine-tuning configuration.
+    Hyperparameter tuning / fine-tuning configuration (TabTune wrapper).
 
-    These parameters are primarily used during meta-learning,
-    few-shot training, or iterative optimization.
+    This config controls optimization loops used in:
+    - meta-learning or episodic training
+    - few-shot adaptation
+    - iterative fine-tuning / search
+
+    Notes
+    -----
+    - These fields may be used only for foundational models (depending on the
+      wrapper logic).
+    - If both episodic (support/query) and standard training fields are provided,
+      the wrapper should define precedence clearly.
 
     :param epochs: Number of training epochs.
-    :type epochs: int
+        Typical range: 1–200 (depends on model and dataset size).
+    :type epochs: int | None
 
     :param learning_rate: Learning rate used during optimization.
-    :type learning_rate: float
+        Common range: 1e-5–1e-1.
+    :type learning_rate: float | None
 
-    :param batch_size: Number of samples processed per batch.
-    :type batch_size: int
+    :param batch_size: Number of samples per batch.
+        Typical range: 8–4096 depending on model and memory.
+    :type batch_size: int | None
 
-    :param support_size: Number of support samples in few-shot learning.
-    :type support_size: int
+    :param support_size: Number of support samples per episode (few-shot).
+        Example: 16, 32, 64.
+    :type support_size: int | None
 
-    :param query_size: Number of query samples in few-shot learning.
-    :type query_size: int
+    :param query_size: Number of query samples per episode (few-shot).
+        Example: 16, 32, 64.
+    :type query_size: int | None
 
-    :param n_episodes: Number of episodes in meta-learning.
-    :type n_episodes: int
+    :param n_episodes: Number of episodes for meta-learning / episodic training.
+        Typical range: 50–5000.
+    :type n_episodes: int | None
 
-    :param steps_per_epoch: Training steps per epoch.
-    :type steps_per_epoch: int
+    :param steps_per_epoch: Number of optimization steps per epoch.
+        If not provided, the wrapper may infer it from dataset size and batch size.
+    :type steps_per_epoch: int | None
     """
 
     epochs: Optional[int]
@@ -281,19 +476,28 @@ class TuningParams(TypedDict, total=False):
 
 class PEFTParams(TypedDict, total=False):
     """
-    Parameter-Efficient Fine-Tuning (PEFT) configuration.
+    Parameter-Efficient Fine-Tuning (PEFT) configuration (TabTune wrapper).
 
-    These parameters control lightweight adaptation strategies
-    such as LoRA.
+    This config enables lightweight adaptation (e.g., LoRA) for foundational models.
+    It is typically used when ``finetune_mode="peft"``.
 
-    :param r: Rank of the low-rank adaptation matrices.
-    :type r: int
+    Notes
+    -----
+    - Applies only to models/backbones that support PEFT in the wrapper.
+    - If the underlying model does not support PEFT, these options may be ignored
+      or raise an error depending on wrapper strictness.
 
-    :param lora_alpha: Scaling factor applied to LoRA layers.
-    :type lora_alpha: int
+    :param r: Rank of the low-rank adaptation matrices (LoRA rank).
+        Typical values: 4, 8, 16, 32.
+    :type r: int | None
+
+    :param lora_alpha: Scaling factor for LoRA layers.
+        Typical values: 8, 16, 32, 64.
+    :type lora_alpha: int | None
 
     :param lora_dropout: Dropout rate applied within LoRA layers.
-    :type lora_dropout: float
+        Range: 0.0–0.5 (commonly 0.0–0.1).
+    :type lora_dropout: float | None
     """
 
     r: Optional[int]
@@ -305,25 +509,36 @@ class ProcessorParams(TypedDict, total=False):
     """
     Data preprocessing and feature engineering configuration.
 
-    These parameters control how input data is cleaned,
-    transformed, and balanced prior to training.
+    These parameters control how input data is cleaned and transformed prior to training.
+    The wrapper typically applies them before fitting either classical ML models or
+    foundational tabular models.
 
-    :param imputation_strategy: Strategy used to handle missing values.
-        Supported values: ``"mean"``, ``"median"``, ``"mode"``, ``"knn"``.
-    :type imputation_strategy: str
+    :param imputation_strategy: Strategy to handle missing values.
+        Supported by this wrapper:
+        - ``"mean"``: numerical mean
+        - ``"median"``: numerical median
+        - ``"mode"``: most frequent value
+        - ``"knn"``: kNN-based imputation
+    :type imputation_strategy: Literal["mean", "median", "mode", "knn"] | None
 
     :param scaling_strategy: Feature scaling method.
-        Supported values: ``"standard"``, ``"minmax"``, ``"robust"``.
-    :type scaling_strategy: str
+        Supported by this wrapper:
+        - ``"standard"``: standardization (z-score)
+        - ``"minmax"``: min-max scaling
+        - ``"robust"``: robust scaling (median/IQR)
+    :type scaling_strategy: Literal["standard", "minmax", "robust"] | None
 
-    :param resampling_strategy: Strategy used to address class imbalance.
-        Supported values: ``"smote"``, ``"random_oversample"``.
-    :type resampling_strategy: str
+    :param resampling_strategy: Strategy to address class imbalance (classification).
+        Supported by this wrapper:
+        - ``"smote"``: SMOTE oversampling
+        - ``"random_oversample"``: random oversampling
+        - ``"none"``: do not resample
+    :type resampling_strategy: Literal["smote", "random_oversample", "none"] | None
     """
 
-    imputation_strategy: str
-    scaling_strategy: str
-    resampling_strategy: str
+    imputation_strategy: Optional[Literal["mean", "median", "mode", "knn"]]
+    scaling_strategy: Optional[Literal["standard", "minmax", "robust"]]
+    resampling_strategy: Optional[Literal["smote", "random_oversample", "none"]]
 
 class SyntheticDataConfig(TypedDict):
     """
