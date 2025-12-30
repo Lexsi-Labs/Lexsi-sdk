@@ -16,7 +16,6 @@ from lexsi_sdk.common.constants import (
 )
 from lexsi_sdk.common.types import (
     CatBoostParams,
-    ClassicModelParams,
     DataConfig,
     FoundationalModelParams,
     InferenceCompute,
