@@ -479,24 +479,28 @@ class PEFTParams(TypedDict, total=False):
     Parameter-Efficient Fine-Tuning (PEFT) configuration (TabTune wrapper).
 
     This config enables lightweight adaptation (e.g., LoRA) for foundational models.
-    It is typically used when ``finetune_mode="peft"``.
+    It is typically used when ``tuning_strategy="peft"``.
 
     Notes
     -----
     - Applies only to models/backbones that support PEFT in the wrapper.
     - If the underlying model does not support PEFT, these options may be ignored
       or raise an error depending on wrapper strictness.
+    - All parameters are optional; unspecified values fall back to defaults.
 
     :param r: Rank of the low-rank adaptation matrices (LoRA rank).
-        Typical values: 4, 8, 16, 32.
+        Typical values: ``4``, ``8``, ``16``, ``32``.
+        Default: ``8``.
     :type r: int | None
 
     :param lora_alpha: Scaling factor for LoRA layers.
-        Typical values: 8, 16, 32, 64.
+        Typical values: ``8``, ``16``, ``32``, ``64``.
+        Default: ``16``.
     :type lora_alpha: int | None
 
     :param lora_dropout: Dropout rate applied within LoRA layers.
-        Range: 0.0–0.5 (commonly 0.0–0.1).
+        Range: ``0.0`` – ``0.5`` (commonly ``0.0`` – ``0.1``).
+        Default: ``0.05``.
     :type lora_dropout: float | None
     """
 

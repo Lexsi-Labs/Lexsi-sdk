@@ -2582,9 +2582,8 @@ class Project(BaseModel):
         - optionally performs fine-tuning / PEFT for foundation models
         - produces a trained model artifact and returns its identifier/reference
 
-        Supported ``model_type`` values
-        ------------------------------
-        **Classic ML models**
+        :param model_type: Name of the model to train. Must be one of the supported following values
+            **Classic ML models**
             - ``XGBoost``
             - ``LGBoost``
             - ``CatBoost``
@@ -2602,11 +2601,6 @@ class Project(BaseModel):
             - ``OrionBix``
             - ``Mitra``
             - ``ContextTab``
-
-        Parameters
-        ----------
-        :param model_type: Name of the model to train. Must be one of the supported values
-            listed above.
         :type model_type: str
 
         :param data_config: Dataset selection + training-time data behavior such as:
@@ -2640,20 +2634,39 @@ class Project(BaseModel):
             See :class:`lexsi_sdk.common.types.TuningParams`.
         :type tunning_config: TuningParams | None
 
-        :param tunning_strategy: Hyperparameter tuning strategy (when tuning is enabled).
-            Common values supported by wrappers:
-            - ``"grid"``: grid search
-            - ``"random"``: random search
-            - ``"bayesian"``: Bayesian optimization (if supported)
-            If not provided, the pipeline may use a default strategy or disable tuning.
-        :type tunning_strategy: str | None
+        :param tuning_strategy: Training / fine-tuning strategy to apply.
 
-        :param finetune_mode: Fine-tuning mode for **foundation models**.
-            Common wrapper modes:
-            - ``"full"``: full fine-tuning (all trainable parameters)
-            - ``"peft"``: PEFT-based fine-tuning (e.g., LoRA)
-            - ``"freeze_backbone"``: train head/adapter while freezing the backbone (if supported)
-            This is ignored for classic ML models.
+        Supported values:
+
+            - ``"inference"``:
+            Zero-shot inference only. No training or parameter updates are performed.
+
+            - ``"base-ft"``:
+            Full fine-tuning of all model parameters.
+
+            - ``"peft"``:
+            Parameter-efficient fine-tuning using LoRA adapters.
+            Requires ``peft_config`` and a foundation model that supports PEFT.
+
+            - ``"finetune"``:
+            Alias for ``"base-ft"``.
+
+        If not provided, the default behavior depends on the selected ``model_type``.
+        :type tuning_strategy: str | None
+
+        :param finetune_mode: Fine-tuning mode for episodic / foundation models.
+
+        Supported values:
+
+            - ``"meta-learning"``:
+            Episodic meta-learning mode (default). Uses support/query splits
+            and episodic optimization.
+
+            - ``"sft"``:
+            Standard supervised fine-tuning using conventional batches.
+
+        This parameter is applicable only to episodic or foundational models and
+        is ignored for classic ML models.
         :type finetune_mode: str | None
 
         :param peft_config: Parameter-efficient fine-tuning configuration (e.g., LoRA params).
@@ -2662,8 +2675,8 @@ class Project(BaseModel):
         :type peft_config: PEFTParams | None
 
         :param instance_type: Compute instance used for training (CPU/GPU).
-            This may be used by the orchestration layer to select the appropriate runtime.
-            Example values: ``"cpu.large"``, ``"gpu.a10"``, ``"gpu.a100"``.
+            This is used by the computation layer to select the appropriate runtime environment we have CPU/GPU runtime with small medium large with 2x 3x nomeclature with GPU T4 and A10G .
+            Example values: ``"small"``, ``"medium"``,``"large"``, ``"2xsmall"``, ``"T4.small"``, ``"A10G.xmedium"``
         :type instance_type: str | None
 
         :return: Identifier or reference for the trained model artifact (e.g., model ID / artifact URI).
