@@ -114,18 +114,8 @@ class DataConfig(TypedDict):
     explainability_method: List[str]
     handle_data_imbalance: Optional[bool]
 
-class ClassicModelParams(TypedDict, total=False):
+class XGBoostParams(TypedDict, total=False):
     """
-    Unified configuration parameters for all non-foundational models.
-
-    This TypedDict covers a wide range of models including:
-    XGBoost (classification & regression), LightGBM, CatBoost,
-    RandomForest, PEFT, TabDPT, Mitra, ContextTab, and others.
-    All fields are optional to allow flexible usage per model type.
-
-    -------------------------------
-    XGBoost Parameters
-    -------------------------------
     :param objective: Learning objective. Examples: "binary:logistic", "reg:squarederror".
     :param booster: Booster type. Options: "gbtree", "gblinear".
     :param eval_metric: Evaluation metric. Examples: "logloss", "auc", "rmse".
@@ -142,44 +132,11 @@ class ClassicModelParams(TypedDict, total=False):
     :param alpha: L1 regularization term on weights.
     :param lambda_: L2 regularization term on weights.
     :param seed: Random seed for reproducibility.
-
-    -------------------------------
-    LightGBM Parameters
-    -------------------------------
-    :param boosting_type: Type of boosting algorithm. Options: "gbdt", "dart".
-    :param num_leaves: Maximum number of leaves in one tree.
-    :param min_child_samples: Minimum number of data needed in a child.
-    :param min_child_weight: Minimum sum of instance weight in a child.
-    :param min_split_gain: Minimum gain to perform a split.
-    :param tree_learner: Tree learning algorithm. Options: "serial", "voting", "data", "feature".
-    :param class_weight: Class weights. Option: "balanced".
-
-    -------------------------------
-    CatBoost Parameters
-    -------------------------------
-    :param iterations: Number of boosting iterations.
-    :param depth: Depth of the tree.
-    :param colsample_bylevel_cb: Subsample ratio of columns per level (CatBoost).
-    :param min_data_in_leaf: Minimum data in a leaf node.
-    :param subsample_cb: Subsample ratio of training data (CatBoost).
-
-    -------------------------------
-    RandomForest Parameters
-    -------------------------------
-    :param max_features: Maximum features considered for split. Options: int, float, "auto", "sqrt", "log2".
-    :param max_leaf_nodes: Maximum number of leaf nodes.
-    :param min_samples_leaf: Minimum number of samples per leaf.
-    :param min_samples_split: Minimum number of samples to split a node.
-    :param criterion: Function to measure quality of split. Options: "gini", "entropy", "mse", "squared_error".
-
     """
-    # -------------------------------
-    # XGBoost
-    # -------------------------------
-    objective: Optional[str]  # e.g., 'binary:logistic', 'reg:squarederror'
-    booster: Optional[str]  # 'gbtree', 'gblinear'
-    eval_metric: Optional[str]  # 'logloss', 'auc', 'rmse'
-    grow_policy: Optional[str]  # 'depthwise', 'lossguide'
+    objective: Optional[str]  # 'binary:logistic', 'reg:squarederror', etc.
+    booster: Optional[Literal["gbtree", "gblinear"]]
+    eval_metric: Optional[str]  # 'logloss', 'auc', 'rmse', etc.
+    grow_policy: Optional[Literal["depthwise", "lossguide"]]
     max_depth: Optional[int]
     max_leaves: Optional[int]
     min_child_weight: Optional[float]
@@ -193,34 +150,60 @@ class ClassicModelParams(TypedDict, total=False):
     lambda_: Optional[float]
     seed: Optional[int]
 
-    # -------------------------------
-    # LightGBM
-    # -------------------------------
+class LightGBMParams(TypedDict, total=False):
+    """
+    :param boosting_type: Type of boosting algorithm. Options: "gbdt", "dart".
+    :param num_leaves: Maximum number of leaves in one tree.
+    :param min_child_samples: Minimum number of data needed in a child.
+    :param min_child_weight: Minimum sum of instance weight in a child.
+    :param min_split_gain: Minimum gain to perform a split.
+    :param tree_learner: Tree learning algorithm. Options: "serial", "voting", "data", "feature".
+    :param class_weight: Class weights. Option: "balanced".
+    """
     boosting_type: Optional[Literal["gbdt", "dart"]]
     num_leaves: Optional[int]
+    max_depth: Optional[int]
+    learning_rate: Optional[float]
+    n_estimators: Optional[int]
     min_child_samples: Optional[int]
     min_child_weight: Optional[float]
     min_split_gain: Optional[float]
+    subsample: Optional[float]
+    colsample_bytree: Optional[float]
     tree_learner: Optional[Literal["serial", "voting", "data", "feature"]]
     class_weight: Optional[Literal["balanced"]]
+    random_state: Optional[int]
 
-    # -------------------------------
-    # CatBoost
-    # -------------------------------
+class CatBoostParams(TypedDict, total=False):
+    """
+    :param iterations: Number of boosting iterations.
+    :param depth: Depth of the tree.
+    :param colsample_bylevel_cb: Subsample ratio of columns per level (CatBoost).
+    :param min_data_in_leaf: Minimum data in a leaf node.
+    :param subsample_cb: Subsample ratio of training data (CatBoost).
+    """
     iterations: Optional[int]
+    learning_rate: Optional[float]
     depth: Optional[int]
+    subsample_cb: Optional[float]
     colsample_bylevel_cb: Optional[float]
     min_data_in_leaf: Optional[int]
-    subsample_cb: Optional[float]
 
-    # -------------------------------
-    # RandomForest
-    # -------------------------------
+class RandomForestParams(TypedDict, total=False):
+    """
+    :param max_features: Maximum features considered for split. Options: int, float, "auto", "sqrt", "log2".
+    :param max_leaf_nodes: Maximum number of leaf nodes.
+    :param min_samples_leaf: Minimum number of samples per leaf.
+    :param min_samples_split: Minimum number of samples to split a node.
+    :param criterion: Function to measure quality of split. Options: "gini", "entropy", "mse", "squared_error".
+    """
+    max_depth: Optional[int]
     max_features: Optional[Union[int, float, Literal["auto", "sqrt", "log2"]]]
     max_leaf_nodes: Optional[int]
     min_samples_leaf: Optional[int]
     min_samples_split: Optional[int]
-    criterion: Optional[str]
+    n_estimators: Optional[int]
+    criterion: Optional[Literal["gini", "entropy", "mse", "squared_error"]]
 
 class FoundationalModelParams(TypedDict, total=False):
     """

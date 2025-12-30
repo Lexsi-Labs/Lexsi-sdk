@@ -15,13 +15,16 @@ from lexsi_sdk.common.constants import (
     MODEL_PERF_DASHBOARD_REQUIRED_FIELDS,
 )
 from lexsi_sdk.common.types import (
+    CatBoostParams,
     ClassicModelParams,
     DataConfig,
     FoundationalModelParams,
     InferenceCompute,
+    LightGBMParams,
     PEFTParams,
     ProcessorParams,
     ProjectConfig,
+    RandomForestParams,
     SyntheticDataConfig,
     SyntheticModelHyperParams,
     GCSConfig,
@@ -29,6 +32,7 @@ from lexsi_sdk.common.types import (
     GDriveConfig,
     SFTPConfig,
     TuningParams,
+    XGBoostParams,
 )
 from lexsi_sdk.common.utils import parse_datetime, parse_float, poll_events
 from lexsi_sdk.common.validation import Validate
@@ -2556,7 +2560,7 @@ class Project(BaseModel):
         self,
         model_type: str,
         data_config: Optional[DataConfig] = None,
-        model_config: Optional[Union[ClassicModelParams, FoundationalModelParams]] = None,
+        model_config: Optional[Union[XGBoostParams, LightGBMParams, CatBoostParams, RandomForestParams, FoundationalModelParams]] = None,
         tunning_config: Optional[TuningParams] = None,
         peft_config: Optional[PEFTParams] = None,
         processor_config: Optional[ProcessorParams] = None,
