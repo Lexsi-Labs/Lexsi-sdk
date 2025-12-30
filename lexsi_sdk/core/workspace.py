@@ -31,7 +31,8 @@ class Workspace(BaseModel):
     api_client: APIClient
 
     def __init__(self, **kwargs):
-        """Attach API client for workspace operations."""
+        """Attach API client for workspace operations.
+        Stores configuration and prepares the object for use."""
         super().__init__(**kwargs)
         self.api_client = kwargs.get("api_client")
 
@@ -150,15 +151,20 @@ class Workspace(BaseModel):
         )
 
         project = next(
-            filter(lambda project: project.get("user_project_name") == project_name, workspace.get("data", {}).get("projects", [])),
+            filter(
+                lambda project: project.get("user_project_name") == project_name,
+                workspace.get("data", {}).get("projects", []),
+            ),
             None,
         )
 
         if project is None:
             raise Exception("Project Not Found")
-        
-        if project.get("metadata",{}).get("modality") == "text": return TextProject(api_client=self.api_client, **project)
-        elif project.get("metadata",{}).get("modality") == "agent": return AgentProject(api_client=self.api_client, **project)
+
+        if project.get("metadata", {}).get("modality") == "text":
+            return TextProject(api_client=self.api_client, **project)
+        elif project.get("metadata", {}).get("modality") == "agent":
+            return AgentProject(api_client=self.api_client, **project)
 
         return Project(api_client=self.api_client, **project)
 
@@ -205,7 +211,7 @@ class Workspace(BaseModel):
 
         if not res["success"]:
             raise Exception(res["details"])
-        
+
         if modality == "text":
             project = TextProject(api_client=self.api_client, **res["details"])
         elif modality == "agent":
@@ -313,13 +319,16 @@ class Workspace(BaseModel):
         return "Server Updated"
 
     def __print__(self) -> str:
-        """User-friendly string representation."""
+        """User-friendly string representation.
+        Encapsulates a small unit of SDK logic and returns the computed result."""
         return f"Workspace(user_workspace_name='{self.user_workspace_name}', created_by='{self.created_by}', created_at='{self.created_at}')"
 
     def __str__(self) -> str:
-        """Return printable representation."""
+        """Return printable representation.
+        Summarizes the instance in a concise form."""
         return self.__print__()
 
     def __repr__(self) -> str:
-        """Return developer-friendly representation."""
+        """Return developer-friendly representation.
+        Includes key fields useful for logging and troubleshooting."""
         return self.__print__()

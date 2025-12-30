@@ -20,12 +20,14 @@ DASHBOARD_TYPES = [
 
 class Dashboard(BaseModel):
     """Client-side wrapper for visualizing generated dashboards."""
+
     config: dict
     query_params: str
     raw_data: dict | list | str
 
     def __init__(self, **kwargs):
-        """Print configuration then render the dashboard frame."""
+        """Print configuration then render the dashboard frame.
+        Stores configuration and prepares the object for use."""
         super().__init__(**kwargs)
 
         self.print_config()
@@ -46,16 +48,16 @@ class Dashboard(BaseModel):
 
     def get_config(self) -> dict:
         """
-        get the dashboard config
-        """
+                get the dashboard config
+        Reads from internal state or a backend client as needed."""
         config_copy = {**self.config}
         config_copy.pop("metadata", None)
         return config_copy
 
     def get_raw_data(self) -> dict:
         """
-        get the dashboard raw data
-        """
+                get the dashboard raw data
+        Reads from internal state or a backend client as needed."""
         raw_data = {"created_at": self.config.get("created_at")}
 
         if self.config["type"] == "data_drift":
@@ -111,21 +113,24 @@ class Dashboard(BaseModel):
 
     def print_config(self):
         """
-        pretty print the cdashboard config
-        """
+                pretty print the cdashboard config
+        Encapsulates a small unit of SDK logic and returns the computed result."""
         config = {k: v for k, v in self.config.items() if v is not None}
         config.pop("metadata", None)
         print("Using config: ", end="")
         print(json.dumps(config, indent=4))
 
     def __print__(self) -> str:
-        """User-friendly string representation."""
+        """User-friendly string representation.
+        Encapsulates a small unit of SDK logic and returns the computed result."""
         return f"Dashboard(config='{self.get_config()}')"
 
     def __str__(self) -> str:
-        """Return printable representation."""
+        """Return printable representation.
+        Summarizes the instance in a concise form."""
         return self.__print__()
 
     def __repr__(self) -> str:
-        """Return developer-friendly representation."""
+        """Return developer-friendly representation.
+        Includes key fields useful for logging and troubleshooting."""
         return self.__print__()

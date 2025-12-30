@@ -65,7 +65,35 @@ project = workspace.project("Your Project name")
       show_root_toc_entry: false
       show_source: true
 
+::: lexsi_sdk.core.dashboard
+    options:
+      show_root_heading: false
+      show_root_full_path: false
+      show_root_toc_entry: false
+      show_source: true
+
+::: lexsi_sdk.core.alert
+    options:
+      show_root_heading: false
+      show_root_full_path: false
+      show_root_toc_entry: false
+      show_source: true
+
 ::: lexsi_sdk.core.text
+    options:
+      show_root_heading: false
+      show_root_full_path: false
+      show_root_toc_entry: false
+      show_source: true
+
+::: lexsi_sdk.core.tracer
+    options:
+      show_root_heading: false
+      show_root_full_path: false
+      show_root_toc_entry: false
+      show_source: true
+
+::: lexsi_sdk.core.model_summary
     options:
       show_root_heading: false
       show_root_full_path: false
@@ -79,16 +107,18 @@ project = workspace.project("Your Project name")
       show_root_toc_entry: false
       show_source: true
 
-::: lexsi_sdk.core.guardrails.guardrails_langgraph
+::: lexsi_sdk.core.agent
     options:
       show_root_heading: false
       show_root_full_path: false
       show_root_toc_entry: false
       show_source: true
 
-::: lexsi_sdk.core.guardrails.guardrails_openai
+
+## Data Classes
+::: lexsi_sdk.common.types
     options:
       show_root_heading: false
       show_root_full_path: false
       show_root_toc_entry: false
-      show_source: true
+      show_source: false

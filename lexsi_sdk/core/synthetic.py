@@ -19,6 +19,7 @@ from lexsi_sdk.common.xai_uris import (
 
 class SyntheticDataTag(BaseModel):
     """Representation of a generated synthetic data tag and its quality."""
+
     api_client: APIClient
     project_name: str
     project: Any
@@ -37,7 +38,8 @@ class SyntheticDataTag(BaseModel):
     model_config = ConfigDict(protected_namespaces=())
 
     def __init__(self, **kwargs):
-        """Bind API client reference for follow-up requests."""
+        """Bind API client reference for follow-up requests.
+        Stores configuration and prepares the object for use."""
         super().__init__(**kwargs)
         self.api_client = kwargs.get("api_client")
 
@@ -49,26 +51,31 @@ class SyntheticDataTag(BaseModel):
         return self.model_name
 
     def view_metadata(self) -> dict:
-        """print metadata"""
+        """print metadata
+        Encapsulates a small unit of SDK logic and returns the computed result."""
 
         print(json.dumps(self.metadata, indent=4))
 
     def get_metadata(self) -> dict:
-        """get metadata"""
+        """get metadata
+        Reads from internal state or a backend client as needed."""
 
         return self.metadata
 
     def __print__(self) -> str:
-        """User-friendly string representation."""
+        """User-friendly string representation.
+        Encapsulates a small unit of SDK logic and returns the computed result."""
         created_at = pretty_date(self.created_at)
         return f"SyntheticDataTag(model_name={self.model_name}, tag={self.tag}, created_at={created_at})"
 
     def __str__(self) -> str:
-        """Return printable representation."""
+        """Return printable representation.
+        Summarizes the instance in a concise form."""
         return self.__print__()
 
     def __repr__(self) -> str:
-        """Return developer-friendly representation."""
+        """Return developer-friendly representation.
+        Includes key fields useful for logging and troubleshooting."""
         return self.__print__()
 
 
@@ -98,7 +105,8 @@ class SyntheticModel(BaseModel):
     model_config = ConfigDict(protected_namespaces=())
 
     def __init__(self, **kwargs):
-        """Bind API client reference for this synthetic model."""
+        """Bind API client reference for this synthetic model.
+        Stores configuration and prepares the object for use."""
         super().__init__(**kwargs)
         self.api_client = kwargs.get("api_client")
 
@@ -125,7 +133,8 @@ class SyntheticModel(BaseModel):
         return df
 
     def quality_plot(self):
-        """plot psi chart"""
+        """plot psi chart
+        Encapsulates a small unit of SDK logic and returns the computed result."""
         x_data = [item["Column"] for item in self.plot_data]
         y_data = [item["Quality Score"] for item in self.plot_data]
         metric_data = [item["Metric"] for item in self.plot_data]
@@ -292,22 +301,26 @@ class SyntheticModel(BaseModel):
         return pd.DataFrame(res["details"]["scores"], index=[0])
 
     def __print__(self) -> str:
-        """User-friendly string representation."""
+        """User-friendly string representation.
+        Encapsulates a small unit of SDK logic and returns the computed result."""
         created_at = pretty_date(self.created_at)
 
         return f"SyntheticModel(model_name={self.model_name}, status={self.status}, created_by={self.created_by}, created_at={created_at})"
 
     def __str__(self) -> str:
-        """Return printable representation."""
+        """Return printable representation.
+        Summarizes the instance in a concise form."""
         return self.__print__()
 
     def __repr__(self) -> str:
-        """Return developer-friendly representation."""
+        """Return developer-friendly representation.
+        Includes key fields useful for logging and troubleshooting."""
         return self.__print__()
 
 
 class SyntheticPrompt(BaseModel):
     """Metadata container for a reusable synthetic prompt definition."""
+
     api_client: APIClient
     project: Any
 
@@ -323,7 +336,8 @@ class SyntheticPrompt(BaseModel):
     updated_at: str
 
     def __init__(self, **kwargs):
-        """Bind API client reference for prompt actions."""
+        """Bind API client reference for prompt actions.
+        Stores configuration and prepares the object for use."""
         super().__init__(**kwargs)
         self.api_client = kwargs.get("api_client")
 
@@ -372,16 +386,19 @@ class SyntheticPrompt(BaseModel):
     """
 
     def __print__(self) -> str:
-        """User-friendly string representation."""
+        """User-friendly string representation.
+        Encapsulates a small unit of SDK logic and returns the computed result."""
         created_at = pretty_date(self.created_at)
         updated_at = pretty_date(self.updated_at)
 
         return f"SyntheticPrompt(prompt_name={self.prompt_name}, prompt_id={self.prompt_id}, status={self.status}, created_by={self.created_by}, created_at={created_at}, updated_at={updated_at})"
 
     def __str__(self) -> str:
-        """Return printable representation."""
+        """Return printable representation.
+        Summarizes the instance in a concise form."""
         return self.__print__()
 
     def __repr__(self) -> str:
-        """Return developer-friendly representation."""
+        """Return developer-friendly representation.
+        Includes key fields useful for logging and troubleshooting."""
         return self.__print__()
