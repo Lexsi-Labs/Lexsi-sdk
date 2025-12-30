@@ -2,7 +2,7 @@ from __future__ import annotations
 import re
 import json
 from pydantic import BaseModel
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 from lexsi_sdk.client.client import APIClient
 from lexsi_sdk.common.constants import (
     MODEL_TYPES,
@@ -15,15 +15,24 @@ from lexsi_sdk.common.constants import (
     MODEL_PERF_DASHBOARD_REQUIRED_FIELDS,
 )
 from lexsi_sdk.common.types import (
+    CatBoostParams,
+    ClassicModelParams,
     DataConfig,
+    FoundationalModelParams,
     InferenceCompute,
+    LightGBMParams,
+    PEFTParams,
+    ProcessorParams,
     ProjectConfig,
+    RandomForestParams,
     SyntheticDataConfig,
     SyntheticModelHyperParams,
     GCSConfig,
     S3Config,
     GDriveConfig,
     SFTPConfig,
+    TuningParams,
+    XGBoostParams,
 )
 from lexsi_sdk.common.utils import parse_datetime, parse_float, poll_events
 from lexsi_sdk.common.validation import Validate
@@ -2551,11 +2560,11 @@ class Project(BaseModel):
         self,
         model_type: str,
         data_config: Optional[DataConfig] = None,
-        model_config: Optional[dict] = None,
-        tunning_config: Optional[dict] = None,
-        peft_config: Optional[dict] = None,
-        processor_config: Optional[dict] = None,
-        finetune_mode: Optional[dict] = None,
+        model_config: Optional[Union[XGBoostParams, LightGBMParams, CatBoostParams, RandomForestParams, FoundationalModelParams]] = None,
+        tunning_config: Optional[TuningParams] = None,
+        peft_config: Optional[PEFTParams] = None,
+        processor_config: Optional[ProcessorParams] = None,
+        finetune_mode: Optional[str] = None,
         tunning_strategy: Optional[str] = None,
         instance_type: Optional[str] = None
     ) -> str:

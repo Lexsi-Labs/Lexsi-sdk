@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List, Optional, TypedDict, Dict
+from typing import Any, List, Literal, Optional, TypedDict, Dict, Union
 
 
 class ProjectConfig(TypedDict):
@@ -114,6 +114,216 @@ class DataConfig(TypedDict):
     explainability_method: List[str]
     handle_data_imbalance: Optional[bool]
 
+class XGBoostParams(TypedDict, total=False):
+    """
+    :param objective: Learning objective. Examples: "binary:logistic", "reg:squarederror".
+    :param booster: Booster type. Options: "gbtree", "gblinear".
+    :param eval_metric: Evaluation metric. Examples: "logloss", "auc", "rmse".
+    :param grow_policy: Tree growth policy. Options: "depthwise", "lossguide".
+    :param max_depth: Maximum depth of the tree.
+    :param max_leaves: Maximum number of leaves per tree.
+    :param min_child_weight: Minimum sum of instance weight needed in a child.
+    :param colsample_bytree: Subsample ratio of columns per tree.
+    :param colsample_bylevel: Subsample ratio of columns per level.
+    :param colsample_bynode: Subsample ratio of columns per node.
+    :param learning_rate: Step size shrinkage used in update to prevents overfitting.
+    :param n_estimators: Number of boosting rounds.
+    :param subsample: Subsample ratio of training instance.
+    :param alpha: L1 regularization term on weights.
+    :param lambda_: L2 regularization term on weights.
+    :param seed: Random seed for reproducibility.
+    """
+    objective: Optional[str]  # 'binary:logistic', 'reg:squarederror', etc.
+    booster: Optional[Literal["gbtree", "gblinear"]]
+    eval_metric: Optional[str]  # 'logloss', 'auc', 'rmse', etc.
+    grow_policy: Optional[Literal["depthwise", "lossguide"]]
+    max_depth: Optional[int]
+    max_leaves: Optional[int]
+    min_child_weight: Optional[float]
+    colsample_bytree: Optional[float]
+    colsample_bylevel: Optional[float]
+    colsample_bynode: Optional[float]
+    learning_rate: Optional[float]
+    n_estimators: Optional[int]
+    subsample: Optional[float]
+    alpha: Optional[float]
+    lambda_: Optional[float]
+    seed: Optional[int]
+
+class LightGBMParams(TypedDict, total=False):
+    """
+    :param boosting_type: Type of boosting algorithm. Options: "gbdt", "dart".
+    :param num_leaves: Maximum number of leaves in one tree.
+    :param min_child_samples: Minimum number of data needed in a child.
+    :param min_child_weight: Minimum sum of instance weight in a child.
+    :param min_split_gain: Minimum gain to perform a split.
+    :param tree_learner: Tree learning algorithm. Options: "serial", "voting", "data", "feature".
+    :param class_weight: Class weights. Option: "balanced".
+    """
+    boosting_type: Optional[Literal["gbdt", "dart"]]
+    num_leaves: Optional[int]
+    max_depth: Optional[int]
+    learning_rate: Optional[float]
+    n_estimators: Optional[int]
+    min_child_samples: Optional[int]
+    min_child_weight: Optional[float]
+    min_split_gain: Optional[float]
+    subsample: Optional[float]
+    colsample_bytree: Optional[float]
+    tree_learner: Optional[Literal["serial", "voting", "data", "feature"]]
+    class_weight: Optional[Literal["balanced"]]
+    random_state: Optional[int]
+
+class CatBoostParams(TypedDict, total=False):
+    """
+    :param iterations: Number of boosting iterations.
+    :param depth: Depth of the tree.
+    :param colsample_bylevel_cb: Subsample ratio of columns per level (CatBoost).
+    :param min_data_in_leaf: Minimum data in a leaf node.
+    :param subsample_cb: Subsample ratio of training data (CatBoost).
+    """
+    iterations: Optional[int]
+    learning_rate: Optional[float]
+    depth: Optional[int]
+    subsample_cb: Optional[float]
+    colsample_bylevel_cb: Optional[float]
+    min_data_in_leaf: Optional[int]
+
+class RandomForestParams(TypedDict, total=False):
+    """
+    :param max_features: Maximum features considered for split. Options: int, float, "auto", "sqrt", "log2".
+    :param max_leaf_nodes: Maximum number of leaf nodes.
+    :param min_samples_leaf: Minimum number of samples per leaf.
+    :param min_samples_split: Minimum number of samples to split a node.
+    :param criterion: Function to measure quality of split. Options: "gini", "entropy", "mse", "squared_error".
+    """
+    max_depth: Optional[int]
+    max_features: Optional[Union[int, float, Literal["auto", "sqrt", "log2"]]]
+    max_leaf_nodes: Optional[int]
+    min_samples_leaf: Optional[int]
+    min_samples_split: Optional[int]
+    n_estimators: Optional[int]
+    criterion: Optional[Literal["gini", "entropy", "mse", "squared_error"]]
+
+class FoundationalModelParams(TypedDict, total=False):
+    """
+    Core model configuration parameters.
+
+    These parameters control model execution, reproducibility,
+    and high-level training behavior.
+
+    :param device: Device on which the model will run.
+        Supported values: ``"cpu"``, ``"cuda"``, ``"auto"``.
+    :type device: Literal["cpu", "cuda", "auto"]
+
+    :param fit_mode: Mode controlling how the model is trained or fitted.
+        Example values: ``"fit_preprocessors"``, ``"fit_model"``.
+    :type fit_mode: str
+
+    :param n_estimators: Number of estimators or ensemble members.
+    :type n_estimators: int
+
+    :param n_jobs: Number of parallel jobs to run.
+        Use ``-1`` to utilize all available cores.
+    :type n_jobs: int
+
+    :param random_state: Random seed for reproducibility.
+    :type random_state: int
+
+    :param softmax_temperature: Temperature parameter applied to softmax
+        for probability calibration.
+    :type softmax_temperature: float
+    """
+
+    device: Optional[Literal["cpu", "cuda", "auto"]]
+    fit_mode: Optional[str]
+    n_estimators: Optional[int]
+    n_jobs: Optional[int]
+    random_state: Optional[int]
+    softmax_temperature: Optional[float]
+
+class TuningParams(TypedDict, total=False):
+    """
+    Hyperparameter tuning and fine-tuning configuration.
+
+    These parameters are primarily used during meta-learning,
+    few-shot training, or iterative optimization.
+
+    :param epochs: Number of training epochs.
+    :type epochs: int
+
+    :param learning_rate: Learning rate used during optimization.
+    :type learning_rate: float
+
+    :param batch_size: Number of samples processed per batch.
+    :type batch_size: int
+
+    :param support_size: Number of support samples in few-shot learning.
+    :type support_size: int
+
+    :param query_size: Number of query samples in few-shot learning.
+    :type query_size: int
+
+    :param n_episodes: Number of episodes in meta-learning.
+    :type n_episodes: int
+
+    :param steps_per_epoch: Training steps per epoch.
+    :type steps_per_epoch: int
+    """
+
+    epochs: Optional[int]
+    learning_rate: Optional[float]
+    batch_size: Optional[int]
+    support_size: Optional[int]
+    query_size: Optional[int]
+    n_episodes: Optional[int]
+    steps_per_epoch: Optional[int]
+
+class PEFTParams(TypedDict, total=False):
+    """
+    Parameter-Efficient Fine-Tuning (PEFT) configuration.
+
+    These parameters control lightweight adaptation strategies
+    such as LoRA.
+
+    :param r: Rank of the low-rank adaptation matrices.
+    :type r: int
+
+    :param lora_alpha: Scaling factor applied to LoRA layers.
+    :type lora_alpha: int
+
+    :param lora_dropout: Dropout rate applied within LoRA layers.
+    :type lora_dropout: float
+    """
+
+    r: Optional[int]
+    lora_alpha: Optional[int]
+    lora_dropout: Optional[float]
+
+
+class ProcessorParams(TypedDict, total=False):
+    """
+    Data preprocessing and feature engineering configuration.
+
+    These parameters control how input data is cleaned,
+    transformed, and balanced prior to training.
+
+    :param imputation_strategy: Strategy used to handle missing values.
+        Supported values: ``"mean"``, ``"median"``, ``"mode"``, ``"knn"``.
+    :type imputation_strategy: str
+
+    :param scaling_strategy: Feature scaling method.
+        Supported values: ``"standard"``, ``"minmax"``, ``"robust"``.
+    :type scaling_strategy: str
+
+    :param resampling_strategy: Strategy used to address class imbalance.
+        Supported values: ``"smote"``, ``"random_oversample"``.
+    :type resampling_strategy: str
+    """
+
+    imputation_strategy: str
+    scaling_strategy: str
+    resampling_strategy: str
 
 class SyntheticDataConfig(TypedDict):
     """
