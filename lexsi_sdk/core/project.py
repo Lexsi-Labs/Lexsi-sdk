@@ -2874,7 +2874,7 @@ class Project(BaseModel):
             raise Exception(
                 f"{file_name} file name is not valid, select valid tag from :\n{file_names.join(',')}"
             )
-
+        filepath = None
         for file in files["details"]:
             file_path = file["filepath"]
             curr_file_name = file_path.split("/")[-1]
@@ -2910,9 +2910,10 @@ class Project(BaseModel):
             "project_name": self.project_name,
             "model_name": model,
             "tags": tag,
-            "filepath": filepath,
             "instance_type": instance_type
         }
+        if filepath:
+            run_model_payload["filepath"] = filepath
 
         run_model_res = self.api_client.post(RUN_MODEL_ON_DATA_URI, run_model_payload)
 
