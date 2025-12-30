@@ -565,8 +565,7 @@ class Project(BaseModel):
         processor_config: Optional[dict] = None,
         finetune_mode: Optional[dict] = None,
         tunning_strategy: Optional[str] = None,
-        gpu: Optional[bool] = False,
-        instance_type: Optional[str] = "shared",
+        instance_type: Optional[str] = "shared"
     ) -> str:
         """Uploads data for the current project
         :param data: file path | dataframe to be uploaded
@@ -749,7 +748,7 @@ class Project(BaseModel):
                             "handle_data_imbalance", False
                         ),
                     },
-                    "gpu": gpu,
+                    # "gpu": gpu,
                     "instance_type": instance_type,
                     "sample_percentage": config.get("sample_percentage", None),
                 }
@@ -2558,8 +2557,7 @@ class Project(BaseModel):
         processor_config: Optional[dict] = None,
         finetune_mode: Optional[dict] = None,
         tunning_strategy: Optional[str] = None,
-        instance_type: Optional[str] = None,
-        gpu: Optional[bool] = False,
+        instance_type: Optional[str] = None
     ) -> str:
         # """Train new model
 
@@ -2624,12 +2622,13 @@ class Project(BaseModel):
 
         if tunning_strategy != "inference" and instance_type:
             custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
+            available_custom_batch_servers = custom_batch_servers.get("details", []) + custom_batch_servers.get("available_gpu_custom_servers", [])
             Validate.value_against_list(
                 "instance_type",
                 instance_type,
                 [
                     server["instance_name"]
-                    for server in custom_batch_servers.get("details", [])
+                    for server in available_custom_batch_servers
                 ],
             )
 
@@ -2828,8 +2827,7 @@ class Project(BaseModel):
             ),
             "lime_explainability_iterations": data_conf.get(
                 "lime_explainability_iterations"
-            ),
-            "gpu": gpu,
+            )
         }
 
         if tunning_config:
@@ -2872,6 +2870,10 @@ class Project(BaseModel):
         staged_models = res["details"]["staged"]
 
         staged_models_df = pd.DataFrame(staged_models)
+        staged_models_df = staged_models_df.drop(columns=['model_provider'])
+        staged_models_df = staged_models_df[
+            ~staged_models_df["status"].isin(["inactive", "failed"])
+        ]
 
         return staged_models_df
 
@@ -2986,8 +2988,7 @@ class Project(BaseModel):
         tag: Optional[str] = None,
         file_name: Optional[str] = None,
         model_name: Optional[str] = None,
-        instance_type: Optional[str] = None,
-        gpu: Optional[bool] = False,
+        instance_type: Optional[str] = None
     ) -> pd.DataFrame:
         """Run model inference on data
 
@@ -3039,12 +3040,13 @@ class Project(BaseModel):
 
         if instance_type:
             custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
+            available_custom_batch_servers = custom_batch_servers.get("details", []) + custom_batch_servers.get("available_gpu_custom_servers", [])
             Validate.value_against_list(
                 "instance_type",
                 instance_type,
                 [
                     server["instance_name"]
-                    for server in custom_batch_servers.get("details", [])
+                    for server in available_custom_batch_servers
                 ],
             )
 
@@ -3053,8 +3055,7 @@ class Project(BaseModel):
             "model_name": model,
             "tags": tag,
             "filepath": filepath,
-            "instance_type": instance_type,
-            "gpu": gpu,
+            "instance_type": instance_type
         }
 
         run_model_res = self.api_client.post(RUN_MODEL_ON_DATA_URI, run_model_payload)
