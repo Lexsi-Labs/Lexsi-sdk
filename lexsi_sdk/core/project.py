@@ -2561,28 +2561,52 @@ class Project(BaseModel):
         instance_type: Optional[str] = None,
         gpu: Optional[bool] = False,
     ) -> str:
-        """Train new model
+        # """Train new model
 
-        :param model_type: type of model
-        :param data_config: config for the data
-                        {
-                            "tags": List[str]
-                            "test_tags": List[str]
-                            "feature_exclude": List[str]
-                            "feature_encodings": Dict[str, str]   # {"feature_name":"labelencode | countencode"}
-                            "drop_duplicate_uid": bool
-                            "use_optuna": bool # Allow using Optuna Framework for hyperparameter optimization
-                            "sample_percentage": float   # Data sample percentage to be used to train
-                            "explainability_sample_percentage": float  # Explainability sample percentage to be used
-                            "lime_explainability_iterations": int # Lime Explainability iterations to be used
-                            "explainability_method": str # List of explainability method ["shap", "lime"]
-                            "handle_data_imbalance": bool # Handle data imbalance using SMOTE
-                        },
-                        defaults to None
-        :param model_config: config with hyper parameters for the model, defaults to None
-        :param instance_type: instance to be used for model training
-        :return: response
+        # :param model_type: type of model
+        # :param data_config: config for the data
+        #                 {
+        #                     "tags": List[str]
+        #                     "test_tags": List[str]
+        #                     "feature_exclude": List[str]
+        #                     "feature_encodings": Dict[str, str]   # {"feature_name":"labelencode | countencode"}
+        #                     "drop_duplicate_uid": bool
+        #                     "use_optuna": bool # Allow using Optuna Framework for hyperparameter optimization
+        #                     "sample_percentage": float   # Data sample percentage to be used to train
+        #                     "explainability_sample_percentage": float  # Explainability sample percentage to be used
+        #                     "lime_explainability_iterations": int # Lime Explainability iterations to be used
+        #                     "explainability_method": str # List of explainability method ["shap", "lime"]
+        #                     "handle_data_imbalance": bool # Handle data imbalance using SMOTE
+        #                 },
+        #                 defaults to None
+        # :param model_config: config with hyper parameters for the model, defaults to None
+        # :param instance_type: instance to be used for model training
+        # :return: response
+        # """
+
         """
+        Train a new machine learning model.
+
+        This method handles data preparation, optional hyperparameter optimization,
+        model training, and explainability setup.
+
+        :param model_type: Type of model to train
+        :type model_type: str
+
+        :param data_config: Data + explainability configuration. See :class:`lexsi_sdk.common.types.DataConfig`.
+        :type data_config: dict, optional
+
+        :param model_config: Model-specific hyperparameters and training settings.
+        :type model_config: dict, optional
+
+        :param instance_type: Compute instance type used for training (CPU/GPU).
+        :type instance_type: str
+
+        :return: Training response including model artifacts, metrics, and metadata.
+        :rtype: dict
+        """
+
+
 
         project_config = self.config()
 
