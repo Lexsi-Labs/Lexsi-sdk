@@ -4,11 +4,11 @@ import functools
 from typing import Callable, Optional
 import inspect
 import uuid
-import botocore.client
-from openai import OpenAI
-from anthropic import Anthropic
-from google import genai
-from mistralai import Mistral
+# import botocore.client
+# from openai import OpenAI
+# from anthropic import Anthropic
+# from google import genai
+# from mistralai import Mistral
 from pydantic import BaseModel
 
 import requests
@@ -17,13 +17,13 @@ from lexsi_sdk.client.client import APIClient
 from lexsi_sdk.common.environment import Environment
 from lexsi_sdk.common.xai_uris import CASE_INFO_TEXT_URI, GENERATE_TEXT_CASE_STREAM_URI, GENERATE_TEXT_CASE_URI
 
-from together import Together
-from groq import Groq
-import replicate
-from huggingface_hub import InferenceClient
-import boto3
-from xai_sdk import Client
-import botocore
+# from together import Together
+# from groq import Groq
+# import replicate
+# from huggingface_hub import InferenceClient
+# import boto3
+# from xai_sdk import Client
+# import botocore
 
 
 class Wrapper:
@@ -644,123 +644,123 @@ class LexsiModels:
                 raise Exception(res.get("details"))
             return res
 
-def monitor(project, client, session_id=None):
-    """Attach tracing wrappers to supported SDK clients.
+# def monitor(project, client, session_id=None):
+#     """Attach tracing wrappers to supported SDK clients.
 
-    :param project: Project instance providing API client and name.
-    :param client: SDK client instance to instrument.
-    :param session_id: Optional session id to reuse.
-    :return: The same client instance with wrapped methods.
-    """
-    wrapper = Wrapper(project_name=project.project_name, api_client=project.api_client)
-    if isinstance(client, OpenAI):
-        models = project.models()["model_name"].to_list()
-        if "OpenAI" not in models:
-            raise Exception("OpenAI Model Not Initialized")
-        client.chat.completions.create = wrapper._get_wrapper(
-            original_method=client.chat.completions.create,
-            method_name="client.chat.completions.create",
-            session_id=session_id,
-            provider="OpenAI"
-        )
-        client.responses.create = wrapper._get_wrapper(
-            original_method=client.responses.create,
-            method_name="client.responses.create",
-            session_id=session_id,
-            provider="OpenAI"
-        )
-    elif isinstance(client, Anthropic):
-        client.messages.create = wrapper._get_wrapper(
-            original_method=client.messages.create,
-            method_name="client.messages.create",
-            session_id=session_id,
-            provider="Anthropic"
-        )
-    elif isinstance(client, genai.Client):        
-        client.models.generate_content = wrapper._get_wrapper(
-            original_method=client.models.generate_content,
-            method_name="client.models.generate_content",
-            session_id=session_id,
-            provider="Gemini"
-        )
-    elif isinstance(client , Groq):
-        client.chat.completions.create = wrapper._get_wrapper(
-            original_method=client.chat.completions.create,
-            method_name="client.chat.completions.create",
-            session_id=session_id,
-            provider="Groq"
-        )
-    elif isinstance(client , Together):
-        client.chat.completions.create = wrapper._get_wrapper(
-            original_method=client.chat.completions.create,
-            method_name="client.chat.completions.create",
-            session_id=session_id,
-            provider="Together"
-        )
-    elif isinstance(client , InferenceClient):
-        client.chat_completion = wrapper._get_wrapper(
-            original_method=client.chat_completion,
-            method_name="client.chat_completion",
-            session_id=session_id,
-            provider="HuggingFace"
-        )    
-    elif isinstance(client, replicate.Client) or client is replicate:        
-        client.run = wrapper._get_wrapper(
-            original_method=client.run,
-            method_name="run",
-            session_id=session_id,
-            provider="Replicate"
-        )
-    elif isinstance(client, Mistral):        
-        client.chat.complete = wrapper._get_wrapper(
-            original_method=client.chat.complete,
-            method_name="client.chat.complete",
-            session_id=session_id,
-            provider="Mistral"
-        )
-        client.chat.complete_async = wrapper._get_wrapper(
-            original_method=client.chat.complete_async,
-            method_name="client.chat.complete_async",
-            session_id=session_id,
-            provider="Mistral"
-        )
-    elif isinstance(client, botocore.client.BaseClient):
-        client.converse = wrapper._get_wrapper(
-            original_method=client.converse,
-            method_name="client.converse",
-            session_id=session_id,
-            provider="AWS Bedrock"
-        )
-    elif isinstance(client, Client):  # XAI Client
-    # Wrap the chat.create method to return a wrapped chat object
-        original_chat_create = client.chat.create 
-        def wrapped_chat_create(*args, **kwargs):
-            """Wrap chat creation to instrument returned chat object.
+#     :param project: Project instance providing API client and name.
+#     :param client: SDK client instance to instrument.
+#     :param session_id: Optional session id to reuse.
+#     :return: The same client instance with wrapped methods.
+#     """
+#     wrapper = Wrapper(project_name=project.project_name, api_client=project.api_client)
+#     if isinstance(client, OpenAI):
+#         models = project.models()["model_name"].to_list()
+#         if "OpenAI" not in models:
+#             raise Exception("OpenAI Model Not Initialized")
+#         client.chat.completions.create = wrapper._get_wrapper(
+#             original_method=client.chat.completions.create,
+#             method_name="client.chat.completions.create",
+#             session_id=session_id,
+#             provider="OpenAI"
+#         )
+#         client.responses.create = wrapper._get_wrapper(
+#             original_method=client.responses.create,
+#             method_name="client.responses.create",
+#             session_id=session_id,
+#             provider="OpenAI"
+#         )
+#     elif isinstance(client, Anthropic):
+#         client.messages.create = wrapper._get_wrapper(
+#             original_method=client.messages.create,
+#             method_name="client.messages.create",
+#             session_id=session_id,
+#             provider="Anthropic"
+#         )
+#     elif isinstance(client, genai.Client):        
+#         client.models.generate_content = wrapper._get_wrapper(
+#             original_method=client.models.generate_content,
+#             method_name="client.models.generate_content",
+#             session_id=session_id,
+#             provider="Gemini"
+#         )
+#     elif isinstance(client , Groq):
+#         client.chat.completions.create = wrapper._get_wrapper(
+#             original_method=client.chat.completions.create,
+#             method_name="client.chat.completions.create",
+#             session_id=session_id,
+#             provider="Groq"
+#         )
+#     elif isinstance(client , Together):
+#         client.chat.completions.create = wrapper._get_wrapper(
+#             original_method=client.chat.completions.create,
+#             method_name="client.chat.completions.create",
+#             session_id=session_id,
+#             provider="Together"
+#         )
+#     elif isinstance(client , InferenceClient):
+#         client.chat_completion = wrapper._get_wrapper(
+#             original_method=client.chat_completion,
+#             method_name="client.chat_completion",
+#             session_id=session_id,
+#             provider="HuggingFace"
+#         )    
+#     elif isinstance(client, replicate.Client) or client is replicate:        
+#         client.run = wrapper._get_wrapper(
+#             original_method=client.run,
+#             method_name="run",
+#             session_id=session_id,
+#             provider="Replicate"
+#         )
+#     elif isinstance(client, Mistral):        
+#         client.chat.complete = wrapper._get_wrapper(
+#             original_method=client.chat.complete,
+#             method_name="client.chat.complete",
+#             session_id=session_id,
+#             provider="Mistral"
+#         )
+#         client.chat.complete_async = wrapper._get_wrapper(
+#             original_method=client.chat.complete_async,
+#             method_name="client.chat.complete_async",
+#             session_id=session_id,
+#             provider="Mistral"
+#         )
+#     elif isinstance(client, botocore.client.BaseClient):
+#         client.converse = wrapper._get_wrapper(
+#             original_method=client.converse,
+#             method_name="client.converse",
+#             session_id=session_id,
+#             provider="AWS Bedrock"
+#         )
+#     elif isinstance(client, Client):  # XAI Client
+#     # Wrap the chat.create method to return a wrapped chat object
+#         original_chat_create = client.chat.create 
+#         def wrapped_chat_create(*args, **kwargs):
+#             """Wrap chat creation to instrument returned chat object.
 
-            :param args: Positional args forwarded to chat.create.
-            :param kwargs: Keyword args forwarded to chat.create.
-            :return: Wrapped chat object with instrumented sample method.
-            """
-            chat = original_chat_create(*args, **kwargs)
-            chat.sample = wrapper._get_wrapper(
-                chat=chat,
-                original_method=chat.sample,
-                method_name="chat.sample",
-                session_id=session_id,
-                xai_kwargs=kwargs,
-                provider="Grok"
-            )
-            return chat
+#             :param args: Positional args forwarded to chat.create.
+#             :param kwargs: Keyword args forwarded to chat.create.
+#             :return: Wrapped chat object with instrumented sample method.
+#             """
+#             chat = original_chat_create(*args, **kwargs)
+#             chat.sample = wrapper._get_wrapper(
+#                 chat=chat,
+#                 original_method=chat.sample,
+#                 method_name="chat.sample",
+#                 session_id=session_id,
+#                 xai_kwargs=kwargs,
+#                 provider="Grok"
+#             )
+#             return chat
         
-        client.chat.create = wrapped_chat_create
+#         client.chat.create = wrapped_chat_create
 
-    elif isinstance(client, LexsiModels):
-        client.generate_text_case = wrapper._get_wrapper(
-            original_method=client.generate_text_case,
-            method_name="client.generate_text_case",
-            session_id=session_id,
-            provider='Lexsi'
-        )
-    else:
-        raise Exception("Not a valid SDK to monitor")
-    return client
+#     elif isinstance(client, LexsiModels):
+#         client.generate_text_case = wrapper._get_wrapper(
+#             original_method=client.generate_text_case,
+#             method_name="client.generate_text_case",
+#             session_id=session_id,
+#             provider='Lexsi'
+#         )
+#     else:
+#         raise Exception("Not a valid SDK to monitor")
+#     return client

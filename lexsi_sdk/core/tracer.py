@@ -23,6 +23,7 @@ class Tracer:
         """Initialize exporter endpoint from environment."""
         self.base_url = os.getenv("XAI_API_URL", "https://apiv1.lexsi.ai")    
         self.endpoint = f"{self.base_url}"
+        self.endpoint = "http://localhost:4317"
     def setup_langchain_tracing(self , project: object, session_id : str = None) -> None:
         """
         Sets up OpenTelemetry tracing for a given project with OTLP and console exporters.
