@@ -504,66 +504,19 @@ class Wrapper:
 
                     input_tokens = 0
                     output_tokens = 0
-                    if (
-                        result.get("details", {})
-                        .get("result", {})
-                        .get("audit_trail", {})
-                        .get("tokens", {})
-                        .get("input_tokens", None)
-                    ):
-                        input_tokens = (
-                            result.get("details", {})
-                            .get("result", {})
-                            .get("audit_trail", {})
-                            .get("tokens", {})
-                            .get("input_tokens")
-                        )
-                    elif (
-                        result.get("details", {})
-                        .get("result", {})
-                        .get("audit_trail", {})
-                        .get("tokens", {})
-                        .get("input_decoded_length", None)
-                    ):
-                        input_tokens = (
-                            result.get("details", {})
-                            .get("result", {})
-                            .get("audit_trail", {})
-                            .get("tokens", {})
-                            .get("input_decoded_length")
-                        )
-
-                    if (
-                        result.get("details", {})
-                        .get("result", {})
-                        .get("audit_trail", {})
-                        .get("tokens", {})
-                        .get("output_tokens", None)
-                    ):
-                        output_tokens = (
-                            result.get("details", {})
-                            .get("result", {})
-                            .get("audit_trail", {})
-                            .get("tokens", {})
-                            .get("output_tokens")
-                        )
-                    elif (
-                        result.get("details", {})
-                        .get("result", {})
-                        .get("audit_trail", {})
-                        .get("tokens", {})
-                        .get("output_decoded_length", None)
-                    ):
-                        output_tokens = (
-                            result.get("details", {})
-                            .get("result", {})
-                            .get("audit_trail", {})
-                            .get("tokens", {})
-                            .get("output_decoded_length")
-                        )
+                    if result.get("details", {}).get("result", {}).get("audit_trail", {}).get("tokens", {}).get("prompt_tokens", None):
+                        input_tokens = result.get("details", {}).get("result", {}).get("audit_trail", {}).get("tokens", {}).get("prompt_tokens")
+                    elif result.get("details", {}).get("result", {}).get("audit_trail", {}).get("tokens", {}).get("input_decoded_length", None):
+                        input_tokens = result.get("details", {}).get("result", {}).get("audit_trail", {}).get("tokens", {}).get("input_decoded_length")
+                    
+                    if result.get("details", {}).get("result", {}).get("audit_trail", {}).get("tokens", {}).get("completion_tokens", None):
+                        output_tokens = result.get("details", {}).get("result", {}).get("audit_trail", {}).get("tokens", {}).get("completion_tokens")
+                    elif result.get("details", {}).get("result", {}).get("audit_trail", {}).get("tokens", {}).get("output_decoded_length", None):
+                        output_tokens = result.get("details", {}).get("result", {}).get("audit_trail", {}).get("tokens", {}).get("output_decoded_length")
                     total_tokens = input_tokens + output_tokens
                     metadata = {
-                        "case_id": result.get("details", {}).get("case_id"),
+                        "model_name": model_name,
+                        "case_id":result.get("details",{}).get("case_id"),
                         "input_tokens": input_tokens,
                         "output_tokens": output_tokens,
                         "total_tokens": total_tokens,
