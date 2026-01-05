@@ -30,7 +30,7 @@ class ModelSummary(BaseModel):
         self.api_client = kwargs.get("api_client")
 
     def info(self) -> dict:
-        """Model Info
+        """Return a dictionary summarizing model details such as source, name, type, parameters, data tags used for modeling, and modelling info.
 
         :return: model info dict
         """
@@ -46,8 +46,7 @@ class ModelSummary(BaseModel):
         return info
 
     def feature_importance(self, xai_method: str):
-        """Global features plot
-        Encapsulates a small unit of SDK logic and returns the computed result."""
+        """Plot global feature importance for the model using the specified explainability method (SHAP or LIME)."""
         global_features = None
         if xai_method == "shap":
             global_features = self.model_results.get("GFI", {}).get("shap_gfi", None)
@@ -83,8 +82,7 @@ class ModelSummary(BaseModel):
         fig.show(config={"displaylogo": False})
 
     def prediction_path(self):
-        """Prediction path plot
-        Encapsulates a small unit of SDK logic and returns the computed result."""
+        """Display the model’s prediction path as an SVG for the current case, retrieving it from the API."""
         model_name = self.model_results.get("model_name")
         res = self.api_client.get(
             f"{MODEL_SVG_URI}?project_name={self.project_name}&model_name={model_name}"
@@ -97,7 +95,7 @@ class ModelSummary(BaseModel):
         display(svg)
 
     def data_config(self):
-        """returns data config for the project
+        """Return the data configuration used for the project (e.g., feature exclusions and encodings) by calling the API.
 
         :return: response
         """

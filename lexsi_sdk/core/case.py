@@ -52,8 +52,7 @@ class Case(BaseModel):
         self.api_client = kwargs.get("api_client")
 
     def explainability_shap_feature_importance(self):
-        """Plots Shap Feature Importance chart
-        Encapsulates a small unit of SDK logic and returns the computed result."""
+        """Plot a horizontal bar chart showing SHAP-based feature importance for the case. Uses stored Shapley values for features."""
         fig = go.Figure()
 
         if len(list(self.shap_feature_importance.values())) < 1:
@@ -90,8 +89,7 @@ class Case(BaseModel):
         fig.show(config={"displaylogo": False})
 
     def explainability_ig_feature_importance(self):
-        """Plots IG Feature Importance chart
-        Encapsulates a small unit of SDK logic and returns the computed result."""
+        """Plot a horizontal bar chart showing Integrated Gradients-based feature importance for the case."""
         fig = go.Figure()
 
         if len(list(self.ig_features_importance.values())) < 1:
@@ -128,8 +126,7 @@ class Case(BaseModel):
         fig.show(config={"displaylogo": False})
 
     def explainability_lime_feature_importance(self):
-        """Plots Lime Feature Importance chart
-        Encapsulates a small unit of SDK logic and returns the computed result."""
+        """Plot a horizontal bar chart showing LIME-based feature importance for the case."""
         fig = go.Figure()
 
         if len(list(self.lime_feature_importance.values())) < 1:
@@ -166,8 +163,7 @@ class Case(BaseModel):
         fig.show(config={"displaylogo": False})
 
     def explainability_dlb_feature_importance(self):
-        """Plots DLB Feature Importance chart
-        Encapsulates a small unit of SDK logic and returns the computed result."""
+        """Plot a horizontal bar chart showing Deep Lift Bayesian (DLB)-based feature importance for the case."""
         fig = go.Figure()
         if len(list(self.dlb_feature_importance.values())) < 1:
             return "No DLB Feature Importance for the case"
@@ -203,13 +199,12 @@ class Case(BaseModel):
         fig.show(config={"displaylogo": False})
 
     def explainability_prediction_path(self):
-        """Explainability Prediction Path
-        Encapsulates a small unit of SDK logic and returns the computed result."""
+        """Display the model’s prediction path as a sequence of decision nodes for the case, typically visualized as an SVG or plot."""
         svg = SVG(self.case_prediction_svg)
         display(svg)
 
     def explainability_raw_data(self) -> pd.DataFrame:
-        """Explainability Raw Data
+        """Return the raw data used for the case as a DataFrame, with feature names and values.
 
         :return: raw data dataframe
         """
@@ -222,7 +217,7 @@ class Case(BaseModel):
         return raw_data_df
 
     def explainability_observations(self) -> pd.DataFrame:
-        """Explainability Observations
+        """Return a DataFrame listing the checklist of observations (e.g., heuristics or warnings) associated with the case.
 
         :return: observations dataframe
         """
@@ -231,7 +226,7 @@ class Case(BaseModel):
         return observations_df
 
     def explainability_policies(self) -> pd.DataFrame:
-        """Explainability Policies
+        """Return a DataFrame listing policies or rules applied during the model’s decision for the case.
 
         :return: policies dataframe
         """
@@ -240,7 +235,7 @@ class Case(BaseModel):
         return policy_df
 
     def explainability_decision(self) -> pd.DataFrame:
-        """Explainability Decision
+        """Return a DataFrame summarizing the final decision for the case, including the true value, predicted value, predicted category, and final decision.
 
         :return: decision dataframe
         """
@@ -255,7 +250,7 @@ class Case(BaseModel):
         return decision_df
 
     def explainability_similar_cases(self) -> pd.DataFrame | str:
-        """Similar Cases
+        """Return a DataFrame of cases similar to the current case (if similar cases are available). If no similar cases are found, returns a message.
 
         :return: similar cases dataframe
         """
@@ -266,8 +261,7 @@ class Case(BaseModel):
         return similar_cases_df
 
     def explainability_gradcam(self):
-        """Visualize Grad-CAM results for image explanations.
-        Encapsulates a small unit of SDK logic and returns the computed result."""
+        """Visualize Grad-CAM results for image data, showing heatmaps and superimposed regions that contributed to the prediction."""
         if not self.image_data.get("gradcam", None):
             return "No Gradcam method found for this case"
         fig = go.Figure()
@@ -329,8 +323,7 @@ class Case(BaseModel):
         fig.show(config={"displaylogo": False})
 
     def explainability_shap(self):
-        """Render SHAP attribution plot for image cases.
-        Encapsulates a small unit of SDK logic and returns the computed result."""
+        """Render a SHAP attribution plot for image cases, displaying attributions as an overlay on the original image."""
         if not self.image_data.get("shap", None):
             return "No Shap method found for this case"
         fig = go.Figure()
@@ -359,8 +352,7 @@ class Case(BaseModel):
         fig.show(config={"displaylogo": False})
 
     def explainability_lime(self):
-        """Render LIME attribution plot for image cases.
-        Encapsulates a small unit of SDK logic and returns the computed result."""
+        """Render a LIME attribution plot for image cases, displaying attributions as an overlay on the original image."""
         if not self.image_data.get("lime", None):
             return "No Lime method found for this case"
         fig = go.Figure()
@@ -389,8 +381,7 @@ class Case(BaseModel):
         fig.show(config={"displaylogo": False})
 
     def explainability_integrated_gradients(self):
-        """Render Integrated Gradients attribution plots.
-        Encapsulates a small unit of SDK logic and returns the computed result."""
+        """Render an integrated gradients attribution plot for image cases, showing positive and negative attributions side-by-side."""
         if not self.image_data.get("integrated_gradients", None):
             return "No Integrated Gradients method found for this case"
         fig = go.Figure()
@@ -550,7 +541,7 @@ class CaseText(BaseModel):
         return self.output
 
     def explainability_raw_data(self) -> pd.DataFrame:
-        """Explainability Raw Data
+        """Return the raw data used for the case as a DataFrame, with feature names and values.
 
         :return: raw data dataframe
         """

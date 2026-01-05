@@ -45,7 +45,7 @@ class Organization(BaseModel):
         self.api_client = kwargs.get("api_client")
 
     def add_user_to_organization(self, user_email: str) -> str:
-        """Add user to Organization
+        """Invite a user to join the organization by sending an invitation email. Requires the user’s email address and uses the organization ID internally to associate the user.
 
         :param user_email: Email of user to be added to organization.
         :return: response
@@ -62,7 +62,7 @@ class Organization(BaseModel):
         return res.get("details", "User added successfully")
 
     def remove_user_from_organization(self, user_email: str) -> str:
-        """Remove user from Organization
+        """Remove an existing user from the organization using their email address. Returns a confirmation message on success.
 
         :param user_email: Email of user to be removed from organization.
         :return: response
@@ -81,7 +81,7 @@ class Organization(BaseModel):
         return res.get("details", "User removed successfully")
 
     def member_details(self) -> pd.DataFrame:
-        """Organization Member details
+        """Return a DataFrame containing details about members of the organization, including their names, emails, roles (owner/admin), and creation dates.
 
         :return: member details dataframe
         """
@@ -108,7 +108,7 @@ class Organization(BaseModel):
         return member_details_df
 
     def workspaces(self) -> pd.DataFrame:
-        """get user workspaces
+        """List all workspaces associated with the organization. Returns a DataFrame with workspace names, access types, creator, and instance details.
 
         :return: workspace details dataframe
         """
@@ -134,7 +134,7 @@ class Organization(BaseModel):
         return workspace_df
 
     def workspace(self, workspace_name: str) -> Workspace:
-        """select specific workspace
+        """Select a specific workspace by name within the organization and return a Workspace object for further operations.
 
         :param workspace_name: Name of the workspace to be used
         :return: Workspace
@@ -165,7 +165,7 @@ class Organization(BaseModel):
     def create_workspace(
         self, workspace_name: str, server_type: Optional[str] = None
     ) -> Workspace:
-        """create user workspace
+        """Create a new workspace within the organization. Accepts a workspace name and an optional server_type to specify the compute instance. Returns a Workspace object for the newly created workspace.
 
         :param workspace_name: name for the workspace
         :param server_type: dedicated instance to run workloads
@@ -223,7 +223,7 @@ class Organization(BaseModel):
         sftp_config: Optional[SFTPConfig] = None,
         hf_token: Optional[str] = None,
     ) -> str:
-        """Create Data Connectors for project
+        """Create a data connector for a project, allowing external data (e.g., S3, GCS, Google Drive, SFTP, Dropbox, HuggingFace) to be linked. Requires the connector name and type, plus the corresponding credential dictionary depending on the connector type.
 
         :param data_connector_name: str # name for data connector
         :param data_connector_type: str # type of data connector (s3 | gcs | gdrive)
@@ -390,7 +390,7 @@ class Organization(BaseModel):
         return res["details"]
 
     def test_data_connectors(self, data_connector_name) -> str:
-        """Test connection for the data connectors
+        """Test the connection of an existing data connector to ensure credentials and connectivity are valid. Takes the connector name as input and returns the status of the connection test.
 
         :param data_connector_name: str
         """
@@ -405,7 +405,7 @@ class Organization(BaseModel):
         return res["details"]
 
     def delete_data_connectors(self, data_connector_name) -> str:
-        """Delete the data connectors
+        """Delete a data connector from the organization using its name. This removes the external data link and returns a confirmation message.
 
         :param data_connector_name: str
         """
@@ -421,8 +421,7 @@ class Organization(BaseModel):
         return res["details"]
 
     def list_data_connectors(self) -> str | pd.DataFrame:
-        """List the data connectors
-        Fetches a collection and returns it in a convenient Python form."""
+        """List all data connectors configured in the organization. If successful, returns a DataFrame with details about each connector; otherwise returns an error message."""
         url = build_list_data_connector_url(
             LIST_DATA_CONNECTORS, None, self.organization_id
         )
@@ -447,7 +446,7 @@ class Organization(BaseModel):
         return res["details"]
 
     def list_data_connectors_buckets(self, data_connector_name) -> str | List:
-        """List the buckets in data connectors
+        """Retrieve the list of buckets (for S3 or GCS connectors) or similar container names for the specified data connector.
 
         :param data_connector_name: str
         """
@@ -469,7 +468,7 @@ class Organization(BaseModel):
         bucket_name: Optional[str] = None,
         root_folder: Optional[str] = None,
     ) -> str | Dict:
-        """List the filepaths in data connectors
+        """List file paths within the specified data connector. For S3/GCS connectors you may need to provide a bucket_name; for SFTP connectors you may need to provide a root_folder.
 
         :param data_connector_name: str
         :param bucket_name: str | Required for S3 & GCS
@@ -522,8 +521,7 @@ class Organization(BaseModel):
         return res["details"]
 
     def credits(self):
-        """Return available credit information for the organization.
-        Encapsulates a small unit of SDK logic and returns the computed result."""
+        """Return credit usage and quota information for the organization."""
         url = build_list_data_connector_url(
             COMPUTE_CREDIT_URI, None, self.organization_id
         )
@@ -535,7 +533,7 @@ class Organization(BaseModel):
         user_email: str,
         access_type: str = ["admin", "user"],
     ) -> str:
-        """Update user access for project
+        """Change the role of a user within the organization. Accepts the user’s email and the new access type (admin or user) and returns a confirmation message.
 
         :param user_email: Email of user to be added to project.
         :param access_type: access type to be given to user (admin | write | read)

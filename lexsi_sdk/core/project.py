@@ -174,7 +174,7 @@ class Project(BaseModel):
         self.api_client = kwargs.get("api_client")
 
     def rename_project(self, new_project_name: str) -> str:
-        """Renames current project
+        """Rename the project by providing a new name. Sends an update request and returns a confirmation message.
 
         :param new_project_name: new name for the project
         :return: response
@@ -192,7 +192,7 @@ class Project(BaseModel):
         return res.get("details")
 
     def delete_project(self) -> str:
-        """Deletes current project
+        """Delete the project. Sends a delete request to the API and returns the response message.
 
         :return: response
         """
@@ -206,7 +206,7 @@ class Project(BaseModel):
         return res.get("details")
 
     def add_user_to_project(self, email: str, role: str) -> str:
-        """Adds new user to project
+        """Add a user to the project with a specified role such as admin, manager, or user.
 
         :param email: user email
         :param role: user role ["admin", "manager", "user"]
@@ -225,7 +225,7 @@ class Project(BaseModel):
         return res.get("details")
 
     def remove_user_from_project(self, email: str) -> str:
-        """Removes user from project
+        """Remove a user from the project using their email address. Returns a confirmation message.
 
         :param email: user email
         :return: response
@@ -238,7 +238,7 @@ class Project(BaseModel):
         return res.get("details")
 
     def update_user_access_for_project(self, email: str, role: str) -> str:
-        """Updates user access for project
+        """Update the role of a user within the project. Accepts an email and new role and returns a response.
 
         :param email: user email
         :param role: user role
@@ -257,7 +257,7 @@ class Project(BaseModel):
         return res.get("details")
 
     def start_server(self) -> str:
-        """start dedicated project server
+        """Start a dedicated server for the project, enabling training or inference activities.
 
         :return: response
         """
@@ -271,7 +271,7 @@ class Project(BaseModel):
         return res["message"]
 
     def stop_server(self) -> str:
-        """stop dedicated project server
+        """Stop the dedicated project server to release compute resources.
 
         :return: response
         """
@@ -285,7 +285,7 @@ class Project(BaseModel):
         return res["message"]
 
     def update_server(self, server_type: str) -> str:
-        """update dedicated project server
+        """Update the dedicated server for the project by specifying a new instance type.
         :param server_type: dedicated instance to run workloads
             for all available instances check xai.available_custom_servers()
 
@@ -317,7 +317,7 @@ class Project(BaseModel):
         return "Server Updated"
 
     def config(self) -> str:
-        """returns config for the project
+        """Retrieve the full configuration of the project, including feature selections, encodings, and tags. Returns a dictionary.
 
         :return: response
         """
@@ -332,7 +332,7 @@ class Project(BaseModel):
         return res.get("details")
 
     def available_tags(self) -> str:
-        """get available tags for the project
+        """Return a list of tags that are available for data categorization within the project.
 
         :return: response
         """
@@ -347,7 +347,7 @@ class Project(BaseModel):
         return res["details"]
 
     def get_labels(self, feature_name: str) -> List[str]:
-        """get unique value of feature name
+        """Get the unique values of a particular feature (column) in the dataset. Useful for enumerated categorical values.
 
         :param feature_name: feature name
         :return: unique values of feature
@@ -365,7 +365,7 @@ class Project(BaseModel):
         return res["labels"]
 
     def files(self) -> pd.DataFrame:
-        """Lists all files uploaded by user
+        """List files uploaded to the project. Returns a DataFrame with file names and statuses. Only active files are included.
 
         :return: user uploaded files dataframe
         """
@@ -390,7 +390,7 @@ class Project(BaseModel):
         return files_df
 
     def file_summary(self, file_name: str) -> pd.DataFrame:
-        """File Summary
+        """Return a summary (e.g., preview) of a file uploaded to the project. Accepts the file name and returns a DataFrame summarizing its contents.
 
         :param file_name: user uploaded file name
         :return: file summary dataframe

@@ -6,7 +6,7 @@ class Guard:
 
     @staticmethod
     def detect_pii(entities: List[str] = None) -> Dict[str, Any]:
-        """Template for PII detection guardrail
+        """Create a guardrail configuration that detects personally identifiable information (PII) in text. Optionally specify a list of entities (e.g., EMAIL_ADDRESS, PHONE_NUMBER) to detect.
 
         :param entities: List of PII entity types to detect.
         """
@@ -19,7 +19,7 @@ class Guard:
     def nsfw_text(
         threshold: float = 0.8, validation_method: str = "sentence"
     ) -> Dict[str, Any]:
-        """Template for NSFW text detection guardrail
+        """Create a guardrail configuration that flags NSFW text content. Accepts a threshold value (0.0–1.0) to control sensitivity and a validation_method to specify the granularity (sentence, paragraph, document).
 
         :param threshold: Confidence threshold for detection (0.0-1.0).
         :param validation_method: Validation scope: "sentence", "paragraph", or "document".
@@ -31,20 +31,17 @@ class Guard:
 
     @staticmethod
     def ban_list(banned_words: List[str]) -> Dict[str, Any]:
-        """Template for banned words guardrail
-        Encapsulates a small unit of SDK logic and returns the computed result."""
+        """Create a guardrail configuration to detect banned words or phrases. Provide a list of banned_words to flag any occurrences."""
         return {"name": "Ban List", "config": {"banned_words": banned_words}}
 
     @staticmethod
     def bias_check(threshold: float = 0.9) -> Dict[str, Any]:
-        """Template for bias check guardrail
-        Encapsulates a small unit of SDK logic and returns the computed result."""
+        """Create a guardrail configuration that checks content for bias. Accepts a threshold (default 0.9) to determine sensitivity to bias."""
         return {"name": "Bias Check", "config": {"threshold": threshold}}
 
     @staticmethod
     def competitor_check(competitors: List[str]) -> Dict[str, Any]:
-        """Template for competitor guardrail
-        Encapsulates a small unit of SDK logic and returns the computed result."""
+        """Create a guardrail configuration that flags mentions of competitors. Provide a list of competitor names to detect."""
         return {"name": "Competitor Check", "config": {"competitors": competitors}}
 
     @staticmethod
@@ -198,8 +195,7 @@ class Guard:
     def valid_length(
         min: Optional[int] = None, max: Optional[int] = None
     ) -> Dict[str, Any]:
-        """Template for valid length guardrail
-        Encapsulates a small unit of SDK logic and returns the computed result."""
+        """Create a guardrail configuration that checks whether the length of text falls within a specified range. Accepts optional min and/or max values."""
         config = {}
         if min is not None:
             config["min"] = min
@@ -211,8 +207,7 @@ class Guard:
     def valid_range(
         min: Optional[int] = None, max: Optional[int] = None
     ) -> Dict[str, Any]:
-        """Template for valid range guardrail
-        Encapsulates a small unit of SDK logic and returns the computed result."""
+        """Create a guardrail configuration to validate that a numeric value is within a specified range. Accepts optional min and max values."""
         config = {}
         if min is not None:
             config["min"] = min
@@ -222,8 +217,7 @@ class Guard:
 
     @staticmethod
     def valid_url() -> Dict[str, Any]:
-        """Template for valid url guardrail
-        Encapsulates a small unit of SDK logic and returns the computed result."""
+        """Create a guardrail configuration that checks if a string is a valid URL."""
         return {"name": "Valid URL", "config": {}}
 
     @staticmethod

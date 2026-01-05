@@ -56,8 +56,7 @@ class GuardrailSupervisor:
         action: str,
         guards: List[Dict[str, Any]],
     ) -> str:
-        """Run configured guards sequentially over provided content.
-        Encapsulates a small unit of SDK logic and returns the computed result."""
+        """Internal method that processes content by applying one or more guardrails and returns a tuple of (content, passed flag, action data)."""
         if not guards:
             return content
 
@@ -86,8 +85,7 @@ class GuardrailSupervisor:
         content_type: str,
         action: str,
     ) -> str:
-        """Apply a guardrail with optional retries and sanitization.
-        Encapsulates a small unit of SDK logic and returns the computed result."""
+        """Internal method to apply a guardrail to content with retry logic. Handles transient failures and retries the operation before returning."""
         current_content = content
         retry_count = 0
 
@@ -134,8 +132,7 @@ class GuardrailSupervisor:
     def _call_run_guardrail(
         self, input_data: str, guard: Dict[str, Any], content_type: str
     ) -> GuardrailRunResult:
-        """Call guardrail API for a single guard specification.
-        Encapsulates a small unit of SDK logic and returns the computed result."""
+        """Internal method that calls the guardrail run endpoint to evaluate content against guardrails."""
         start_time = datetime.now()
         try:
             body = {"input_data": input_data, "guard": guard}
@@ -196,8 +193,7 @@ class GuardrailSupervisor:
         content_type: str,
         guard_name: str,
     ) -> str:
-        """Handle guardrail outcome according to configured action.
-        Encapsulates a small unit of SDK logic and returns the computed result."""
+        """Internal method to handle the result of a guardrail check and determine what action to take (e.g., block, warn, retry)."""
         validation_passed = bool(run_result.get("validation_passed", True))
         detected_issue = not validation_passed or not run_result.get("success", True)
         sanitized_output = run_result.get("sanitized_output")

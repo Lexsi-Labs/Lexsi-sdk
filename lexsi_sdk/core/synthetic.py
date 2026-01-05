@@ -44,21 +44,19 @@ class SyntheticDataTag(BaseModel):
         self.api_client = kwargs.get("api_client")
 
     def get_model_name(self) -> str:
-        """get model type
+        """Return the name of the synthetic model associated with the tag.
 
         :return: model type
         """
         return self.model_name
 
     def view_metadata(self) -> dict:
-        """print metadata
-        Encapsulates a small unit of SDK logic and returns the computed result."""
+        """Pretty-print the metadata associated with the synthetic data tag using JSON indentation."""
 
         print(json.dumps(self.metadata, indent=4))
 
     def get_metadata(self) -> dict:
-        """get metadata
-        Reads from internal state or a backend client as needed."""
+        """Return the metadata dictionary for the synthetic data tag."""
 
         return self.metadata
 
@@ -107,14 +105,14 @@ class SyntheticModel(BaseModel):
         self.api_client = kwargs.get("api_client")
 
     def get_model_type(self) -> str:
-        """get model type
+        """Return the model type recorded in the metadata dictionary for the synthetic model (e.g., GAN, VAE).
 
         :return: model type
         """
         return self.metadata["model_name"]
 
     def get_data_quality(self) -> pd.DataFrame:
-        """get data quality
+        """Return a DataFrame summarizing the overall synthetic data quality, including scores for column shapes and column pair trends.
 
         :return: data quality metrics
         """
@@ -129,8 +127,7 @@ class SyntheticModel(BaseModel):
         return df
 
     def quality_plot(self):
-        """plot psi chart
-        Encapsulates a small unit of SDK logic and returns the computed result."""
+        """Plot a PSI chart of synthetic data quality across different metrics (columns, quality scores, metric names)."""
         x_data = [item["Column"] for item in self.plot_data]
         y_data = [item["Quality Score"] for item in self.plot_data]
         metric_data = [item["Metric"] for item in self.plot_data]
@@ -180,7 +177,7 @@ class SyntheticModel(BaseModel):
     def generate_synthetic_datapoints(
         self, num_of_datapoints: int, instance_type: Optional[str] = "shared"
     ):
-        """generate given number of synthetic datapoints
+        """Generate a specified number of synthetic data points using the model. Accepts the number of data points and an optional instance_type for compute resources. If instance_type is not shared, checks available servers and raises errors for invalid values.
 
         :param num_of_datapoints: total datapoints to generate
         :param instance_type: type of instance to run training
@@ -338,7 +335,7 @@ class SyntheticPrompt(BaseModel):
         self.api_client = kwargs.get("api_client")
 
     def get_expression(self) -> str:
-        """construct prompt expression
+        """Construct the textual expression for the synthetic prompt by concatenating conditional expressions defined in its metadata.
 
         :return: prompt expression
         """
@@ -358,7 +355,7 @@ class SyntheticPrompt(BaseModel):
         return " ".join(expression_list)
 
     def get_config(self) -> List[dict]:
-        """get prompt configuration
+        """Return the stored configuration list for the synthetic prompt.
 
         :return: prompt configuration
         """

@@ -20,7 +20,7 @@ class AgentProject(Project):
     """Project abstraction for agent-based workflows. Enables tracing, guardrail enforcement, tool invocation tracking, and agent execution analysis."""
 
     def sessions(self) -> pd.DataFrame:
-        """All sessions
+        """Return a DataFrame listing all conversation sessions for this agent project.
 
         :return: response
         """
@@ -31,7 +31,7 @@ class AgentProject(Project):
         return pd.DataFrame(res.get("details"))
 
     def messages(self, session_id: str) -> pd.DataFrame:
-        """All messages for a session
+        """Return a DataFrame listing all messages for a given session. Requires the session_id.
 
         :param session_id: id of the session
         :return: response
@@ -45,7 +45,7 @@ class AgentProject(Project):
         return pd.DataFrame(res.get("details"))
 
     def traces(self, trace_id: str) -> pd.DataFrame:
-        """Traces generated for trace_id
+        """Retrieve execution traces for a given trace ID for agent conversations. Returns a DataFrame of trace details.
 
         :param trace_id: id of the trace
         :return: response

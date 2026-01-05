@@ -16,7 +16,7 @@ class Alert(BaseModel):
         super().__init__(**kwargs)
 
     def view_info(self) -> pd.DataFrame:
-        """view the alert info
+        """Return basic information about an alert, such as its type, category, severity, and timestamp.
 
         :return: _description_
         """
@@ -26,7 +26,7 @@ class Alert(BaseModel):
         return pd.DataFrame([self.info])
 
     def view_detailed_report(self) -> pd.DataFrame:
-        """view the detailed report of alert
+        """Return a detailed report for the alert, containing analysis and potential remediation recommendations.
 
         :return: _description_
         """
@@ -48,7 +48,7 @@ class Alert(BaseModel):
         return pd.DataFrame(detailed_report)
 
     def view_not_used_features(self) -> pd.DataFrame:
-        """view the not used features of alert
+        """Return features that were not used in the model’s decision-making for the alert. Helps identify features excluded from analysis.
 
         :return: _description_
         """

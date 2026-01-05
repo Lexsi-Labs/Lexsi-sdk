@@ -34,7 +34,7 @@ class Dashboard(BaseModel):
         self.plot()
 
     def plot(self, width: int = "100%", height: int = 800):
-        """plot the dashboard by remote url
+        """Render the dashboard in an iframe, specifying the width and height of the frame. Displays the HTML or fetches the dashboard from the SDK portal.
 
         :param width: Width of the embedded frame.
         :param height: Height of the embedded frame.
@@ -47,17 +47,13 @@ class Dashboard(BaseModel):
             display(IFrame(src=f"{url}", width=width, height=height))
 
     def get_config(self) -> dict:
-        """
-                get the dashboard config
-        Reads from internal state or a backend client as needed."""
+        """Return a copy of the dashboard configuration dictionary (excluding metadata) so you can inspect settings like type and metrics."""
         config_copy = {**self.config}
         config_copy.pop("metadata", None)
         return config_copy
 
     def get_raw_data(self) -> dict:
-        """
-                get the dashboard raw data
-        Reads from internal state or a backend client as needed."""
+        """Return a dictionary containing the raw data underlying the dashboard, tailored to the dashboard’s type (e.g., data drift, target drift, performance metrics)."""
         raw_data = {"created_at": self.config.get("created_at")}
 
         if self.config["type"] == "data_drift":
@@ -112,9 +108,7 @@ class Dashboard(BaseModel):
         return raw_data
 
     def print_config(self):
-        """
-                pretty print the cdashboard config
-        Encapsulates a small unit of SDK logic and returns the computed result."""
+        """Pretty-print the dashboard configuration in JSON format for inspection."""
         config = {k: v for k, v in self.config.items() if v is not None}
         config.pop("metadata", None)
         print("Using config: ", end="")

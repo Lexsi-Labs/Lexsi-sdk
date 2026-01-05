@@ -84,8 +84,7 @@ class OpenAIAgentsGuardrail:
         action: str = "block",
         name: str = "input_guardrail",
     ) -> Callable:
-        """
-        Create an input guardrail function for OpenAI Agents.
+        """Create a guardrail function that wraps agent input processing. Accepts parameters to specify the guardrail name, configuration, and what action to take (block, retry, warn) when a violation occurs.
 
         :param guards: List of guard specifications or single guard.
         :param action: 'block' | 'retry' | 'warn'.
@@ -143,8 +142,7 @@ class OpenAIAgentsGuardrail:
         action: str = "block",
         name: str = "output_guardrail",
     ) -> Callable:
-        """
-        Create an output guardrail function for OpenAI Agents.
+        """Create a guardrail function that wraps agent output processing. Similar to create_input_guardrail but applied to agent responses.
 
         :param guards: List of guard specifications or single guard.
         :param action: 'block' | 'retry' | 'warn'.
@@ -197,8 +195,7 @@ class OpenAIAgentsGuardrail:
         action: str,
         agent_name: str,
     ) -> tuple[Any, bool, Dict[str, Any]]:
-        """
-        Run multiple guardrails in parallel using batch endpoint.
+        """Internal method that applies multiple guardrails in parallel to agent input or output and returns aggregated results.
 
         Returns:
             tuple: (processed_content, tripwire_triggered, output_info)
@@ -349,8 +346,7 @@ class OpenAIAgentsGuardrail:
         guard_name: str,
         parent_span: Optional[Any],
     ) -> tuple[Any, bool]:
-        """
-        Handle the action for a single guardrail result.
+        """Internal method that processes the result of a guardrail check for agent content and determines the next action (block, warn, retry).
 
         Returns:
             tuple: (processed_content, is_triggered)
@@ -408,8 +404,7 @@ class OpenAIAgentsGuardrail:
     async def _call_run_guardrail(
         self, input_data: Any, guard: Dict[str, Any], guardrail_type: str
     ) -> GuardrailRunResult:
-        """Call the guardrails HTTP API
-        Encapsulates a small unit of SDK logic and returns the computed result."""
+        """Internal method that calls the guardrail run endpoint to evaluate content against guardrails."""
         uri = RUN_GUARDRAILS_URI
         input_text = str(input_data)
 
@@ -489,8 +484,7 @@ class OpenAIAgentsGuardrail:
     def _build_sanitize_prompt(
         self, guard_name: str, content: Any, guardrail_type: str
     ) -> str:
-        """Build a prompt for the LLM to sanitize the content according to the guardrail type
-        Encapsulates a small unit of SDK logic and returns the computed result."""
+        """Internal method to assemble a sanitization prompt used to clean or modify content according to guardrail directives."""
         instructions = {
             "Detect PII": "Sanitize the following text by removing or masking any personally identifiable information (PII). Do not change anything else.",
             "NSFW Text": "Sanitize the following text by removing or masking any not safe for work (NSFW) content. Do not change anything else.",

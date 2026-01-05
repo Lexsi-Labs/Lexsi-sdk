@@ -60,8 +60,7 @@ class LangGraphGuardrail:
         output_key: Optional[str] = None,
         # process_entire_state: bool = False,
     ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
-        """
-        Decorator factory.
+        """Decorator method used to wrap LangGraph nodes and apply guardrail checks in configured or ad hoc modes. Ensures that content passing through the node complies with guardrail policies.
 
         - action: 'block' | 'retry' | 'warn'. If validation fails:
           - block: raise ValueError
@@ -134,8 +133,7 @@ class LangGraphGuardrail:
         return decorator
 
     def _get_content(self, data: Any, key: Optional[str], is_input: bool) -> Any:
-        """Extract guardrail-relevant content from the input or output structure.
-        Encapsulates a small unit of SDK logic and returns the computed result."""
+        """Internal helper to extract text content from LangGraph node input, preparing it for guardrail processing."""
         if key is not None:
             if isinstance(data, dict) and key in data:
                 return data[key]
@@ -154,8 +152,7 @@ class LangGraphGuardrail:
     def _set_content(
         self, data: Any, processed: Any, key: Optional[str], is_input: bool
     ) -> None:
-        """Write processed content back into the state or result container.
-        Encapsulates a small unit of SDK logic and returns the computed result."""
+        """Internal helper to place processed content back into the LangGraph node after guardrail checks are complete."""
         if key is not None:
             if isinstance(data, dict):
                 data[key] = processed
@@ -175,8 +172,7 @@ class LangGraphGuardrail:
         action: str,
         guards: Optional[List[Union[str, Dict[str, Any]]]],
     ) -> Any:
-        """Run guardrails over provided content and return sanitized result when needed.
-        Encapsulates a small unit of SDK logic and returns the computed result."""
+        """Internal method that processes content within a LangGraph node and applies configured guardrails, returning processed content and a boolean pass indicator."""
         if not guards:
             return content
 
@@ -272,8 +268,7 @@ class LangGraphGuardrail:
         content: Any,
         guards: List[Union[str, Dict[str, Any]]],
     ) -> Any:
-        """
-        Run multiple guardrails in parallel using batch endpoint
+        """Internal method that invokes multiple guardrails in parallel via a batch endpoint and aggregates their results.
 
         :param content: Content to validate against multiple guardrails.
         :param guards: List of guardrails to run in parallel.
@@ -326,8 +321,7 @@ class LangGraphGuardrail:
         content_type: str,
         action: str,
     ) -> Any:
-        """Apply a guardrail, optionally retrying with sanitized output.
-        Encapsulates a small unit of SDK logic and returns the computed result."""
+        """Internal method that applies guardrails with retry logic for handling transient errors."""
         current_content = content
         retry_count = 0
 
@@ -399,8 +393,7 @@ class LangGraphGuardrail:
     def _call_run_guardrail(
         self, input_data: Any, guard: Dict[str, Any], content_type: Any
     ) -> GuardrailRunResult:
-        """Invoke the guardrail service for a single guard.
-        Encapsulates a small unit of SDK logic and returns the computed result."""
+        """Internal method that calls the run_guardrail API for a single guardrail check."""
         uri = RUN_GUARDRAILS_URI
         input = input_data
 
@@ -458,8 +451,7 @@ class LangGraphGuardrail:
         guard_name: str,
         parent_span: Optional[Any] = None,
     ) -> Any:
-        """Handle guardrail results according to configured action.
-        Encapsulates a small unit of SDK logic and returns the computed result."""
+        """Internal method to handle guardrail results within LangGraph nodes, determining actions like block, warn, or continue."""
         validation_passed = bool(run_result.get("validation_passed", True))
         detected_issue = not validation_passed or not run_result.get("success", True)
 
@@ -506,8 +498,7 @@ class LangGraphGuardrail:
     def _build_sanitize_prompt(
         self, guard_name: str, content: Any, content_type: str
     ) -> str:
-        """Construct a prompt asking the LLM to sanitize problematic content.
-        Encapsulates a small unit of SDK logic and returns the computed result."""
+        """Internal method to assemble a sanitization prompt used to clean or modify content according to guardrail directives."""
         instructions = {
             "Detect PII": "Sanitize the following text by removing or masking any personally identifiable information (PII). Do not change anything else.",
             "NSFW Text": "Sanitize the following text by removing or masking any not safe for work (NSFW) content. Do not change anything else.",

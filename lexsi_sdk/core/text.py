@@ -43,7 +43,7 @@ class TextProject(Project):
     """Specialized project abstraction for text and LLM-based workloads. Supports sessions, messages, traces, guardrails, and token-level explainability."""
 
     def llm_monitor(self, client, session_id=None):
-        """llm monitoring for custom clients
+        """Monitor a custom large language model (LLM) client for inference. Accepts a client object (e.g., an OpenAI API wrapper) and an optional session_id to monitor a specific conversation.
 
         :param client: client to monitor like OpenAI
         :param session_id: id of the session
@@ -52,7 +52,7 @@ class TextProject(Project):
         return monitor(project=self, client=client, session_id=session_id)
 
     def sessions(self) -> pd.DataFrame:
-        """All sessions
+        """Return a DataFrame listing all conversation sessions for this text project. Each row corresponds to a session metadata record.
 
         :return: response
         """
@@ -63,7 +63,7 @@ class TextProject(Project):
         return pd.DataFrame(res.get("details"))
 
     def messages(self, session_id: str) -> pd.DataFrame:
-        """All messages for a session
+        """Return a DataFrame listing all messages in a given session. Requires the session_id.
 
         :param session_id: id of the session
         :return: response
@@ -77,7 +77,7 @@ class TextProject(Project):
         return pd.DataFrame(res.get("details"))
 
     def traces(self, trace_id: str) -> pd.DataFrame:
-        """Traces generated for trace_id
+        """Retrieve the execution traces for a given trace ID and return them as a DataFrame.
 
         :param trace_id: id of the trace
         :return: response
@@ -91,7 +91,7 @@ class TextProject(Project):
         return pd.DataFrame(res.get("details"))
 
     def guardrails(self) -> pd.DataFrame:
-        """Guardrails configured in project
+        """List all guardrails currently configured for the project. Returns a DataFrame describing each guardrail and its configuration.
 
         :return: response
         """
@@ -104,7 +104,7 @@ class TextProject(Project):
         return pd.DataFrame(res.get("details"))
 
     def update_guardrail_status(self, guardrail_id: str, status: bool) -> str:
-        """Update Guardrail Status
+        """Update the status (active/inactive) of a specified guardrail. Requires the guardrail_id and a boolean status value.
 
         :param guardrail_id: id of the guardrail
         :param status: status to active/inactive
@@ -122,7 +122,7 @@ class TextProject(Project):
         return res.get("details")
 
     def delete_guardrail(self, guardrail_id: str) -> str:
-        """Deletes Guardrail
+        """Delete a guardrail from the project using its ID. Returns the API response message.
 
         :param guardrail_id: id of the guardrail
         :return: response
@@ -138,7 +138,7 @@ class TextProject(Project):
         return res.get("details")
 
     def available_guardrails(self) -> pd.DataFrame:
-        """Available guardrails to configure
+        """Return a DataFrame of all guardrails available to configure in this project. Each row describes a guardrail type.
 
         :return: response
         """
@@ -155,7 +155,7 @@ class TextProject(Project):
         model_name: str,
         apply_on: str,
     ) -> str:
-        """Configure guardrail for project
+        """Configure a new guardrail in the project. Requires the guardrail name, configuration dictionary, model name, and where to apply it (input or output). Returns a confirmation message.
 
         :param guardrail_name: name of the guardrail
         :param guardrail_config: config for the guardrail
@@ -186,7 +186,7 @@ class TextProject(Project):
         inference_settings: InferenceSettings,
         assets: Optional[dict] = None,
     ) -> str:
-        """Initialize text model
+        """Initialize a text model for the project, specifying the model provider, model name, task type, model type (classification/regression), inference compute settings, inference settings, and optional assets. Polls for completion and returns when done.
 
         :param model_provider: model of provider
         :param model_name: name of the model to be initialized
@@ -295,7 +295,7 @@ class TextProject(Project):
         data: str | pd.DataFrame,
         tag: str,
     ) -> str:
-        """Upload text data for the current project.
+        """Upload text data to the project by specifying either a file path or a pandas DataFrame and a tag. Handles conversion to CSV for DataFrame uploads and returns the API response.
 
         :param data: File path or DataFrame containing rows to upload.
         :param tag: Tag to associate with the uploaded data.
@@ -365,7 +365,7 @@ class TextProject(Project):
         file_path: Optional[str] = None,
         dataset_name: Optional[str] = None,
     ):
-        """Upload text data stored in a configured data connector.
+        """Upload text data stored in a configured data connector (e.g., S3 or GCS). Requires the connector name, a tag, and optionally the bucket name and file path. Returns the API response.
 
         :param data_connector_name: Name of the configured connector.
         :param tag: Tag to associate with uploaded data.
@@ -457,7 +457,7 @@ class TextProject(Project):
         input_column: Optional[str] = None,
         no_of_samples: Optional[str] = None,
     ):
-        """Quantize Model
+        """Quantize a trained model by specifying the model name, a new quantized model name, quantization type (e.g., int8), number of bits, compute instance type, and optional tag, input column, and number of samples. This process reduces model size and improves inference efficiency.
 
         :param model_name: name of the model
         :param quant_name: quant name of the model

@@ -40,7 +40,7 @@ class XAI(BaseModel):
         self.api_client = APIClient(debug=debug, base_url=base_url)
 
     def login(self):
-        """login to Lexsi.ai platform
+        """Authenticate with Lexsi.ai using an access token. It prompts for or reads the access token from the environment variable XAI_ACCESS_TOKEN and sets it on the API client, enabling subsequent calls to the platform.
 
         :param api_key: API key, defaults to XAI_ACCESS_TOKEN environment variable
         """
@@ -58,7 +58,7 @@ class XAI(BaseModel):
         print("Authenticated successfully.")
 
     def organizations(self) -> pd.DataFrame:
-        """Get all organizations associated with user
+        """Retrieve all organizations associated with the authenticated user. Returns a DataFrame listing organization names and metadata such as ownership, admin status, number of users, creator, and creation date.
 
         :return: Organization details dataframe
         """
@@ -95,7 +95,7 @@ class XAI(BaseModel):
         return organization_df
 
     def organization(self, organization_name: str) -> Organization:
-        """Select specific organization
+        """Select a specific organization by its name. If the name is "personal", returns the personal organization. Otherwise, it searches the user’s organizations and returns an Organization object for further management.
 
         :param organization_name: Name of the organization to be used
         :return: Organization object
@@ -136,7 +136,7 @@ class XAI(BaseModel):
         return organization
 
     def create_organization(self, organization_name: str) -> Organization:
-        """Create New Organization
+        """Create a new organization with the given name. It sends a POST request to the API and returns an Organization object representing the created organization.
 
         :param organization_name: Name of the new organization
         :return: Organization object
@@ -150,7 +150,7 @@ class XAI(BaseModel):
         return Organization(api_client=self.api_client, **res["organization_details"])
 
     def get_notifications(self) -> pd.DataFrame:
-        """get user notifications
+        """Fetch notifications for the user from Lexsi.ai. Notifications include project names, messages and timestamps and are returned as a DataFrame.
 
         :return: notification details dataFrame
         """
@@ -169,7 +169,7 @@ class XAI(BaseModel):
         )
 
     def clear_notifications(self) -> str:
-        """clear user notifications
+        """Clear all notifications for the user by sending a POST request. Returns a confirmation string indicating success.
 
         :return: response
         """
@@ -181,7 +181,7 @@ class XAI(BaseModel):
         return res["details"]
 
     def available_batch_servers(self) -> dict:
-        """available custom batch servers
+        """Retrieve a dictionary of available batch servers (compute instances) that can be used for running custom batch tasks. Useful for selecting compute resources.
 
         :return: response
         """
@@ -189,7 +189,7 @@ class XAI(BaseModel):
         return res["details"]
 
     def available_custom_servers(self) -> dict:
-        """available custom servers
+        """Retrieve a dictionary or list of available custom servers that can be used for deploying models or running compute-heavy workloads.
 
         :return: response
         """
@@ -197,7 +197,7 @@ class XAI(BaseModel):
         return res
 
     def available_synthetic_custom_servers(self) -> dict:
-        """available synthetic custom servers
+        """Retrieve details of custom servers available for generating synthetic data. This helps select the appropriate compute instance for synthetic data generation.
 
         :return: response
         """
