@@ -31,7 +31,6 @@ from lexsi_sdk.core.project import Project
 import pandas as pd
 
 from lexsi_sdk.core.utils import build_list_data_connector_url
-from lexsi_sdk.core.wrapper import LexsiModels, monitor
 import json
 import aiohttp
 from typing import AsyncIterator, Iterator
@@ -43,15 +42,6 @@ class TextProject(Project):
 
     :return: TextProject
     """
-
-    def llm_monitor(self, client, session_id=None):
-        """llm monitoring for custom clients
-
-        :param client: client to monitor like OpenAI
-        :param session_id: id of the session
-        :return: response
-        """
-        return monitor(project=self, client=client, session_id=session_id)
 
     def sessions(self) -> pd.DataFrame:
         """All sessions
@@ -234,49 +224,6 @@ class TextProject(Project):
         res = self.api_client.post(f"{TEXT_MODEL_INFERENCE_SETTINGS_URI}", payload)
         if not res["success"]:
             raise Exception(res.get("details", "Failed to update inference settings"))
-
-    def generate_text_case(
-        self,
-        model_name: str,
-        prompt: str,
-        serverless_instance_type: str,
-        instance_type: Optional[str] = None,
-        explainability_method: Optional[list] = ["DLB"],
-        explain_model: Optional[bool] = False,
-        session_id: Optional[str] = None,
-        max_tokens: Optional[int] = None,
-        min_tokens: Optional[int] = None,
-        stream: Optional[bool] = False,
-    ) -> dict:
-        """Generate Text Case
-
-        :param model_name: name of the model
-        :param model_type: type of the model
-        :param input_text: input text for the case
-        :param tag: tag for the case
-        :param task_type: task type for the case, defaults to None
-        :param instance_type: instance type for the case, defaults to None
-        :param explainability_method: explainability method for the case, defaults to None
-        :param explain_model: explain model for the case, defaults to False
-        :return: response
-        """
-        if explain_model and not instance_type:
-            raise Exception("instance_type required for explainability.")
-        llm = monitor(
-            project=self, client=LexsiModels(project=self, api_client=self.api_client), session_id=session_id
-        )
-        res = llm.generate_text_case(
-            model_name=model_name,
-            prompt=prompt,
-            instance_type=instance_type,
-            serverless_instance_type=serverless_instance_type,
-            explainability_method=explainability_method,
-            explain_model=explain_model,
-            max_tokens=max_tokens,
-            min_tokens=min_tokens,
-            stream=stream
-        )
-        return res
 
     def available_text_models(self) -> pd.DataFrame:
         """Get available text models
