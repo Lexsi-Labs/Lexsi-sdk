@@ -184,8 +184,8 @@ class TextProject(Project):
         model_name: str, 
         model_task_type:str, 
         model_type: str,  
-        inference_compute: InferenceCompute,
-        inference_settings: InferenceSettings,
+        inference_compute: Optional[InferenceCompute] = None,
+        inference_settings: Optional[InferenceSettings] = None,
         assets: Optional[dict] = None,
         requirements_file: Optional[str] = None,
         app_file: Optional[str] = None
