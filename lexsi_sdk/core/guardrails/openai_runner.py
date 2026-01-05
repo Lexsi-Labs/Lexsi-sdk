@@ -97,7 +97,7 @@ from dataclasses import dataclass, field
 
 @dataclass
 class ModelInputData:
-    """Container for the data that will be sent to the model."""
+    """Dataclass container for model input data passed through guardrails and execution runners."""
 
     input: list[TResponseInputItem]
     instructions: str | None
@@ -105,7 +105,7 @@ class ModelInputData:
 
 @dataclass
 class CallModelData(Generic[TContext]):
-    """Data passed to `RunConfig.call_model_input_filter` prior to model call."""
+    """Dataclass representing a normalized model invocation payload used by execution runners."""
 
     model_data: ModelInputData
     agent: Agent[TContext]
@@ -113,7 +113,7 @@ class CallModelData(Generic[TContext]):
 
 
 class Runner:
-    """Orchestrates agent execution loops for OpenAI Agents."""
+    """Execution orchestrator for OpenAI agents and guardrails, supporting both synchronous and asynchronous execution flows."""
 
     @classmethod
     async def run(

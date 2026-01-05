@@ -2,7 +2,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, TypedDict, Union
 
 
 class Guard:
-    """Predefined guardrail configurations for common use cases"""
+    """Collection of predefined guardrail templates for common safety, PII, toxicity, and compliance checks."""
 
     @staticmethod
     def detect_pii(entities: List[str] = None) -> Dict[str, Any]:

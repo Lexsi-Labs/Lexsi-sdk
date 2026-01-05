@@ -40,10 +40,7 @@ from uuid import UUID
 
 
 class TextProject(Project):
-    """Project for text modality
-
-    :return: TextProject
-    """
+    """Specialized project abstraction for text and LLM-based workloads. Supports sessions, messages, traces, guardrails, and token-level explainability."""
 
     def llm_monitor(self, client, session_id=None):
         """llm monitoring for custom clients

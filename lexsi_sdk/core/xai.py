@@ -24,7 +24,7 @@ import getpass
 
 
 class XAI(BaseModel):
-    """Base class to connect with Lexsi.ai platform"""
+    """Base entry-point class for interacting with the Lexsi.ai platform. Handles authentication, organization discovery and selection, notification retrieval, and provides access to higher-level SDK abstractions."""
 
     env: Environment = Environment()
     api_client: APIClient = APIClient()

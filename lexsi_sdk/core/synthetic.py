@@ -18,7 +18,7 @@ from lexsi_sdk.common.xai_uris import (
 
 
 class SyntheticDataTag(BaseModel):
-    """Representation of a generated synthetic data tag and its quality."""
+    """Represents metadata for synthetic datasets generated within Lexsi. Used to track lineage, configuration, and dataset properties."""
 
     api_client: APIClient
     project_name: str
@@ -80,11 +80,7 @@ class SyntheticDataTag(BaseModel):
 
 
 class SyntheticModel(BaseModel):
-    """Synthetic Model Class
-
-    :param BaseModel: _description_
-    :return: _description_
-    """
+    """Represents a synthetic model configuration used for data generation. Exposes model parameters and generation statistics."""
 
     api_client: APIClient
     project_name: str
@@ -319,7 +315,7 @@ class SyntheticModel(BaseModel):
 
 
 class SyntheticPrompt(BaseModel):
-    """Metadata container for a reusable synthetic prompt definition."""
+    """Prompt abstraction used in synthetic data generation workflows. Defines the generation logic and constraints."""
 
     api_client: APIClient
     project: Any

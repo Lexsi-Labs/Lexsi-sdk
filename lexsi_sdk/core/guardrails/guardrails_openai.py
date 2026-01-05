@@ -25,7 +25,7 @@ from agents import (
 
 @dataclass
 class GuardrailFunctionOutput:
-    """The output of a guardrail function."""
+    """Dataclass representing the output of a single guardrail execution, including decision and metadata."""
 
     output_info: Any
     """
@@ -42,7 +42,7 @@ class GuardrailFunctionOutput:
 
 
 class GuardrailRunResult(TypedDict, total=False):
-    """Normalized response payload for guardrail execution."""
+    """Typed dictionary aggregating the results of running one or more guardrails."""
 
     success: bool
     details: Dict[str, Any]
@@ -59,14 +59,7 @@ class GuardrailRunResult(TypedDict, total=False):
 
 
 class OpenAIAgentsGuardrail:
-    """
-    Utility for creating OpenAI Agents guardrails that call Guardrails HTTP APIs.
-
-    Supports different actions:
-    - "block": raises InputGuardrailTripwireTriggered/OutputGuardrailTripwireTriggered
-    - "retry": attempts to sanitize content using LLM and passes sanitized content to handoff agent
-    - "warn": logs the issue but allows content to pass through
-    """
+    """Decorator-style guardrail utility for OpenAI Agents. Supports adhoc and configured guard execution."""
 
     def __init__(
         self,

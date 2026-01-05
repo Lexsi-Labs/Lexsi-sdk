@@ -13,13 +13,13 @@ from .guard_template import Guard
 
 
 class GuardrailRunResult(Dict[str, Any]):
-    """Dictionary describing the outcome of a guardrail execution."""
+    """Typed dictionary aggregating the results of running one or more guardrails."""
 
     pass  # TypedDict not needed for runtime, but can add if desired
 
 
 class GuardrailSupervisor:
-    """Pluggable class to monitor and control agent behavior using API-based guardrails."""
+    """Coordinator class responsible for executing multiple guardrails and aggregating their results."""
 
     def __init__(
         self,

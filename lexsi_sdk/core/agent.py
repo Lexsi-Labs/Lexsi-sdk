@@ -17,10 +17,7 @@ from lexsi_sdk.core.wrapper import monitor
 
 
 class AgentProject(Project):
-    """Project for Agent modality
-
-    :return: AgentProject
-    """
+    """Project abstraction for agent-based workflows. Enables tracing, guardrail enforcement, tool invocation tracking, and agent execution analysis."""
 
     def sessions(self) -> pd.DataFrame:
         """All sessions

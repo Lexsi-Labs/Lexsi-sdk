@@ -7,7 +7,7 @@ from IPython.display import SVG, display
 
 
 class ModelSummary(BaseModel):
-    """Container for model metadata and visualization helpers."""
+    """Provides high-level summaries of trained models including features, metrics, drift indicators, and metadata for quick inspection."""
 
     project_name: str
     project_type: str

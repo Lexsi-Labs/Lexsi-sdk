@@ -20,7 +20,7 @@ from lexsi_sdk.core.agent import AgentProject
 
 
 class Workspace(BaseModel):
-    """Class to work with Lexsi.ai workspaces"""
+    """Logical container inside an organization that groups projects, users, and compute resources. Supports workspace-level user access and project lifecycle management."""
 
     organization_id: Optional[str] = None
     created_by: str

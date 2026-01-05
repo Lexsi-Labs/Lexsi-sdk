@@ -152,7 +152,7 @@ from lexsi_sdk.core.synthetic import SyntheticDataTag, SyntheticModel, Synthetic
 
 
 class Project(BaseModel):
-    """Central class representing a Lexsi project and its operations."""
+    """Represents a project within a workspace. Provides APIs for model monitoring, explainability cases, alerts, dashboards, and data uploads."""
 
     organization_id: Optional[str] = None
     created_by: str

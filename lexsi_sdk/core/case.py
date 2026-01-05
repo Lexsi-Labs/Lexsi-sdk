@@ -12,7 +12,7 @@ from PIL import Image
 
 
 class Case(BaseModel):
-    """Represents a single explainability case with plotting helpers."""
+    """Represents an explainability case for a prediction. Provides visualization helpers such as SHAP, LIME, Integrated Gradients, and decision paths."""
 
     status: str
     true_value: str | int
@@ -530,7 +530,7 @@ class Case(BaseModel):
 
 
 class CaseText(BaseModel):
-    """Represents text explainability output for a generated case."""
+    """Explainability view for text-based cases. Supports token-level importance, attention visualization, and LLM output analysis."""
 
     model_name: str
     status: str

@@ -12,7 +12,7 @@ from .guard_template import Guard
 
 
 class GuardrailRunResult(TypedDict, total=False):
-    """Structured response returned from guardrail API execution."""
+    """Typed dictionary aggregating the results of running one or more guardrails."""
 
     details: Dict[str, Any]
     validated_output: Any
@@ -28,14 +28,7 @@ class GuardrailRunResult(TypedDict, total=False):
 
 
 class LangGraphGuardrail:
-    """
-    Decorator utility for applying Guardrails checks to LangGraph node inputs and outputs
-    by calling the Guardrails HTTP APIs.
-
-    Supports two modes:
-    - "adhoc": calls /guardrails/run_guardrail per guard passed in the decorator
-    - "configured": calls /guardrails/run to use project/model configured guardrails
-    """
+    """Guardrail integration for LangGraph workflows. Enables node-level input and output validation."""
 
     def __init__(
         self,
