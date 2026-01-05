@@ -402,8 +402,30 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="IMAGE modality API">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#text-modality-apis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Text Modality API's
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Text Modality API&#39;s">
       <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#text-generation-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Text Generation API
+      
+    </span>
+  </a>
+  
+</li>
         
           <li class="md-nav__item">
   <a href="#chat-completions" class="md-nav__link">
@@ -507,13 +529,22 @@
 
 
 <h1 id="lexsi-rest-api-curl-snippets">Lexsi REST API (curl snippets)<a class="headerlink" href="#lexsi-rest-api-curl-snippets" title="Permanent link">&para;</a></h1>
-<p>Use these ready-to-run curl examples with your Lexsi API key. Replace <code>$LEXSI_API_KEY</code> and payload values as needed.</p>
+<p>Use these ready-to-run curl with your Lexsi API key. Replace the placeholder values before running.</p>
 <h2 id="basic">Basic<a class="headerlink" href="#basic" title="Permanent link">&para;</a></h2>
 <h3 id="health-check">Health check<a class="headerlink" href="#health-check" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code>curl<span class="w"> </span>-X<span class="w"> </span>GET<span class="w"> </span><span class="s2">&quot;https://apiv1.lexsi.ai/healthcheck&quot;</span>
 </code></pre></div>
 <h2 id="tabular-modality-apis">Tabular Modality API's<a class="headerlink" href="#tabular-modality-apis" title="Permanent link">&para;</a></h2>
 <h3 id="generate-prediction-and-explainability">Generate Prediction and Explainability<a class="headerlink" href="#generate-prediction-and-explainability" title="Permanent link">&para;</a></h3>
+<p>Placeholders:
+- <code>$X_API_TOKEN</code>: Your Lexsi API token from the SDK/portal.
+- <code>$USERNAME</code>: Your Lexsi username/client ID.
+- <code>$PROJECTNAME</code>: Target project name.
+- <code>$UNIQUE_IDENTIFIER</code>: Unique row ID for the registered case.
+- <code>$Tag</code>: Dataset tag you want to attach to this upload / Prediction.
+- <code>$SERVERLESS_COMPUTE_TYPE</code>: Serverless instance type for processing (e.g., <code>NOVA</code>, <code>GOVA</code>, or <code>local</code>).
+- <code>$EXPLAINABILITY_METHOD</code>: Explainability technique to run (e.g., <code>shap</code>, <code>lime</code>).
+- <code>$data</code>: List of JSON objects containing feature key/value pairs.</p>
 <div class="highlight"><pre><span></span><code>curl<span class="w"> </span>--http2<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span><span class="s2">&quot;https://apiv1.lexsi.ai/v2/project/case-register&quot;</span><span class="w"> </span><span class="se">\</span>
 <span class="w">   </span>-H<span class="w"> </span><span class="s2">&quot;x-api-token: &lt;</span><span class="nv">$X_API_TOKEN</span><span class="s2">&gt;&quot;</span><span class="w"> </span><span class="se">\</span>
 <span class="w">   </span>-H<span class="w"> </span><span class="s2">&quot;Content-Type: application/x-www-form-urlencoded&quot;</span><span class="w"> </span><span class="se">\</span>
@@ -524,102 +555,69 @@
 <span class="w">   </span>--data-urlencode<span class="w"> </span><span class="s2">&quot;serverless_instance_type=&lt;</span><span class="nv">$SERVERLESS_COMPUTE_TYPE</span><span class="s2">&gt;&quot;</span><span class="w"> </span><span class="se">\</span>
 <span class="w">   </span>--data-urlencode<span class="w"> </span><span class="s2">&quot;xai=&lt;</span><span class="nv">$EXPLAINABILITY_METHOD</span><span class="s2">&gt;&quot;</span><span class="w"> </span><span class="se">\</span>
 <span class="w">   </span>--data-urlencode<span class="w"> </span><span class="s2">&quot;data=[{</span>
-<span class="s2">    &quot;</span><span class="nv">$UNIQUE_ID_KEY</span><span class="s2">&quot;: &quot;</span><span class="nv">$UNIQUE_IDENTIFIER</span><span class="s2">&quot;,</span>
-<span class="s2">    &quot;</span><span class="nv">$SAMPLE_KEY</span><span class="s2">&quot;: &quot;</span><span class="nv">$SAMPLE_VALUE</span><span class="s2">&quot;,</span>
-<span class="s2">    &quot;</span><span class="nv">$SAMPLE_KEY</span><span class="s2">&quot;: &quot;</span><span class="nv">$SAMPLE_VALUE</span><span class="s2">&quot;,</span>
+<span class="s2">    \&quot;</span><span class="nv">$UNIQUE_ID_KEY</span><span class="s2">\&quot;: \&quot;</span><span class="nv">$UNIQUE_IDENTIFIER</span><span class="s2">\&quot;,</span>
+<span class="s2">    \&quot;</span><span class="nv">$SAMPLE_KEY</span><span class="s2">\&quot;: \&quot;</span><span class="nv">$SAMPLE_VALUE</span><span class="s2">\&quot;,</span>
+<span class="s2">    \&quot;</span><span class="nv">$SAMPLE_KEY</span><span class="s2">\&quot;: \&quot;</span><span class="nv">$SAMPLE_VALUE</span><span class="s2">\&quot;,</span>
 <span class="s2">        .</span>
 <span class="s2">        .</span>
-<span class="s2">    &quot;</span><span class="nv">$SAMPLE_KEY</span><span class="s2">&quot;: &quot;</span><span class="nv">$SAMPLE_VALUE</span><span class="s2">&quot;</span>
+<span class="s2">    \&quot;</span><span class="nv">$SAMPLE_KEY</span><span class="s2">\&quot;: \&quot;</span><span class="nv">$SAMPLE_VALUE</span><span class="s2">\&quot;</span>
 <span class="s2">  }]&quot;</span>
 </code></pre></div>
-<p>Placeholders:
-- <code>$X_API_TOKEN</code>: Your Lexsi API token from the SDK/portal.
-- <code>$USERNAME</code>: Your Lexsi username/client ID.
-- <code>$PROJECTNAME</code>: Target project name.
-- <code>$UNIQUE_IDENTIFIER</code>: Unique row ID for the registered case.
-- <code>$Tag</code>: Dataset tag you want to attach to this upload / Prediction.
-- <code>$SERVERLESS_COMPUTE_TYPE</code>: Serverless instance type for processing (e.g., <code>NOVA</code>, <code>GOVA</code>, or <code>local</code>).
-- <code>$EXPLAINABILITY_METHOD</code>: Explainability technique to run (e.g., <code>shap</code>, <code>lime</code>).
-- <code>$data</code>: List of Json containing data in Key:Value pair.</p>
 <h2 id="image-modality-api">IMAGE modality API<a class="headerlink" href="#image-modality-api" title="Permanent link">&para;</a></h2>
-<p>curl --http2 -X POST "https://apiv1.lexsi.ai/v2/project/case-register" \
-   -H "x-api-token: &lt;$X_API_TOKEN&gt;" \
-   -F "client_id=&lt;$USERNAME&gt;" \
-   -F "project_name=&lt;$PROJECT_NAME&gt;" \
-   -F "unique_identifier=&lt;$UNIQUE_IDENTIFIER&gt;" \
-   -F "tag=&lt;$TAG&gt;" \
-   -F "xai=&lt;$EXPLAINABILITY_METHOD&gt;" \
-   -F "serverless_instance_type=&lt;$SERVERLESS_COMPUTE_TYPE&gt;" \
-   -F "in_file=&lt;$IMAGE_PATH&gt;"
-   -F "image_class=&lt;$IMAGE_CLASS&gt;"</p>
-<div class="highlight"><pre><span></span><code>Placeholders:
-- `$X_API_TOKEN`: Your Lexsi API token.
-- `$USERNAME`: Your Lexsi username/client ID.
-- `$PROJECT_NAME`: Target project name for this image case.
-- `$UNIQUE_IDENTIFIER`: filename of image for the image case.
-- `$TAG`: Tag to associate with the upload.
-- `$EXPLAINABILITY_METHOD`: Explainability method to run (e.g., `gradcam`).
-- `$SERVERLESS_COMPUTE_TYPE`: Serverless instance type for processing.
-- `$IMAGE_PATH`: Local path to the image file to upload.
-- `$IMAGE_CLASS`: Optional class/label for the image.
-```bash
-
-
-## Text Modality API&#39;s
-
-### Text Generation API
-
-```bash
-curl --http2 -X POST &#39;https://apiv1.lexsi.ai/v2/project/case-register&#39; \
-  -H &quot;x-api-token: &lt;$API_TOKEN&gt;&quot; \
-  -F &quot;provider= &lt;$MODEL_PROVIDER&gt;&quot; \
-  -F &quot;client_id=&lt;$USERNAME&gt;&quot; \
-  -F &quot;project_name=&lt;$PROJECT_NAME&gt;&quot; \
-  -F &quot;prompt=&lt;$INPUT_PROMPT&gt;&quot; \
-  -F &quot;serverless_instance_type=&lt;$SERVERLESS_COMPUTE_TYPE&gt;&quot; \
-  -F &quot;model_name=&lt;$MODEL_NAME&gt;&quot; \
-  -F &quot;min_tokens=&lt;$MIN_TOKENS&gt;&quot; \
-  -F &quot;max_tokens=&lt;$MAX_TOKENS&gt;&quot; \
-  -F &quot;session_id=&lt;$SESSION_ID&gt;&quot; \
-  -F &quot;instance_type=&lt;$POD_INSTANCE_TYPE&gt;&quot; \
-  -F &quot;explain_model=&lt;$EXPLAINABILTY_FLAG&gt;&quot;
+<p>Placeholders:
+- <code>$X_API_TOKEN</code>: Your Lexsi API token.
+- <code>$USERNAME</code>: Your Lexsi username/client ID.
+- <code>$PROJECT_NAME</code>: Target project name for this image case.
+- <code>$UNIQUE_IDENTIFIER</code>: Filename or unique ID for the image case.
+- <code>$TAG</code>: Tag to associate with the upload.
+- <code>$EXPLAINABILITY_METHOD</code>: Explainability method to run (e.g., <code>gradcam</code>).
+- <code>$SERVERLESS_COMPUTE_TYPE</code>: Serverless instance type for processing.
+- <code>$IMAGE_PATH</code>: Local path to the image file to upload.
+- <code>$IMAGE_CLASS</code>: Optional class/label for the image.</p>
+<div class="highlight"><pre><span></span><code>curl<span class="w"> </span>--http2<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span><span class="s2">&quot;https://apiv1.lexsi.ai/v2/project/case-register&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>-H<span class="w"> </span><span class="s2">&quot;x-api-token: &lt;</span><span class="nv">$X_API_TOKEN</span><span class="s2">&gt;&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>-F<span class="w"> </span><span class="s2">&quot;client_id=&lt;</span><span class="nv">$USERNAME</span><span class="s2">&gt;&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>-F<span class="w"> </span><span class="s2">&quot;project_name=&lt;</span><span class="nv">$PROJECT_NAME</span><span class="s2">&gt;&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>-F<span class="w"> </span><span class="s2">&quot;unique_identifier=&lt;</span><span class="nv">$UNIQUE_IDENTIFIER</span><span class="s2">&gt;&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>-F<span class="w"> </span><span class="s2">&quot;tag=&lt;</span><span class="nv">$TAG</span><span class="s2">&gt;&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>-F<span class="w"> </span><span class="s2">&quot;xai=&lt;</span><span class="nv">$EXPLAINABILITY_METHOD</span><span class="s2">&gt;&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>-F<span class="w"> </span><span class="s2">&quot;serverless_instance_type=&lt;</span><span class="nv">$SERVERLESS_COMPUTE_TYPE</span><span class="s2">&gt;&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>-F<span class="w"> </span><span class="s2">&quot;in_file=&lt;</span><span class="nv">$IMAGE_PATH</span><span class="s2">&gt;&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>-F<span class="w"> </span><span class="s2">&quot;image_class=&lt;</span><span class="nv">$IMAGE_CLASS</span><span class="s2">&gt;&quot;</span>
 </code></pre></div>
+<h2 id="text-modality-apis">Text Modality API's<a class="headerlink" href="#text-modality-apis" title="Permanent link">&para;</a></h2>
+<h3 id="text-generation-api">Text Generation API<a class="headerlink" href="#text-generation-api" title="Permanent link">&para;</a></h3>
 <p>Placeholders:
 - <code>$API_TOKEN</code>: Your Lexsi API token.
-- <code>$MODEL_PROVIDER</code>: Provider identifier (e.g., <code>Lexsi</code>,<code>OpenAI</code>,<code>Grok</code>,etc).
+- <code>$MODEL_PROVIDER</code>: Provider identifier (e.g., <code>Lexsi</code>, <code>OpenAI</code>, <code>Grok</code>).
 - <code>$USERNAME</code>: Your Lexsi username/client ID.
 - <code>$PROJECT_NAME</code>: Target text project name.
 - <code>$INPUT_PROMPT</code>: User prompt to send to the model.
 - <code>$SERVERLESS_COMPUTE_TYPE</code>: Serverless instance type for processing.
 - <code>$MODEL_NAME</code>: Model name within the provider.
-- <code>$MIN_TOKENS</code>/<code>$MAX_TOKENS</code>: Min/Max tokens to generate (integers).
+- <code>$MIN_TOKENS</code> / <code>$MAX_TOKENS</code>: Minimum/maximum tokens to generate (integers).
 - <code>$SESSION_ID</code>: Optional session ID for threaded conversations.
 - <code>$POD_INSTANCE_TYPE</code>: Optional dedicated instance type for processing.
 - <code>$EXPLAINABILTY_FLAG</code>: Boolean flag indicating whether to compute explainability.</p>
-<h3 id="chat-completions">Chat completions<a class="headerlink" href="#chat-completions" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code>curl<span class="w"> </span>--request<span class="w"> </span>POST<span class="w"> </span><span class="s1">&#39;https://apiv1.lexsi.ai/gateway/v1/chat/completions&#39;</span><span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--header<span class="w"> </span><span class="s2">&quot;x-api-token: &lt;</span><span class="nv">$API_TOKEN</span><span class="s2">&gt;&quot;</span><span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--header<span class="w"> </span><span class="s1">&#39;Content-Type: application/json&#39;</span><span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--data<span class="w"> </span><span class="s2">&quot;{</span>
-<span class="s2">    &quot;</span>provider<span class="s2">&quot;: &quot;</span>&lt;<span class="nv">$MODEL_PROVIDER_NAME</span>&gt;<span class="s2">&quot;,</span>
-<span class="s2">    &quot;</span>api_key<span class="s2">&quot;: &quot;</span>&lt;<span class="nv">$API_KEY</span>&gt;<span class="s2">&quot;,</span>
-<span class="s2">    &quot;</span>client_id<span class="s2">&quot;: &quot;</span>&lt;<span class="nv">$USERNAME</span>&gt;<span class="s2">&quot;,</span>
-<span class="s2">    &quot;</span>max_tokens<span class="s2">&quot;: &lt;</span><span class="nv">$MAX_NEW_TOKENS</span><span class="s2">&gt;,</span>
-<span class="s2">    &quot;</span>project_name<span class="s2">&quot;: &quot;</span>&lt;<span class="nv">$PROJECT_NAME</span>&gt;<span class="s2">&quot;,</span>
-<span class="s2">    &quot;</span>model<span class="s2">&quot;: &quot;</span>&lt;<span class="nv">$MODEL_NAME</span>&gt;<span class="s2">&quot;,</span>
-<span class="s2">    &quot;</span>messages<span class="s2">&quot;: [</span>
-<span class="s2">      {</span>
-<span class="s2">        &quot;</span>role<span class="s2">&quot;: &quot;</span>&lt;<span class="nv">$ROLE</span>&gt;<span class="s2">&quot;,</span>
-<span class="s2">        &quot;</span>content<span class="s2">&quot;: &quot;</span>&lt;<span class="nv">$PROMPT</span>&gt;<span class="s2">&quot;</span>
-<span class="s2">      }</span>
-<span class="s2">    ],</span>
-<span class="s2">    &quot;</span>stream<span class="s2">&quot;: &lt;</span><span class="nv">$STREAM_BOOL</span><span class="s2">&gt;</span>
-<span class="s2">  }&quot;</span>
+<div class="highlight"><pre><span></span><code>curl<span class="w"> </span>--http2<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span><span class="s1">&#39;https://apiv1.lexsi.ai/v2/project/case-register&#39;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-H<span class="w"> </span><span class="s2">&quot;x-api-token: &lt;</span><span class="nv">$API_TOKEN</span><span class="s2">&gt;&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-F<span class="w"> </span><span class="s2">&quot;provider= &lt;</span><span class="nv">$MODEL_PROVIDER</span><span class="s2">&gt;&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-F<span class="w"> </span><span class="s2">&quot;client_id=&lt;</span><span class="nv">$USERNAME</span><span class="s2">&gt;&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-F<span class="w"> </span><span class="s2">&quot;project_name=&lt;</span><span class="nv">$PROJECT_NAME</span><span class="s2">&gt;&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-F<span class="w"> </span><span class="s2">&quot;prompt=&lt;</span><span class="nv">$INPUT_PROMPT</span><span class="s2">&gt;&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-F<span class="w"> </span><span class="s2">&quot;serverless_instance_type=&lt;</span><span class="nv">$SERVERLESS_COMPUTE_TYPE</span><span class="s2">&gt;&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-F<span class="w"> </span><span class="s2">&quot;model_name=&lt;</span><span class="nv">$MODEL_NAME</span><span class="s2">&gt;&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-F<span class="w"> </span><span class="s2">&quot;min_tokens=&lt;</span><span class="nv">$MIN_TOKENS</span><span class="s2">&gt;&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-F<span class="w"> </span><span class="s2">&quot;max_tokens=&lt;</span><span class="nv">$MAX_TOKENS</span><span class="s2">&gt;&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-F<span class="w"> </span><span class="s2">&quot;session_id=&lt;</span><span class="nv">$SESSION_ID</span><span class="s2">&gt;&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-F<span class="w"> </span><span class="s2">&quot;instance_type=&lt;</span><span class="nv">$POD_INSTANCE_TYPE</span><span class="s2">&gt;&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-F<span class="w"> </span><span class="s2">&quot;explain_model=&lt;</span><span class="nv">$EXPLAINABILTY_FLAG</span><span class="s2">&gt;&quot;</span>
 </code></pre></div>
+<h3 id="chat-completions">Chat completions<a class="headerlink" href="#chat-completions" title="Permanent link">&para;</a></h3>
 <p>Placeholders:
 - <code>$API_TOKEN</code>: Your Lexsi API token.
-- <code>$MODEL_PROVIDER_NAME</code>: Provider identifier (e.g., <code>Lexsi</code>,<code>OpenAI</code>,<code>Grok</code>).
-- <code>$API_KEY</code>: This is only required for third party models
+- <code>$MODEL_PROVIDER_NAME</code>: Provider identifier (e.g., <code>openai</code>).
+- <code>$API_KEY</code>: Provider-specific API key or token if required.
 - <code>$USERNAME</code>: Your Lexsi username/client ID.
 - <code>$MAX_NEW_TOKENS</code>: Maximum tokens to generate (integer).
 - <code>$PROJECT_NAME</code>: Target project name.
@@ -627,57 +625,76 @@ curl --http2 -X POST &#39;https://apiv1.lexsi.ai/v2/project/case-register&#39; \
 - <code>$ROLE</code>: Message role (e.g., <code>user</code>, <code>system</code>).
 - <code>$PROMPT</code>: The input text prompt.
 - <code>$STREAM_BOOL</code>: <code>true</code> or <code>false</code> to control streaming responses.</p>
-<h3 id="completions">Completions<a class="headerlink" href="#completions" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code>curl<span class="w"> </span>--request<span class="w"> </span>POST<span class="w"> </span><span class="s1">&#39;https://apiv1.lexsi.ai/gateway/v1/completions&#39;</span><span class="w"> </span><span class="se">\</span>
+<div class="highlight"><pre><span></span><code>curl<span class="w"> </span>--request<span class="w"> </span>POST<span class="w"> </span><span class="s1">&#39;https://apiv1.lexsi.ai/gateway/v1/chat/completions&#39;</span><span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--header<span class="w"> </span><span class="s2">&quot;x-api-token: &lt;</span><span class="nv">$API_TOKEN</span><span class="s2">&gt;&quot;</span><span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--header<span class="w"> </span><span class="s1">&#39;Content-Type: application/json&#39;</span><span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--data<span class="w"> </span><span class="s2">&quot;{</span>
-<span class="s2">    &quot;</span>provider<span class="s2">&quot;: &quot;</span>&lt;<span class="nv">$MODEL_PROVIDER_NAME</span>&gt;<span class="s2">&quot;,</span>
-<span class="s2">    &quot;</span>api_key<span class="s2">&quot;: &quot;</span>&lt;<span class="nv">$RANDOM_TEXT</span>&gt;<span class="s2">&quot;,</span>
-<span class="s2">    &quot;</span>client_id<span class="s2">&quot;: &quot;</span>&lt;<span class="nv">$USERNAME</span>&gt;<span class="s2">&quot;,</span>
-<span class="s2">    &quot;</span>max_tokens<span class="s2">&quot;: &lt;</span><span class="nv">$MAX_NEW_TOKENS</span><span class="s2">&gt;,</span>
-<span class="s2">    &quot;</span>project_name<span class="s2">&quot;: &quot;</span>&lt;<span class="nv">$PROJECT_NAME</span>&gt;<span class="s2">&quot;,</span>
-<span class="s2">    &quot;</span>model<span class="s2">&quot;: &quot;</span>&lt;<span class="nv">$MODEL_NAME</span>&gt;<span class="s2">&quot;,</span>
-<span class="s2">    &quot;</span>prompt<span class="s2">&quot;: &quot;</span>&lt;<span class="nv">$PROMPT</span>&gt;<span class="s2">&quot;,</span>
-<span class="s2">    &quot;</span>stream<span class="s2">&quot;: &lt;</span><span class="nv">$STREAM_BOOL</span><span class="s2">&gt;</span>
+<span class="s2">    \&quot;provider\&quot;: \&quot;&lt;</span><span class="nv">$MODEL_PROVIDER_NAME</span><span class="s2">&gt;\&quot;,</span>
+<span class="s2">    \&quot;api_key\&quot;: \&quot;&lt;</span><span class="nv">$API_KEY</span><span class="s2">&gt;\&quot;,</span>
+<span class="s2">    \&quot;client_id\&quot;: \&quot;&lt;</span><span class="nv">$USERNAME</span><span class="s2">&gt;\&quot;,</span>
+<span class="s2">    \&quot;max_tokens\&quot;: &lt;</span><span class="nv">$MAX_NEW_TOKENS</span><span class="s2">&gt;,</span>
+<span class="s2">    \&quot;project_name\&quot;: \&quot;&lt;</span><span class="nv">$PROJECT_NAME</span><span class="s2">&gt;\&quot;,</span>
+<span class="s2">    \&quot;model\&quot;: \&quot;&lt;</span><span class="nv">$MODEL_NAME</span><span class="s2">&gt;\&quot;,</span>
+<span class="s2">    \&quot;messages\&quot;: [</span>
+<span class="s2">      {</span>
+<span class="s2">        \&quot;role\&quot;: \&quot;&lt;</span><span class="nv">$ROLE</span><span class="s2">&gt;\&quot;,</span>
+<span class="s2">        \&quot;content\&quot;: \&quot;&lt;</span><span class="nv">$PROMPT</span><span class="s2">&gt;\&quot;</span>
+<span class="s2">      }</span>
+<span class="s2">    ],</span>
+<span class="s2">    \&quot;stream\&quot;: &lt;</span><span class="nv">$STREAM_BOOL</span><span class="s2">&gt;</span>
 <span class="s2">  }&quot;</span>
 </code></pre></div>
+<h3 id="completions">Completions<a class="headerlink" href="#completions" title="Permanent link">&para;</a></h3>
 <p>Placeholders:
 - <code>$API_TOKEN</code>: Your Lexsi API token.
 - <code>$MODEL_PROVIDER_NAME</code>: Provider identifier (e.g., <code>openai</code>).
-- <code>$RANDOM_TEXT</code>: Provider-specific API key or token if required.
+- <code>$API_KEY</code>: Provider-specific API key or token if required.
 - <code>$USERNAME</code>: Your Lexsi username/client ID.
 - <code>$MAX_NEW_TOKENS</code>: Maximum tokens to generate (integer).
 - <code>$PROJECT_NAME</code>: Target project name.
 - <code>$MODEL_NAME</code>: Model name within the provider.
 - <code>$PROMPT</code>: The input text prompt.
 - <code>$STREAM_BOOL</code>: <code>true</code> or <code>false</code> to control streaming responses.</p>
-<h3 id="embeddings">Embeddings<a class="headerlink" href="#embeddings" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code>curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span><span class="s2">&quot;https://apiv1.lexsi.ai/gateway/v1/embeddings&quot;</span><span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>-H<span class="w"> </span><span class="s2">&quot;Authorization: Bearer </span><span class="nv">$LEXSI_API_KEY</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>-H<span class="w"> </span><span class="s2">&quot;Content-Type: application/json&quot;</span><span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>-d<span class="w"> </span><span class="s2">&quot;{</span>
-<span class="s2">    &quot;</span>model<span class="s2">&quot;: &quot;</span>&lt;<span class="nv">$MODEL_NAME</span>&gt;<span class="s2">&quot;,</span>
-<span class="s2">    &quot;</span>input<span class="s2">&quot;: [&quot;</span>&lt;<span class="nv">$INPUT_PROMPT</span>&gt;<span class="s2">&quot;]</span>
+<div class="highlight"><pre><span></span><code>curl<span class="w"> </span>--request<span class="w"> </span>POST<span class="w"> </span><span class="s1">&#39;https://apiv1.lexsi.ai/gateway/v1/completions&#39;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--header<span class="w"> </span><span class="s2">&quot;x-api-token: &lt;</span><span class="nv">$API_TOKEN</span><span class="s2">&gt;&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--header<span class="w"> </span><span class="s1">&#39;Content-Type: application/json&#39;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--data<span class="w"> </span><span class="s2">&quot;{</span>
+<span class="s2">    \&quot;provider\&quot;: \&quot;&lt;</span><span class="nv">$MODEL_PROVIDER_NAME</span><span class="s2">&gt;\&quot;,</span>
+<span class="s2">    \&quot;api_key\&quot;: \&quot;&lt;</span><span class="nv">$API_KEY</span><span class="s2">&gt;\&quot;,</span>
+<span class="s2">    \&quot;client_id\&quot;: \&quot;&lt;</span><span class="nv">$USERNAME</span><span class="s2">&gt;\&quot;,</span>
+<span class="s2">    \&quot;max_tokens\&quot;: &lt;</span><span class="nv">$MAX_NEW_TOKENS</span><span class="s2">&gt;,</span>
+<span class="s2">    \&quot;project_name\&quot;: \&quot;&lt;</span><span class="nv">$PROJECT_NAME</span><span class="s2">&gt;\&quot;,</span>
+<span class="s2">    \&quot;model\&quot;: \&quot;&lt;</span><span class="nv">$MODEL_NAME</span><span class="s2">&gt;\&quot;,</span>
+<span class="s2">    \&quot;prompt\&quot;: \&quot;&lt;</span><span class="nv">$PROMPT</span><span class="s2">&gt;\&quot;,</span>
+<span class="s2">    \&quot;stream\&quot;: &lt;</span><span class="nv">$STREAM_BOOL</span><span class="s2">&gt;</span>
 <span class="s2">  }&quot;</span>
 </code></pre></div>
+<h3 id="embeddings">Embeddings<a class="headerlink" href="#embeddings" title="Permanent link">&para;</a></h3>
 <p>Placeholders:
 - <code>$LEXSI_API_KEY</code>: Your Lexsi API key for gateway endpoints.
 - <code>$MODEL_NAME</code>: Embedding model to use.
 - <code>$INPUT_PROMPT</code>: Text to embed (single string or list).</p>
-<h3 id="image-generation">Image generation<a class="headerlink" href="#image-generation" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code>curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span><span class="s2">&quot;https://apiv1.lexsi.ai/gateway/v1/images/generations&quot;</span><span class="w"> </span><span class="se">\</span>
+<div class="highlight"><pre><span></span><code>curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span><span class="s2">&quot;https://apiv1.lexsi.ai/gateway/v1/embeddings&quot;</span><span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>-H<span class="w"> </span><span class="s2">&quot;Authorization: Bearer </span><span class="nv">$LEXSI_API_KEY</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>-H<span class="w"> </span><span class="s2">&quot;Content-Type: application/json&quot;</span><span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>-d<span class="w"> </span><span class="s2">&quot;{</span>
-<span class="s2">    &quot;</span>model<span class="s2">&quot;: &quot;</span>&lt;<span class="nv">$$</span>MODEL_NAME&gt;<span class="s2">&quot;,</span>
-<span class="s2">    &quot;</span>prompt<span class="s2">&quot;: &quot;</span>&lt;<span class="nv">$INPUT_PROMPT</span>&gt;<span class="s2">&quot;</span>
+<span class="s2">    \&quot;model\&quot;: \&quot;&lt;</span><span class="nv">$MODEL_NAME</span><span class="s2">&gt;\&quot;,</span>
+<span class="s2">    \&quot;input\&quot;: [\&quot;&lt;</span><span class="nv">$INPUT_PROMPT</span><span class="s2">&gt;\&quot;]</span>
 <span class="s2">  }&quot;</span>
 </code></pre></div>
+<h3 id="image-generation">Image generation<a class="headerlink" href="#image-generation" title="Permanent link">&para;</a></h3>
 <p>Placeholders:
 - <code>$LEXSI_API_KEY</code>: Your Lexsi API key for gateway endpoints.
 - <code>$MODEL_NAME</code>: Image generation model to use.
 - <code>$INPUT_PROMPT</code>: Text prompt describing the image to generate.</p>
+<div class="highlight"><pre><span></span><code>curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span><span class="s2">&quot;https://apiv1.lexsi.ai/gateway/v1/images/generations&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-H<span class="w"> </span><span class="s2">&quot;Authorization: Bearer </span><span class="nv">$LEXSI_API_KEY</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-H<span class="w"> </span><span class="s2">&quot;Content-Type: application/json&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-d<span class="w"> </span><span class="s2">&quot;{</span>
+<span class="s2">    \&quot;model\&quot;: \&quot;&lt;</span><span class="nv">$MODEL_NAME</span><span class="s2">&gt;\&quot;,</span>
+<span class="s2">    \&quot;prompt\&quot;: \&quot;&lt;</span><span class="nv">$INPUT_PROMPT</span><span class="s2">&gt;\&quot;</span>
+<span class="s2">  }&quot;</span>
+</code></pre></div>
 
 
 
