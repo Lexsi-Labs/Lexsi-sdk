@@ -10,19 +10,9 @@ Use these ready-to-run curl with your Lexsi API key. Replace the placeholder val
 curl -X GET "https://apiv1.lexsi.ai/healthcheck"
 ```
 
-## Tabular Modality API's
+## Tabular Modality API
 
 ### Generate Prediction and Explainability
-
-Placeholders:
-- `$X_API_TOKEN`: Your Lexsi API token from the SDK/portal.
-- `$USERNAME`: Your Lexsi username/client ID.
-- `$PROJECTNAME`: Target project name.
-- `$UNIQUE_IDENTIFIER`: Unique row ID for the registered case.
-- `$Tag`: Dataset tag you want to attach to this upload / Prediction.
-- `$SERVERLESS_COMPUTE_TYPE`: Serverless instance type for processing (e.g., `NOVA`, `GOVA`, or `local`).
-- `$EXPLAINABILITY_METHOD`: Explainability technique to run (e.g., `shap`, `lime`).
-- `$data`: List of JSON objects containing feature key/value pairs.
 
 ```bash
 curl --http2 -X POST "https://apiv1.lexsi.ai/v2/project/case-register" \
@@ -44,18 +34,21 @@ curl --http2 -X POST "https://apiv1.lexsi.ai/v2/project/case-register" \
   }]"
 ```
 
-## IMAGE modality API
+| Placeholder | Description |
+|------------|-------------|
+| `$X_API_TOKEN` | Your Lexsi API token from the SDK or portal |
+| `$USERNAME` | Your Lexsi username / client ID |
+| `$PROJECTNAME` | Target project name |
+| `$UNIQUE_IDENTIFIER` | Unique row ID for the registered case |
+| `$Tag` | Dataset tag to attach to this upload or prediction |
+| `$SERVERLESS_COMPUTE_TYPE` | Serverless instance type (e.g. `NOVA`, `GOVA`, or `local`) |
+| `$EXPLAINABILITY_METHOD` | Explainability technique to run (e.g. `shap`, `lime`) |
+| `$data` | List of JSON objects containing feature key/value pairs |
 
-Placeholders:
-- `$X_API_TOKEN`: Your Lexsi API token.
-- `$USERNAME`: Your Lexsi username/client ID.
-- `$PROJECT_NAME`: Target project name for this image case.
-- `$UNIQUE_IDENTIFIER`: Filename or unique ID for the image case.
-- `$TAG`: Tag to associate with the upload.
-- `$EXPLAINABILITY_METHOD`: Explainability method to run (e.g., `gradcam`).
-- `$SERVERLESS_COMPUTE_TYPE`: Serverless instance type for processing.
-- `$IMAGE_PATH`: Local path to the image file to upload.
-- `$IMAGE_CLASS`: Optional class/label for the image.
+
+
+## Image Modality API
+
 
 ```bash
 curl --http2 -X POST "https://apiv1.lexsi.ai/v2/project/case-register" \
@@ -70,22 +63,21 @@ curl --http2 -X POST "https://apiv1.lexsi.ai/v2/project/case-register" \
    -F "image_class=<$IMAGE_CLASS>"
 ```
 
+| Placeholder | Description |
+|------------|-------------|
+| `$X_API_TOKEN` | Your Lexsi API token |
+| `$USERNAME` | Your Lexsi username / client ID |
+| `$PROJECT_NAME` | Target project name for this image case |
+| `$UNIQUE_IDENTIFIER` | Filename or unique identifier for the image case |
+| `$TAG` | Tag to associate with the upload |
+| `$EXPLAINABILITY_METHOD` | Explainability method to run (e.g.  `gradcam`,`dlb`,`ig`) |
+| `$SERVERLESS_COMPUTE_TYPE` | Serverless instance type for processing |
+| `$IMAGE_PATH` | Local filesystem path to the image file |
+| `$IMAGE_CLASS` | Optional class or label for the image |
+
 ## Text Modality API's
 
 ### Text Generation API
-
-Placeholders:
-- `$API_TOKEN`: Your Lexsi API token.
-- `$MODEL_PROVIDER`: Provider identifier (e.g., `Lexsi`, `OpenAI`, `Grok`).
-- `$USERNAME`: Your Lexsi username/client ID.
-- `$PROJECT_NAME`: Target text project name.
-- `$INPUT_PROMPT`: User prompt to send to the model.
-- `$SERVERLESS_COMPUTE_TYPE`: Serverless instance type for processing.
-- `$MODEL_NAME`: Model name within the provider.
-- `$MIN_TOKENS` / `$MAX_TOKENS`: Minimum/maximum tokens to generate (integers).
-- `$SESSION_ID`: Optional session ID for threaded conversations.
-- `$POD_INSTANCE_TYPE`: Optional dedicated instance type for processing.
-- `$EXPLAINABILTY_FLAG`: Boolean flag indicating whether to compute explainability.
 
 ```bash
 curl --http2 -X POST 'https://apiv1.lexsi.ai/v2/project/case-register' \
@@ -103,19 +95,22 @@ curl --http2 -X POST 'https://apiv1.lexsi.ai/v2/project/case-register' \
   -F "explain_model=<$EXPLAINABILTY_FLAG>"
 ```
 
-### Chat completions
+| Placeholder | Description |
+|------------|-------------|
+| `$API_TOKEN` | Your Lexsi API token |
+| `$MODEL_PROVIDER` | Provider identifier (e.g. `Lexsi`, `OpenAI`, `Grok`) |
+| `$USERNAME` | Your Lexsi username / client ID |
+| `$PROJECT_NAME` | Target text project name |
+| `$INPUT_PROMPT` | User prompt to send to the model |
+| `$SERVERLESS_COMPUTE_TYPE` | Serverless instance type for processing |
+| `$MODEL_NAME` | Model name within the selected provider |
+| `$MIN_TOKENS` / `$MAX_TOKENS` | Minimum and maximum tokens to generate (integers) |
+| `$SESSION_ID` | Optional session ID for threaded or multi-turn conversations |
+| `$POD_INSTANCE_TYPE` | Optional dedicated instance type for processing |
+| `$EXPLAINABILTY_FLAG` | Boolean flag indicating whether explainability is computed |
 
-Placeholders:
-- `$API_TOKEN`: Your Lexsi API token.
-- `$MODEL_PROVIDER_NAME`: Provider identifier (e.g., `openai`).
-- `$API_KEY`: Provider-specific API key or token if required.
-- `$USERNAME`: Your Lexsi username/client ID.
-- `$MAX_NEW_TOKENS`: Maximum tokens to generate (integer).
-- `$PROJECT_NAME`: Target project name.
-- `$MODEL_NAME`: Model name within the provider.
-- `$ROLE`: Message role (e.g., `user`, `system`).
-- `$PROMPT`: The input text prompt.
-- `$STREAM_BOOL`: `true` or `false` to control streaming responses.
+
+### Chat completions
 
 ```bash
 curl --request POST 'https://apiv1.lexsi.ai/gateway/v1/chat/completions' \
@@ -138,18 +133,21 @@ curl --request POST 'https://apiv1.lexsi.ai/gateway/v1/chat/completions' \
   }"
 ```
 
-### Completions
+| Placeholder | Description |
+|------------|-------------|
+| `$API_TOKEN` | Your Lexsi API token |
+| `$MODEL_PROVIDER_NAME` | Provider identifier (e.g. `openai`) |
+| `$API_KEY` | Provider-specific API key or token, if required |
+| `$USERNAME` | Your Lexsi username / client ID |
+| `$MAX_NEW_TOKENS` | Maximum number of tokens to generate (integer) |
+| `$PROJECT_NAME` | Target project name |
+| `$MODEL_NAME` | Model name within the selected provider |
+| `$ROLE` | Message role (e.g. `user`, `system`) |
+| `$PROMPT` | Input text prompt |
+| `$STREAM_BOOL` | Boolean flag (`true` or `false`) to enable or disable streaming responses |
 
-Placeholders:
-- `$API_TOKEN`: Your Lexsi API token.
-- `$MODEL_PROVIDER_NAME`: Provider identifier (e.g., `openai`).
-- `$API_KEY`: Provider-specific API key or token if required.
-- `$USERNAME`: Your Lexsi username/client ID.
-- `$MAX_NEW_TOKENS`: Maximum tokens to generate (integer).
-- `$PROJECT_NAME`: Target project name.
-- `$MODEL_NAME`: Model name within the provider.
-- `$PROMPT`: The input text prompt.
-- `$STREAM_BOOL`: `true` or `false` to control streaming responses.
+
+### Completions
 
 ```bash
 curl --request POST 'https://apiv1.lexsi.ai/gateway/v1/completions' \
@@ -163,16 +161,25 @@ curl --request POST 'https://apiv1.lexsi.ai/gateway/v1/completions' \
     \"project_name\": \"<$PROJECT_NAME>\",
     \"model\": \"<$MODEL_NAME>\",
     \"prompt\": \"<$PROMPT>\",
-    \"stream\": <$STREAM_BOOL>
+    \"stream\": \"<$STREAM_BOOL>\"
   }"
 ```
 
-### Embeddings
+| Placeholder | Description |
+|------------|-------------|
+| `$API_TOKEN` | Your Lexsi API token |
+| `$MODEL_PROVIDER_NAME` | Provider identifier (e.g. `openai`) |
+| `$API_KEY` | Provider-specific API key or token, if required |
+| `$USERNAME` | Your Lexsi username / client ID |
+| `$MAX_NEW_TOKENS` | Maximum number of tokens to generate (integer) |
+| `$PROJECT_NAME` | Target project name |
+| `$MODEL_NAME` | Model name within the selected provider |
+| `$PROMPT` | Input text prompt |
+| `$STREAM_BOOL` | Boolean flag (`true` or `false`) to enable or disable streaming responses |
 
-Placeholders:
-- `$LEXSI_API_KEY`: Your Lexsi API key for gateway endpoints.
-- `$MODEL_NAME`: Embedding model to use.
-- `$INPUT_PROMPT`: Text to embed (single string or list).
+
+
+### Embeddings
 
 ```bash
 curl -X POST "https://apiv1.lexsi.ai/gateway/v1/embeddings" \
@@ -184,12 +191,13 @@ curl -X POST "https://apiv1.lexsi.ai/gateway/v1/embeddings" \
   }"
 ```
 
-### Image generation
+| Placeholder | Description |
+|------------|-------------|
+| `$LEXSI_API_KEY` | Your Lexsi API key for gateway endpoints |
+| `$MODEL_NAME` | Embedding model to use |
+| `$INPUT_PROMPT` | Text input to generate embeddings for (single string or list of strings) |
 
-Placeholders:
-- `$LEXSI_API_KEY`: Your Lexsi API key for gateway endpoints.
-- `$MODEL_NAME`: Image generation model to use.
-- `$INPUT_PROMPT`: Text prompt describing the image to generate.
+### Image generation
 
 ```bash
 curl -X POST "https://apiv1.lexsi.ai/gateway/v1/images/generations" \
@@ -200,3 +208,9 @@ curl -X POST "https://apiv1.lexsi.ai/gateway/v1/images/generations" \
     \"prompt\": \"<$INPUT_PROMPT>\"
   }"
 ```
+
+| Placeholder | Description |
+|------------|-------------|
+| `$LEXSI_API_KEY` | Your Lexsi API key for gateway endpoints |
+| `$MODEL_NAME` | Image generation model to use |
+| `$INPUT_PROMPT` | Text prompt describing the image to generate |
