@@ -7,7 +7,7 @@ import json
 
 
 class APIClient(BaseModel):
-    """API client to interact with Lexsi Ai services"""
+    """API client to interact with Lexsi.ai services"""
 
     debug: bool = False
     base_url: str = ""
@@ -146,24 +146,7 @@ class APIClient(BaseModel):
 
         return response.json()
 
-    # def stream(self, uri):
-    #     """makes streaming request to xai base service
-
-    #     :param uri: api uri
-    #     :param payload: api payload, defaults to {}
-    #     :raises Exception: Request exception
-    #     :return: JSON response
-    #     """
-
-    #     self.refresh_bearer_token()
-    #     response = self.base_request("GET", uri, stream=True)
-    #     for res in response.iter_lines(decode_unicode=True):
-    #         if res:
-    #             if res.startswith("data: "):
-    #                 res = res.split("data: ")[1]
-    #             yield json.loads(res)
-
-    def stream(self, uri):
+    def stream(self, uri, method, payload=None):
         """Server-Sent Events / line-streaming endpoint."""
         self.refresh_bearer_token()
         url = f"{self.base_url}/{uri}"
@@ -172,15 +155,14 @@ class APIClient(BaseModel):
 
         with httpx.Client(http2=True, timeout=None) as client:
             # streaming MUST be consumed inside the context
-            with client.stream("GET", url, headers=headers) as response:
+            with client.stream(method, url, headers=headers, json=payload) as response:
                 response.raise_for_status()
                 for line in response.iter_lines():  # no decode_unicode arg in httpx
-                    if not line:
-                        continue
-                    # httpx.iter_lines() yields str lines
+                    if not line: continue
                     if line.startswith("data: "):      # typical SSE prefix
-                        line = line[6:]
-                    yield json.loads(line)
+                        if line.strip() == "data: [DONE]":
+                            break
+                        yield json.loads(line[6:])
 
     def file(self, uri, files):
         """makes multipart request to send files

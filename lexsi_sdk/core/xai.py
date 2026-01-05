@@ -44,7 +44,7 @@ class XAI(BaseModel):
         :param api_key: API key, defaults to XAI_ACCESS_TOKEN environment variable
         """
         access_token = os.environ.get("XAI_ACCESS_TOKEN", None) or getpass.getpass(
-            "Enter your Lexsi Ai Access Token: "
+            "Enter your Lexsi.ai SDK Access Token: "
         )
 
         if not access_token:
@@ -70,11 +70,12 @@ class XAI(BaseModel):
         res["details"].insert(
             0,
             {
-                "name": "Personal",
+                "name": "personal",
                 "organization_owner": True,
                 "organization_admin": True,
                 "current_users": 1,
-                "created_by": "you",
+                "created_by": res.get("current_user", {}).get("username", ""),
+                "created_at": res.get("current_user", {}).get("created_at", ""),
             },
         )
 

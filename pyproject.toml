@@ -38,6 +38,14 @@ dependencies = { file = ["requirements.txt"] }
 where = ["."]
 include = ["lexsi_sdk*"]
 
+[project.optional-dependencies]
+docs = [
+  "mkdocs>=1.6",
+  "mkdocs-material>=9.5",
+  "mkdocstrings[python]>=0.24",
+  "pymdown-extensions>=10.0",
+]
+
 [tool.setuptools_scm]
 version_scheme = "no-guess-dev"
 local_scheme = "no-local-version"

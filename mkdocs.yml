@@ -1,0 +1,54 @@
+site_name: SDK Documentation
+site_url: https://lexsi-labs.github.io/Lexsi-sdk/
+theme:
+  name: material
+  logo: assets/LexsiLogo.svg
+  favicon: assets/LexsiLogo.svg
+  features:
+    - navigation.top
+    - navigation.sections
+    - navigation.expand
+    - navigation.prune
+    - navigation.tracking
+    - toc.integrate
+    - toc.follow 
+    - content.code.copy
+  palette:
+    - scheme: slate
+      primary: custom
+      accent: custom
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: sphinx
+            show_source: true
+            show_root_heading: true
+            heading_level: 2
+            separate_signature: true
+            merge_init_into_class: true
+            filters:
+              - "!^__"
+
+markdown_extensions:
+  - admonition
+  - toc:
+      permalink: true
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.tabbed:
+      alternate_style: true
+
+extra_css:
+  - styles/overrides.css
+
+nav:
+  - Home: index.md
+  - SDK Components: sdk.md
+  - API Usage: api.md
+  - API Playground: redoc.md

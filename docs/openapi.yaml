@@ -1,0 +1,144 @@
+openapi: 3.0.3
+info:
+  title: Lexsi REST API
+  version: "1.0.0"
+  description: >
+    Core endpoints surfaced in the docs. Replace servers and adjust schemas as needed for your environment.
+
+servers:
+  - url: https://apiv1.lexsi.ai
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    ChatCompletionRequest:
+      type: object
+      properties:
+        model:
+          type: string
+          example: Qwen-Qwen3-8B_v1
+        messages:
+          type: array
+          items:
+            type: object
+            properties:
+              role:
+                type: string
+                enum: [user, system, assistant]
+              content:
+                type: string
+            required: [role, content]
+        stream:
+          type: boolean
+          example: false
+      required: [model, messages]
+    EmbeddingsRequest:
+      type: object
+      properties:
+        model:
+          type: string
+          example: text-embedding-3-small
+        input:
+          type: array
+          items:
+            type: string
+          example: ["Lexsi makes observability easy"]
+      required: [model, input]
+    ImageGenerationRequest:
+      type: object
+      properties:
+        model:
+          type: string
+          example: stability/stable-diffusion-xl-base-1.0
+        prompt:
+          type: string
+          example: A futuristic city skyline at dusk
+      required: [model, prompt]
+
+security:
+  - bearerAuth: []
+
+paths:
+  /healthcheck:
+    get:
+      summary: Health check
+      tags: [healthcheck]
+      security: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+
+  /gateway/v1/chat/completions:
+    post:
+      summary: Chat completions
+      tags: [chat]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChatCompletionRequest"
+      responses:
+        "200":
+          description: Chat completion response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /gateway/v1/embeddings:
+    post:
+      summary: Create embeddings
+      tags: [embeddings]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmbeddingsRequest"
+      responses:
+        "200":
+          description: Embedding vectors
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /gateway/v1/images/generations:
+    post:
+      summary: Image generation
+      tags: [images]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ImageGenerationRequest"
+      responses:
+        "200":
+          description: Generated image response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true

@@ -55,13 +55,22 @@ def poll_events(
     handle_failed_event: Optional[Callable] = None,
     progress_message: str = "progress",
 ):
-    """Poll long-running event stream and print incremental progress."""
+    """Poll long-running event stream and print incremental progress.
+
+    :param api_client: API client with streaming support.
+    :param project_name: Project name owning the event.
+    :param event_id: Identifier of the event to track.
+    :param handle_failed_event: Optional callback to invoke on failure.
+    :param progress_message: Label used when printing progress.
+    :return: None. Raises on failure events.
+    """
     last_message = ""
     log_length = 0
     progress = 0
 
     for event in api_client.stream(
-        f"{POLL_EVENTS}?project_name={project_name}&event_id={event_id}"
+        uri=f"{POLL_EVENTS}?project_name={project_name}&event_id={event_id}",
+        method="GET"
     ):
         details = event.get("details")
 
