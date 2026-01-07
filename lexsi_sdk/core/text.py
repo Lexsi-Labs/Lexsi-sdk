@@ -535,8 +535,8 @@ class TextProject(Project):
         self,
         input : Union[str, List[str]],
         model: str,
-        api_key : str,
         provider: str,
+        api_key : Optional[str] = None,
         session_id : Optional[UUID] = None,
     ) -> dict:  
         payload = {
@@ -582,7 +582,7 @@ class TextProject(Project):
         model: str,
         prompt: str,
         provider: str,
-        api_key: str,
+        api_key: Optional[str] = None,
         session_id : Optional[UUID] = None,
     ) -> dict:
         """Image generation endpoint wrapper
