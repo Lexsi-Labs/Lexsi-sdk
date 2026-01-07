@@ -156,8 +156,12 @@ class APIClient(BaseModel):
         with httpx.Client(http2=True, timeout=None) as client:
             # streaming MUST be consumed inside the context
             with client.stream(method, url, headers=headers, json=payload) as response:
-                if 400 <= response.status_code < 600:
-                    raise Exception(response.text)
+                if response.status_code >= 400:
+                    try:
+                        error_body = response.read().decode()
+                    except Exception:
+                        error_body = "Something went wrong while streaming response"
+                    raise Exception(error_body)
                 for line in response.iter_lines():  # no decode_unicode arg in httpx
                     if not line: continue
                     if line.startswith("data: "):      # typical SSE prefix
