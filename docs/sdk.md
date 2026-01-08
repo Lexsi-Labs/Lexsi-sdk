@@ -9,7 +9,7 @@ SDK token can be generated from the [Lexsi Console](https://console.lexsi.ai) un
 ```python
 from lexsi_sdk import lexsi
 
-# Login using your Lexsi API key 
+# Login using your Lexsi SDK Token
 lexsi.login(sdk_access_token="YOUR_SDK_TOKEN")
 
 ```
