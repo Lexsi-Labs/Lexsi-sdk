@@ -4,7 +4,7 @@
 
 SDK token can be generated from the [Lexsi Console](https://console.lexsi.ai) under  
 **Dashboard → Access Token**:  
-https://console.lexsi.ai/dashboard/access-token
+[https://console.lexsi.ai/dashboard/access-token](https://console.lexsi.ai/dashboard/access-token)
 
 ```python
 from lexsi_sdk import lexsi
