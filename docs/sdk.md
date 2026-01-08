@@ -1,7 +1,6 @@
 # SDK Documentation
 
 ## Getting Started
-The recommended pattern is:
 
 SDK token can be generated from the [Lexsi Console](https://console.lexsi.ai) under  
 **Dashboard → Access Token**:  
