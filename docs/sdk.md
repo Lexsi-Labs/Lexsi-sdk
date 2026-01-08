@@ -19,11 +19,6 @@ lexsi.login(sdk_access_token="YOUR_SDK_TOKEN")
       show_root_full_path: false
       show_root_toc_entry: false
       show_source: true
-      show_inheritance_diagram: false
-      show_inheritance: false
-      inherited_members: true
-      members: true
-      show_bases: false 
       filters:
         - "!case_profile"
 
