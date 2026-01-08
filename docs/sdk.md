@@ -3,20 +3,27 @@
 ## Getting Started
 The recommended pattern is:
 
-```python
-from lexsi_sdk import xai as lexsi
+SDK TOKEN can be generated from console.lexsi.ai[console.lexsi.ai] at [https://console.lexsi.ai/dashboard/access-token]
 
-# Login using your Lexsi API key
-lexsi.login(api_key="YOUR_API_KEY")
+```python
+from lexsi_sdk import lexsi
+
+# Login using your Lexsi API key 
+lexsi.login(sdk_access_token="YOUR_SDK_TOKEN")
 
 ```
 
-::: lexsi_sdk.core.xai
+::: lexsi_sdk.core.lexsi
     options:
       show_root_heading: false
       show_root_full_path: false
       show_root_toc_entry: false
       show_source: true
+      show_inheritance_diagram: false
+      show_inheritance: false
+      inherited_members: true
+      members: true
+      show_bases: false 
       filters:
         - "!case_profile"
 

@@ -39,21 +39,22 @@ class XAI(BaseModel):
 
         self.api_client = APIClient(debug=debug, base_url=base_url)
 
-    def login(self):
+    def login(self, sdk_access_token: Optional[str] = None):
         """Authenticate with Lexsi.ai using an access token. It prompts for or reads the access token from the environment variable XAI_ACCESS_TOKEN and sets it on the API client, enabling subsequent calls to the platform.
 
         :param api_key: API key, defaults to XAI_ACCESS_TOKEN environment variable
         """
-        access_token = os.environ.get("XAI_ACCESS_TOKEN", None) or getpass.getpass(
-            "Enter your Lexsi.ai SDK Access Token: "
-        )
+        if not sdk_access_token:
+            sdk_access_token = os.environ.get("XAI_ACCESS_TOKEN", None) or getpass.getpass(
+                "Enter your Lexsi.ai SDK Access Token: "
+            )
 
-        if not access_token:
+        if not sdk_access_token:
             raise ValueError("Either set XAI_ACCESS_TOKEN or pass the Access token")
 
-        res = self.api_client.post(LOGIN_URI, payload={"access_token": access_token})
+        res = self.api_client.post(LOGIN_URI, payload={"access_token": sdk_access_token})
         self.api_client.update_headers(res["access_token"])
-        self.api_client.set_access_token(access_token)
+        self.api_client.set_access_token(sdk_access_token)
 
         print("Authenticated successfully.")
 
