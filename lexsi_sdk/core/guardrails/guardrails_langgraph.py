@@ -3,10 +3,7 @@ from __future__ import annotations
 import json
 from datetime import datetime
 from typing import Any, Callable, Dict, List, Optional, Tuple, TypedDict, Union
-from lexsi_sdk.common.xai_uris import (
-    RUN_GUARDRAILS_URI,
-    RUN_GUARDRAILS_PARALLEL_URI
-)
+from lexsi_sdk.common.xai_uris import RUN_GUARDRAILS_URI, RUN_GUARDRAILS_PARALLEL_URI
 from lexsi_sdk.core.project import Project
 from openinference.instrumentation.langchain import get_current_span
 from opentelemetry import trace
@@ -15,7 +12,8 @@ from .guard_template import Guard
 
 
 class GuardrailRunResult(TypedDict, total=False):
-    """Structured response returned from guardrail API execution."""
+    """Typed dictionary aggregating the results of running one or more guardrails."""
+
     details: Dict[str, Any]
     validated_output: Any
     validation_passed: bool
@@ -30,14 +28,7 @@ class GuardrailRunResult(TypedDict, total=False):
 
 
 class LangGraphGuardrail:
-    """
-    Decorator utility for applying Guardrails checks to LangGraph node inputs and outputs
-    by calling the Guardrails HTTP APIs.
-
-    Supports two modes:
-    - "adhoc": calls /guardrails/run_guardrail per guard passed in the decorator
-    - "configured": calls /guardrails/run to use project/model configured guardrails
-    """
+    """Guardrail integration for LangGraph workflows. Enables node-level input and output validation."""
 
     def __init__(
         self,
@@ -45,29 +36,31 @@ class LangGraphGuardrail:
         default_apply_on: str = "input",
         llm: Optional[Any] = None,
     ) -> None:
-        """Initialize guardrail helper with project context and defaults."""
+        """Initialize guardrail helper with project context and defaults.
+        Stores configuration and prepares the object for use."""
         if project is not None:
             self.client = project.api_client
             self.project_name = project.project_name
-            
+
         self.default_apply_on = default_apply_on
         self.logs: List[Dict[str, Any]] = []
         self.max_retries = 1
-        self.retry_delay = 1.0 
+        self.retry_delay = 1.0
         self.tracer = trace.get_tracer(__name__)
         self.llm = llm
 
     def guardrail(
         self,
-        guards: Union[List[str], List[Dict[str, Any]], str, Dict[str, Any], None] = None,
+        guards: Union[
+            List[str], List[Dict[str, Any]], str, Dict[str, Any], None
+        ] = None,
         action: str = "block",
         apply_to: str = "both",
         input_key: Optional[str] = None,
         output_key: Optional[str] = None,
         # process_entire_state: bool = False,
     ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
-        """
-        Decorator factory.
+        """Decorator method used to wrap LangGraph nodes and apply guardrail checks in configured or ad hoc modes. Ensures that content passing through the node complies with guardrail policies.
 
         - action: 'block' | 'retry' | 'warn'. If validation fails:
           - block: raise ValueError
@@ -83,15 +76,19 @@ class LangGraphGuardrail:
             guards = [guards]  # type: ignore[assignment]
 
         def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
-            """Decorator that wraps a LangGraph node with guardrail checks."""
+            """Decorator that wraps a LangGraph node with guardrail checks.
+            Encapsulates a small unit of SDK logic and returns the computed result."""
+
             def wrapper(*args: Any, **kwargs: Any) -> Any:
-                """Execute guardrails around the wrapped node call."""
+                """Execute guardrails around the wrapped node call.
+                Encapsulates a small unit of SDK logic and returns the computed result.
+                """
                 # In LangGraph, the first argument is the state dict
                 state = args[0] if args else kwargs.get("state")
                 node_name = getattr(func, "__name__", "unknown_node")
 
                 # Pre-process input
-                if state and apply_to in ("input", "both"): 
+                if state and apply_to in ("input", "both"):
                     input_content = self._get_content(state, input_key, is_input=True)
                     if input_content is not None:
                         processed = self._process_content(
@@ -107,8 +104,10 @@ class LangGraphGuardrail:
 
                 # Post-process output
                 if apply_to in ("output", "both"):
-                    
-                    output_content = self._get_content(result, output_key, is_input=False)
+
+                    output_content = self._get_content(
+                        result, output_key, is_input=False
+                    )
                     if output_content is not None:
                         processed = self._process_content(
                             content=output_content,
@@ -116,7 +115,6 @@ class LangGraphGuardrail:
                             content_type="output",
                             action=action,
                             guards=guards,
-                            
                         )
                         if output_key is not None:
                             if isinstance(result, dict):
@@ -135,7 +133,7 @@ class LangGraphGuardrail:
         return decorator
 
     def _get_content(self, data: Any, key: Optional[str], is_input: bool) -> Any:
-        """Extract guardrail-relevant content from the input or output structure."""
+        """Internal helper to extract text content from LangGraph node input, preparing it for guardrail processing."""
         if key is not None:
             if isinstance(data, dict) and key in data:
                 return data[key]
@@ -151,8 +149,10 @@ class LangGraphGuardrail:
                 return data
             return None  # No content to process
 
-    def _set_content(self, data: Any, processed: Any, key: Optional[str], is_input: bool) -> None:
-        """Write processed content back into the state or result container."""
+    def _set_content(
+        self, data: Any, processed: Any, key: Optional[str], is_input: bool
+    ) -> None:
+        """Internal helper to place processed content back into the LangGraph node after guardrail checks are complete."""
         if key is not None:
             if isinstance(data, dict):
                 data[key] = processed
@@ -172,7 +172,7 @@ class LangGraphGuardrail:
         action: str,
         guards: Optional[List[Union[str, Dict[str, Any]]]],
     ) -> Any:
-        """Run guardrails over provided content and return sanitized result when needed."""
+        """Internal method that processes content within a LangGraph node and applies configured guardrails, returning processed content and a boolean pass indicator."""
         if not guards:
             return content
 
@@ -185,48 +185,64 @@ class LangGraphGuardrail:
             return content
 
         current_content = content_to_process
-        
+
         try:
             parent_span = get_current_span()
             if parent_span is not None:
                 ctx = trace.set_span_in_context(parent_span)
                 # Create parent span for input/output guardrails with node name for better tracing
-                with self.tracer.start_as_current_span(f"guardrails:{content_type}", context=ctx) as parent_gr_span:
+                with self.tracer.start_as_current_span(
+                    f"guardrails:{content_type}", context=ctx
+                ) as parent_gr_span:
                     # Set parent span attributes
-                    parent_gr_span.set_attribute("node", str(node_name))  # Add node attribute
+                    parent_gr_span.set_attribute(
+                        "node", str(node_name)
+                    )  # Add node attribute
                     parent_gr_span.set_attribute("component", str(node_name))
                     parent_gr_span.set_attribute("content_type", str(content_type))
-                    
+
                     # Run all guardrails in parallel
-                    parallel_result = self._apply_guardrail_parallel(current_content, guards)
-                    
+                    parallel_result = self._apply_guardrail_parallel(
+                        current_content, guards
+                    )
+
                     if not parallel_result.get("success", False):
                         return current_content
 
                     # Set timing attributes only on parent span
-                    parent_gr_span.set_attribute("start_time", str(parallel_result.get("start_time", "")))
-                    parent_gr_span.set_attribute("end_time", str(parallel_result.get("end_time", "")))
-                    parent_gr_span.set_attribute("duration", float(parallel_result.get("duration", 0.0)))
+                    parent_gr_span.set_attribute(
+                        "start_time", str(parallel_result.get("start_time", ""))
+                    )
+                    parent_gr_span.set_attribute(
+                        "end_time", str(parallel_result.get("end_time", ""))
+                    )
+                    parent_gr_span.set_attribute(
+                        "duration", float(parallel_result.get("duration", 0.0))
+                    )
 
                     for guard_result in parallel_result.get("details", []):
                         guard_name = guard_result.get("name", "unknown")
-                        
+
                         run_result: GuardrailRunResult = {
                             "details": guard_result,
                             "validated_output": guard_result.get("validated_output"),
-                            "validation_passed": guard_result.get("validation_passed", False),
-                            "sanitized_output": guard_result.get("sanitized_output", current_content),
+                            "validation_passed": guard_result.get(
+                                "validation_passed", False
+                            ),
+                            "sanitized_output": guard_result.get(
+                                "sanitized_output", current_content
+                            ),
                             "duration": guard_result.get("duration", 0.0),
                             "latency": guard_result.get("latency", "0 ms"),
                             "start_time": parallel_result.get("start_time", ""),
                             "end_time": parallel_result.get("end_time", ""),
                             "retry_count": 0,
-                            "max_retries": self.max_retries
+                            "max_retries": self.max_retries,
                         }
-                        
+
                         run_result["response"] = guard_result
                         run_result["input"] = current_content
-                        
+
                         # Process each guard result with child spans
                         current_content = self._handle_action(
                             original=current_content,
@@ -235,7 +251,7 @@ class LangGraphGuardrail:
                             node_name=node_name,
                             content_type=content_type,
                             guard_name=guard_name,
-                            parent_span=parent_gr_span  # Pass parent span
+                            parent_span=parent_gr_span,  # Pass parent span
                         )
 
             if is_list:
@@ -243,7 +259,7 @@ class LangGraphGuardrail:
                 return content
             else:
                 return current_content
-                
+
         except Exception as e:
             return content
 
@@ -252,9 +268,8 @@ class LangGraphGuardrail:
         content: Any,
         guards: List[Union[str, Dict[str, Any]]],
     ) -> Any:
-        """
-        Run multiple guardrails in parallel using batch endpoint
-        
+        """Internal method that invokes multiple guardrails in parallel via a batch endpoint and aggregates their results.
+
         :param content: Content to validate against multiple guardrails.
         :param guards: List of guardrails to run in parallel.
         :return: Response dict containing success status and validation details.
@@ -268,10 +283,11 @@ class LangGraphGuardrail:
             # Prepare payload according to RunGuardParallelPayload schema
             payload = {
                 "input_data": content,
-                "guards": guard_specs  # List of properly formatted guard specs
+                "guards": guard_specs,  # List of properly formatted guard specs
             }
 
             import requests
+
             start_time = datetime.now()
             response = self.client.post(
                 RUN_GUARDRAILS_PARALLEL_URI,
@@ -279,12 +295,14 @@ class LangGraphGuardrail:
             )
             end_time = datetime.now()
             result = response
-            result.update({
-                "start_time": start_time.isoformat(),
-                "end_time": end_time.isoformat(),
-                "duration": (end_time - start_time).total_seconds()
-            })
-                    
+            result.update(
+                {
+                    "start_time": start_time.isoformat(),
+                    "end_time": end_time.isoformat(),
+                    "duration": (end_time - start_time).total_seconds(),
+                }
+            )
+
             return result
 
         except Exception as e:
@@ -292,7 +310,7 @@ class LangGraphGuardrail:
                 "success": False,
                 "details": f"Failed to run guardrails in parallel: {str(e)}",
                 "start_time": datetime.now().isoformat(),
-                "end_time": datetime.now().isoformat()
+                "end_time": datetime.now().isoformat(),
             }
 
     def _apply_guardrail_with_retry(
@@ -303,18 +321,28 @@ class LangGraphGuardrail:
         content_type: str,
         action: str,
     ) -> Any:
-        """Apply a guardrail, optionally retrying with sanitized output."""
+        """Internal method that applies guardrails with retry logic for handling transient errors."""
         current_content = content
         retry_count = 0
 
         if action == "retry":
             while retry_count <= self.max_retries:
-                run_result = self._call_run_guardrail(current_content, guard_spec, content_type)
+                run_result = self._call_run_guardrail(
+                    current_content, guard_spec, content_type
+                )
                 validation_passed = bool(run_result.get("validation_passed", True))
-                detected_issue = not validation_passed or not run_result.get("success", True)
+                detected_issue = not validation_passed or not run_result.get(
+                    "success", True
+                )
 
-                if detected_issue and self.llm is not None and retry_count < self.max_retries:
-                    prompt = self._build_sanitize_prompt(guard_spec.get("name", "unknown"), current_content, content_type)
+                if (
+                    detected_issue
+                    and self.llm is not None
+                    and retry_count < self.max_retries
+                ):
+                    prompt = self._build_sanitize_prompt(
+                        guard_spec.get("name", "unknown"), current_content, content_type
+                    )
                     try:
                         sanitized = self.llm.invoke(prompt)
                         if hasattr(sanitized, "content"):
@@ -328,7 +356,8 @@ class LangGraphGuardrail:
                         action=retry_action,
                         node_name=node_name,
                         content_type=content_type,
-                        guard_name=guard_spec.get("name") or guard_spec.get("class", "unknown"),
+                        guard_name=guard_spec.get("name")
+                        or guard_spec.get("class", "unknown"),
                     )
                     current_content = sanitized
                     retry_count += 1
@@ -341,12 +370,15 @@ class LangGraphGuardrail:
                         action=f"retry_{retry_count}" if retry_count > 0 else action,
                         node_name=node_name,
                         content_type=content_type,
-                        guard_name=guard_spec.get("name") or guard_spec.get("class", "unknown"),
+                        guard_name=guard_spec.get("name")
+                        or guard_spec.get("class", "unknown"),
                     )
             return current_content
         else:
             # Only one check for non-retry actions
-            run_result = self._call_run_guardrail(current_content, guard_spec, content_type)
+            run_result = self._call_run_guardrail(
+                current_content, guard_spec, content_type
+            )
             return self._handle_action(
                 original=current_content,
                 run_result=run_result,
@@ -358,21 +390,26 @@ class LangGraphGuardrail:
 
     # --------- HTTP calls ---------
 
-
-    def _call_run_guardrail(self, input_data: Any, guard: Dict[str, Any], content_type: Any) -> GuardrailRunResult:
-        """Invoke the guardrail service for a single guard."""
+    def _call_run_guardrail(
+        self, input_data: Any, guard: Dict[str, Any], content_type: Any
+    ) -> GuardrailRunResult:
+        """Internal method that calls the run_guardrail API for a single guardrail check."""
         uri = RUN_GUARDRAILS_URI
         input = input_data
-        
+
         start_time = datetime.now()
         try:
             body = {"input_data": input, "guard": guard}
             data = self.client.post(uri, body)
             end_time = datetime.now()
-            
+
             details = data.get("details", {}) if isinstance(data, dict) else {}
             result: GuardrailRunResult = {
-                "success": bool(data.get("success", False)) if isinstance(data, dict) else False,
+                "success": (
+                    bool(data.get("success", False))
+                    if isinstance(data, dict)
+                    else False
+                ),
                 "details": details if isinstance(details, dict) else {},
                 "start_time": start_time.isoformat(),
                 "end_time": end_time.isoformat(),
@@ -390,7 +427,7 @@ class LangGraphGuardrail:
                     result["duration"] = details["duration"]
                 if "latency" in details:
                     result["latency"] = details["latency"]
-                
+
                 result["retry_count"] = 0
                 result["max_retries"] = self.max_retries
 
@@ -398,7 +435,7 @@ class LangGraphGuardrail:
             result["input"] = input
 
             return result
-            
+
         except Exception as exc:
             end_time = datetime.now()  # Still capture end time on exception
             raise exc
@@ -414,34 +451,39 @@ class LangGraphGuardrail:
         guard_name: str,
         parent_span: Optional[Any] = None,
     ) -> Any:
-        """Handle guardrail results according to configured action."""
+        """Internal method to handle guardrail results within LangGraph nodes, determining actions like block, warn, or continue."""
         validation_passed = bool(run_result.get("validation_passed", True))
         detected_issue = not validation_passed or not run_result.get("success", True)
 
         def create_child_span(is_issue: bool):
-            """Record a child tracing span for a single guard result."""
-            
+            """Record a child tracing span for a single guard result.
+            Builds a new object or request payload and returns the created result."""
+
             with self.tracer.start_as_current_span(
-                f"guard: {guard_name}",
-                context=trace.set_span_in_context(parent_span)
+                f"guard: {guard_name}", context=trace.set_span_in_context(parent_span)
             ) as gr_span:
                 gr_span.set_attribute("component", str(node_name))
                 gr_span.set_attribute("guard", str(guard_name))
                 gr_span.set_attribute("content_type", str(content_type))
                 gr_span.set_attribute("detected", is_issue)
                 gr_span.set_attribute("action", action)
-                
+
                 # Don't set timing attributes on child spans
-                gr_span.set_attribute("input.value", self._safe_str(run_result.get("input")))
-                gr_span.set_attribute("output.value", json.dumps(run_result.get("response")))
-        
+                gr_span.set_attribute(
+                    "input.value", self._safe_str(run_result.get("input"))
+                )
+                gr_span.set_attribute(
+                    "output.value", json.dumps(run_result.get("response"))
+                )
 
         if detected_issue:
             if parent_span is not None:
                 create_child_span(True)
-                
+
             if action == "block":
-                raise ValueError(f"Guardrail '{guard_name}' detected an issue in {content_type}. Operation blocked.")
+                raise ValueError(
+                    f"Guardrail '{guard_name}' detected an issue in {content_type}. Operation blocked."
+                )
             elif "retry" in action:
                 return run_result.get("sanitized_output", original)
             else:  # warn
@@ -453,8 +495,10 @@ class LangGraphGuardrail:
 
         return original
 
-    def _build_sanitize_prompt(self, guard_name: str, content: Any, content_type: str) -> str:
-        """Construct a prompt asking the LLM to sanitize problematic content."""
+    def _build_sanitize_prompt(
+        self, guard_name: str, content: Any, content_type: str
+    ) -> str:
+        """Internal method to assemble a sanitization prompt used to clean or modify content according to guardrail directives."""
         instructions = {
             "Detect PII": "Sanitize the following text by removing or masking any personally identifiable information (PII). Do not change anything else.",
             "NSFW Text": "Sanitize the following text by removing or masking any not safe for work (NSFW) content. Do not change anything else.",
@@ -487,13 +531,17 @@ class LangGraphGuardrail:
             "Valid URL": "Sanitize the following text by ensuring it is a valid URL. Do not change anything else.",
             "Web Sanitization": "Sanitize the following text by removing any unsafe web content. Do not change anything else.",
         }
-        instruction = instructions.get(guard_name, "Sanitize the following text according to the guardrail requirements. Do not change anything else.")
+        instruction = instructions.get(
+            guard_name,
+            "Sanitize the following text according to the guardrail requirements. Do not change anything else.",
+        )
         prompt = f"{instruction}\n\nContent:\n{content}"
         return prompt
 
     @staticmethod
     def _safe_str(value: Any) -> str:
-        """Safely stringify potentially complex values for logging."""
+        """Safely stringify potentially complex values for logging.
+        Encapsulates a small unit of SDK logic and returns the computed result."""
         try:
             if isinstance(value, (str, int, float, bool)) or value is None:
                 return str(value)
@@ -502,7 +550,11 @@ class LangGraphGuardrail:
             if isinstance(value, (list, tuple)):
                 parts = []
                 for item in value:
-                    parts.append(Guard._safe_str(item) if hasattr(Guard, "_safe_str") else str(item))
+                    parts.append(
+                        Guard._safe_str(item)
+                        if hasattr(Guard, "_safe_str")
+                        else str(item)
+                    )
                 return ", ".join(parts)
             if isinstance(value, dict):
                 safe_dict: Dict[str, Any] = {}
@@ -519,7 +571,9 @@ class LangGraphGuardrail:
         except Exception:
             return "<unserializable>"
 
+
 # Convenience function for quick guardrail setup
 def create_guardrail(project: Project) -> LangGraphGuardrail:
-    """Quick factory function to create a guardrail instance with a project"""
+    """Quick factory function to create a guardrail instance with a project
+    Builds a new object or request payload and returns the created result."""
     return LangGraphGuardrail(project=project)

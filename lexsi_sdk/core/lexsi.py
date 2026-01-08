@@ -23,7 +23,7 @@ from lexsi_sdk.common.xai_uris import (
 import getpass
 
 
-class XAI(BaseModel):
+class LEXSI(BaseModel):
     """Base entry-point class for interacting with the Lexsi.ai platform. Handles authentication, organization discovery and selection, notification retrieval, and provides access to higher-level SDK abstractions."""
 
     env: Environment = Environment()
