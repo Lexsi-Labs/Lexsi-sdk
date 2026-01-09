@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from datetime import datetime
 from typing import Any, Callable, Dict, List, Optional, TypedDict, Union
-from lexsi_sdk.common.xai_uris import RUN_GUARDRAILS_URI , RUN_GUARDRAILS_PARALLEL_URI
+from lexsi_sdk.common.xai_uris import RUN_GUARDRAILS_URI, RUN_GUARDRAILS_PARALLEL_URI
 from lexsi_sdk.core.project import Project
 from opentelemetry import trace
 import time
@@ -22,9 +22,10 @@ from agents import (
     ModelTracing,
 )
 
+
 @dataclass
 class GuardrailFunctionOutput:
-    """The output of a guardrail function."""
+    """Dataclass representing the output of a single guardrail execution, including decision and metadata."""
 
     output_info: Any
     """
@@ -39,8 +40,10 @@ class GuardrailFunctionOutput:
 
     sanitized_content: str
 
+
 class GuardrailRunResult(TypedDict, total=False):
-    """Normalized response payload for guardrail execution."""
+    """Typed dictionary aggregating the results of running one or more guardrails."""
+
     success: bool
     details: Dict[str, Any]
     validated_output: Any
@@ -54,29 +57,24 @@ class GuardrailRunResult(TypedDict, total=False):
     start_time: str
     end_time: str
 
+
 class OpenAIAgentsGuardrail:
-    """
-    Utility for creating OpenAI Agents guardrails that call Guardrails HTTP APIs.
-    
-    Supports different actions:
-    - "block": raises InputGuardrailTripwireTriggered/OutputGuardrailTripwireTriggered
-    - "retry": attempts to sanitize content using LLM and passes sanitized content to handoff agent
-    - "warn": logs the issue but allows content to pass through
-    """
+    """Decorator-style guardrail utility for OpenAI Agents. Supports adhoc and configured guard execution."""
 
     def __init__(
         self,
         project: Optional[Project],
         model: Optional[Any] = None,
     ) -> None:
-        """Initialize OpenAI Agents guardrail helper with project and model context."""
+        """Initialize OpenAI Agents guardrail helper with project and model context.
+        Stores configuration and prepares the object for use."""
         if project is not None:
             self.client = project.api_client
             self.project_name = project.project_name
-            
+
         self.logs: List[Dict[str, Any]] = []
         self.max_retries = 2
-        self.retry_delay = 1.0 
+        self.retry_delay = 1.0
         self.tracer = trace.get_tracer(__name__)
         self.model = model
 
@@ -84,11 +82,10 @@ class OpenAIAgentsGuardrail:
         self,
         guards: Union[List[str], List[Dict[str, Any]], str, Dict[str, Any]],
         action: str = "block",
-        name: str = "input_guardrail"
+        name: str = "input_guardrail",
     ) -> Callable:
-        """
-        Create an input guardrail function for OpenAI Agents.
-        
+        """Create a guardrail function that wraps agent input processing. Accepts parameters to specify the guardrail name, configuration, and what action to take (block, retry, warn) when a violation occurs.
+
         :param guards: List of guard specifications or single guard.
         :param action: 'block' | 'retry' | 'warn'.
         :param name: Name for the guardrail function.
@@ -99,17 +96,18 @@ class OpenAIAgentsGuardrail:
 
         @input_guardrail
         async def guardrail_function(
-            ctx: RunContextWrapper[None], 
-            agent: Agent, 
-            input: str | list[TResponseInputItem]
+            ctx: RunContextWrapper[None],
+            agent: Agent,
+            input: str | list[TResponseInputItem],
         ) -> GuardrailFunctionOutput:
-            """Run configured input guardrails for an agent invocation."""
+            """Run configured input guardrails for an agent invocation.
+            Encapsulates a small unit of SDK logic and returns the computed result."""
             # Convert input to string for processing
             if isinstance(input, list):
                 # Handle list of input items (messages)
                 input_text = ""
                 for item in input:
-                    if hasattr(item, 'content'):
+                    if hasattr(item, "content"):
                         input_text += str(item.content) + " "
                     else:
                         input_text += str(item) + " "
@@ -118,18 +116,20 @@ class OpenAIAgentsGuardrail:
                 input_text = str(input)
 
             # Process through all guards in parallel
-            current_content, tripwire_triggered, output_info = await self._apply_guardrail_parallel(
-                content=input_text,
-                guards=guards,
-                guardrail_type="input",
-                action=action,
-                agent_name=agent.name,
+            current_content, tripwire_triggered, output_info = (
+                await self._apply_guardrail_parallel(
+                    content=input_text,
+                    guards=guards,
+                    guardrail_type="input",
+                    action=action,
+                    agent_name=agent.name,
+                )
             )
 
             return GuardrailFunctionOutput(
                 output_info=output_info,
                 tripwire_triggered=tripwire_triggered,
-                sanitized_content=current_content if action == "retry" else input_text
+                sanitized_content=current_content if action == "retry" else input_text,
             )
 
         # Set function name for debugging
@@ -140,11 +140,10 @@ class OpenAIAgentsGuardrail:
         self,
         guards: Union[List[str], List[Dict[str, Any]], str, Dict[str, Any]],
         action: str = "block",
-        name: str = "output_guardrail"
+        name: str = "output_guardrail",
     ) -> Callable:
-        """
-        Create an output guardrail function for OpenAI Agents.
-        
+        """Create a guardrail function that wraps agent output processing. Similar to create_input_guardrail but applied to agent responses.
+
         :param guards: List of guard specifications or single guard.
         :param action: 'block' | 'retry' | 'warn'.
         :param name: Name for the guardrail function.
@@ -155,32 +154,33 @@ class OpenAIAgentsGuardrail:
 
         @output_guardrail
         async def guardrail_function(
-            ctx: RunContextWrapper, 
-            agent: Agent, 
-            output: Any
+            ctx: RunContextWrapper, agent: Agent, output: Any
         ) -> GuardrailFunctionOutput:
-            """Run configured output guardrails for an agent response."""
+            """Run configured output guardrails for an agent response.
+            Encapsulates a small unit of SDK logic and returns the computed result."""
             # Extract text content from output
-            if hasattr(output, 'response'):
+            if hasattr(output, "response"):
                 output_text = str(output.response)
-            elif hasattr(output, 'content'):
+            elif hasattr(output, "content"):
                 output_text = str(output.content)
             else:
                 output_text = str(output)
 
             # Process through all guards in parallel
-            current_content, tripwire_triggered, output_info = await self._apply_guardrail_parallel(
-                content=output_text,
-                guards=guards,
-                guardrail_type="output",
-                action=action,
-                agent_name=agent.name,
+            current_content, tripwire_triggered, output_info = (
+                await self._apply_guardrail_parallel(
+                    content=output_text,
+                    guards=guards,
+                    guardrail_type="output",
+                    action=action,
+                    agent_name=agent.name,
+                )
             )
 
             return GuardrailFunctionOutput(
                 output_info=output_info,
                 tripwire_triggered=tripwire_triggered,
-                sanitized_content=current_content if action == "retry" else output_text
+                sanitized_content=current_content if action == "retry" else output_text,
             )
 
         # Set function name for debugging
@@ -195,9 +195,8 @@ class OpenAIAgentsGuardrail:
         action: str,
         agent_name: str,
     ) -> tuple[Any, bool, Dict[str, Any]]:
-        """
-        Run multiple guardrails in parallel using batch endpoint.
-        
+        """Internal method that applies multiple guardrails in parallel to agent input or output and returns aggregated results.
+
         Returns:
             tuple: (processed_content, tripwire_triggered, output_info)
         """
@@ -210,17 +209,19 @@ class OpenAIAgentsGuardrail:
             parent_span = trace.get_current_span()
             if parent_span is not None:
                 ctx = trace.set_span_in_context(parent_span)
-                with self.tracer.start_as_current_span(f"guardrails:{guardrail_type}", context=ctx) as parent_gr_span:
+                with self.tracer.start_as_current_span(
+                    f"guardrails:{guardrail_type}", context=ctx
+                ) as parent_gr_span:
                     parent_gr_span.set_attribute("component", str(agent_name))
                     parent_gr_span.set_attribute("content_type", guardrail_type)
 
                     while retry_count <= self.max_retries:
                         # Prepare payload for parallel guardrail execution
-                        guard_specs = [guard if isinstance(guard, dict) else {"name": guard} for guard in guards]
-                        payload = {
-                            "input_data": current_content,
-                            "guards": guard_specs
-                        }
+                        guard_specs = [
+                            guard if isinstance(guard, dict) else {"name": guard}
+                            for guard in guards
+                        ]
+                        payload = {"input_data": current_content, "guards": guard_specs}
 
                         # Call parallel guardrail endpoint
                         start_time = datetime.now()
@@ -232,18 +233,28 @@ class OpenAIAgentsGuardrail:
                         parallel_result = response
 
                         # Add timing information
-                        parallel_result.update({
-                            "start_time": start_time.isoformat(),
-                            "end_time": end_time.isoformat(),
-                            "duration": (end_time - start_time).total_seconds()
-                        })
+                        parallel_result.update(
+                            {
+                                "start_time": start_time.isoformat(),
+                                "end_time": end_time.isoformat(),
+                                "duration": (end_time - start_time).total_seconds(),
+                            }
+                        )
 
-                        parent_gr_span.set_attribute("start_time", str(parallel_result.get("start_time", "")))
-                        parent_gr_span.set_attribute("end_time", str(parallel_result.get("end_time", "")))
-                        parent_gr_span.set_attribute("duration", float(parallel_result.get("duration", 0.0)))
+                        parent_gr_span.set_attribute(
+                            "start_time", str(parallel_result.get("start_time", ""))
+                        )
+                        parent_gr_span.set_attribute(
+                            "end_time", str(parallel_result.get("end_time", ""))
+                        )
+                        parent_gr_span.set_attribute(
+                            "duration", float(parallel_result.get("duration", 0.0))
+                        )
 
                         if not parallel_result.get("success", False):
-                            output_info["parallel_execution_error"] = parallel_result.get("details", {})
+                            output_info["parallel_execution_error"] = (
+                                parallel_result.get("details", {})
+                            )
                             return current_content, tripwire_triggered, output_info
 
                         # Process each guardrail result
@@ -253,15 +264,21 @@ class OpenAIAgentsGuardrail:
                             run_result: GuardrailRunResult = {
                                 "success": parallel_result.get("success"),
                                 "details": guard_result,
-                                "validated_output": guard_result.get("validated_output"),
-                                "validation_passed": guard_result.get("validation_passed", False),
-                                "sanitized_output": guard_result.get("sanitized_output", current_content),
+                                "validated_output": guard_result.get(
+                                    "validated_output"
+                                ),
+                                "validation_passed": guard_result.get(
+                                    "validation_passed", False
+                                ),
+                                "sanitized_output": guard_result.get(
+                                    "sanitized_output", current_content
+                                ),
                                 "duration": guard_result.get("duration", 0.0),
                                 "latency": guard_result.get("latency", "0 ms"),
                                 "start_time": parallel_result.get("start_time", ""),
                                 "end_time": parallel_result.get("end_time", ""),
                                 "retry_count": retry_count,
-                                "max_retries": self.max_retries
+                                "max_retries": self.max_retries,
                             }
                             run_result["response"] = guard_result
                             run_result["input"] = current_content
@@ -270,11 +287,15 @@ class OpenAIAgentsGuardrail:
                             current_content, is_triggered = await self._handle_action(
                                 original=current_content,
                                 run_result=run_result,
-                                action=f"retry_{retry_count}" if retry_count > 0 else action,
+                                action=(
+                                    f"retry_{retry_count}"
+                                    if retry_count > 0
+                                    else action
+                                ),
                                 agent_name=agent_name,
                                 guardrail_type=guardrail_type,
                                 guard_name=guard_name,
-                                parent_span=parent_gr_span
+                                parent_span=parent_gr_span,
                             )
 
                             if is_triggered:
@@ -282,9 +303,16 @@ class OpenAIAgentsGuardrail:
                                 tripwire_triggered = True
                                 output_info[f"guard_{guard_name}"] = run_result
 
-                        if detected_issue and action == "retry" and self.model is not None and retry_count < self.max_retries:
+                        if (
+                            detected_issue
+                            and action == "retry"
+                            and self.model is not None
+                            and retry_count < self.max_retries
+                        ):
                             # Sanitize content using LLM
-                            prompt = self._build_sanitize_prompt("combined", current_content, guardrail_type)
+                            prompt = self._build_sanitize_prompt(
+                                "combined", current_content, guardrail_type
+                            )
                             try:
                                 sanitized = await self._invoke_llm(prompt)
                                 current_content = sanitized
@@ -316,11 +344,10 @@ class OpenAIAgentsGuardrail:
         agent_name: str,
         guardrail_type: str,
         guard_name: str,
-        parent_span: Optional[Any]
+        parent_span: Optional[Any],
     ) -> tuple[Any, bool]:
-        """
-        Handle the action for a single guardrail result.
-        
+        """Internal method that processes the result of a guardrail check for agent content and determines the next action (block, warn, retry).
+
         Returns:
             tuple: (processed_content, is_triggered)
         """
@@ -331,18 +358,28 @@ class OpenAIAgentsGuardrail:
             try:
                 with self.tracer.start_as_current_span(
                     f"guard:{guard_name}",
-                    context=trace.set_span_in_context(parent_span)
+                    context=trace.set_span_in_context(parent_span),
                 ) as gr_span:
                     gr_span.set_attribute("component", str(agent_name))
                     gr_span.set_attribute("guard", str(guard_name))
                     gr_span.set_attribute("content_type", guardrail_type)
                     gr_span.set_attribute("detected", detected_issue)
                     gr_span.set_attribute("action", action)
-                    gr_span.set_attribute("input.value", self._safe_str(run_result.get("input")))
-                    gr_span.set_attribute("output.value", json.dumps(run_result.get("response")))
-                    gr_span.set_attribute("start_time", str(run_result.get("start_time", "")))
-                    gr_span.set_attribute("end_time", str(run_result.get("end_time", "")))
-                    gr_span.set_attribute("duration", float(run_result.get("duration", 0.0)))
+                    gr_span.set_attribute(
+                        "input.value", self._safe_str(run_result.get("input"))
+                    )
+                    gr_span.set_attribute(
+                        "output.value", json.dumps(run_result.get("response"))
+                    )
+                    gr_span.set_attribute(
+                        "start_time", str(run_result.get("start_time", ""))
+                    )
+                    gr_span.set_attribute(
+                        "end_time", str(run_result.get("end_time", ""))
+                    )
+                    gr_span.set_attribute(
+                        "duration", float(run_result.get("duration", 0.0))
+                    )
             except Exception:
                 pass
 
@@ -365,33 +402,34 @@ class OpenAIAgentsGuardrail:
         return original, False
 
     async def _call_run_guardrail(
-        self, 
-        input_data: Any, 
-        guard: Dict[str, Any], 
-        guardrail_type: str
+        self, input_data: Any, guard: Dict[str, Any], guardrail_type: str
     ) -> GuardrailRunResult:
-        """Call the guardrails HTTP API"""
+        """Internal method that calls the guardrail run endpoint to evaluate content against guardrails."""
         uri = RUN_GUARDRAILS_URI
         input_text = str(input_data)
-        
+
         start_time = datetime.now()
         try:
             body = {"input_data": input_text, "guard": guard}
             data = self.client.post(uri, body)
-            
+
             end_time = datetime.now()
-            
+
             details = data.get("details", {}) if isinstance(data, dict) else {}
             result: GuardrailRunResult = {
-                "success": bool(data.get("success", False)) if isinstance(data, dict) else False,
+                "success": (
+                    bool(data.get("success", False))
+                    if isinstance(data, dict)
+                    else False
+                ),
                 "details": details if isinstance(details, dict) else {},
                 "start_time": start_time.isoformat(),
                 "end_time": end_time.isoformat(),
             }
-            
+
             if "duration" not in details:
                 result["duration"] = (end_time - start_time).total_seconds()
-                
+
             if isinstance(details, dict):
                 if "validated_output" in details:
                     result["validated_output"] = details["validated_output"]
@@ -403,14 +441,14 @@ class OpenAIAgentsGuardrail:
                     result["duration"] = details["duration"]
                 if "latency" in details:
                     result["latency"] = details["latency"]
-                
+
             result["retry_count"] = 0
             result["max_retries"] = self.max_retries
             result["response"] = data
             result["input"] = input_text
 
             return result
-            
+
         except Exception as exc:
             end_time = datetime.now()
             raise exc
@@ -423,10 +461,11 @@ class OpenAIAgentsGuardrail:
         guardrail_type: str,
         guard_name: str,
     ) -> None:
-        """Log guardrail results without creating a new span"""
+        """Log guardrail results without creating a new span
+        Encapsulates a small unit of SDK logic and returns the computed result."""
         validation_passed = bool(run_result.get("validation_passed", True))
         detected_issue = not validation_passed or not run_result.get("success", True)
-        
+
         # Append to logs list instead of creating a new span
         log_entry = {
             "guard_name": guard_name,
@@ -438,12 +477,14 @@ class OpenAIAgentsGuardrail:
             "end_time": run_result.get("end_time", ""),
             "duration": float(run_result.get("duration", 0.0)),
             "input": self._safe_str(run_result.get("input")),
-            "output": self._safe_str(run_result.get("response"))
+            "output": self._safe_str(run_result.get("response")),
         }
         self.logs.append(log_entry)
 
-    def _build_sanitize_prompt(self, guard_name: str, content: Any, guardrail_type: str) -> str:
-        """Build a prompt for the LLM to sanitize the content according to the guardrail type"""
+    def _build_sanitize_prompt(
+        self, guard_name: str, content: Any, guardrail_type: str
+    ) -> str:
+        """Internal method to assemble a sanitization prompt used to clean or modify content according to guardrail directives."""
         instructions = {
             "Detect PII": "Sanitize the following text by removing or masking any personally identifiable information (PII). Do not change anything else.",
             "NSFW Text": "Sanitize the following text by removing or masking any not safe for work (NSFW) content. Do not change anything else.",
@@ -476,16 +517,20 @@ class OpenAIAgentsGuardrail:
             "Valid URL": "Sanitize the following text by ensuring it is a valid URL. Do not change anything else.",
             "Web Sanitization": "Sanitize the following text by removing any unsafe web content. Do not change anything else.",
         }
-        
-        instruction = instructions.get(guard_name, "Sanitize the following text according to the guardrail requirements. Do not change anything else.")
+
+        instruction = instructions.get(
+            guard_name,
+            "Sanitize the following text according to the guardrail requirements. Do not change anything else.",
+        )
         prompt = f"{instruction}\n\nContent:\n{content}"
         return prompt
 
     async def _invoke_llm(self, prompt: str) -> str:
-        """Invoke the LLM for content sanitization"""
+        """Invoke the LLM for content sanitization
+        Encapsulates a small unit of SDK logic and returns the computed result."""
         if self.model is None:
             return prompt  # Return original if no LLM available
-            
+
         try:
             data = await self.model.get_response(
                 system_instructions="Based on the input you have to provide the best and accurate results",
@@ -495,31 +540,33 @@ class OpenAIAgentsGuardrail:
                 output_schema=None,
                 handoffs=[],
                 tracing=ModelTracing.DISABLED,
-                previous_response_id=None
+                previous_response_id=None,
             )
             return str(data.output[0].content[0].text)
         except Exception:
             return prompt  # Return original on error
 
     async def _async_sleep(self, seconds: float) -> None:
-        """Async sleep utility"""
+        """Async sleep utility
+        Encapsulates a small unit of SDK logic and returns the computed result."""
         await asyncio.sleep(seconds)
 
     @staticmethod
     def _safe_str(value: Any) -> str:
-        """Safely convert any value to string for logging"""
+        """Safely convert any value to string for logging
+        Encapsulates a small unit of SDK logic and returns the computed result."""
         try:
             if isinstance(value, (str, int, float, bool)) or value is None:
                 return str(value)
             if hasattr(value, "content"):
                 return str(getattr(value, "content", ""))
-            
+
             if isinstance(value, (list, tuple)):
                 parts = []
                 for item in value:
                     parts.append(OpenAIAgentsGuardrail._safe_str(item))
                 return ", ".join(parts)
-            
+
             if isinstance(value, dict):
                 safe_dict: Dict[str, Any] = {}
                 for k, v in value.items():
@@ -531,11 +578,15 @@ class OpenAIAgentsGuardrail:
                     else:
                         safe_dict[key] = str(v)
                 return json.dumps(safe_dict, ensure_ascii=False)
-            
+
             return str(value)
         except Exception:
             return "<unserializable>"
 
-def create_guardrail(project: Project, model: Optional[Any] = None) -> OpenAIAgentsGuardrail:
-    """Quick factory function to create a guardrail instance with a project"""
+
+def create_guardrail(
+    project: Project, model: Optional[Any] = None
+) -> OpenAIAgentsGuardrail:
+    """Quick factory function to create a guardrail instance with a project
+    Builds a new object or request payload and returns the created result."""
     return OpenAIAgentsGuardrail(project=project, model=model)

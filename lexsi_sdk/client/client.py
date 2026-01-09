@@ -16,7 +16,8 @@ class APIClient(BaseModel):
     headers: dict = {}
 
     def __init__(self, **kwargs):
-        """Initialize the API client with provided configuration."""
+        """Initialize the API client with provided configuration.
+        Stores configuration and prepares the object for use."""
         super().__init__(**kwargs)
 
     def get_auth_token(self) -> str:
@@ -50,14 +51,16 @@ class APIClient(BaseModel):
         return f"{self.base_url}/{uri}"
 
     def update_headers(self, auth_token):
-        """sets jwt auth token and updates headers for all requests"""
+        """sets jwt auth token and updates headers for all requests
+        Encapsulates a small unit of SDK logic and returns the computed result."""
         self.set_auth_token(auth_token)
         self.headers = {
             "Authorization": f"Bearer {self.auth_token}",
         }
 
     def refresh_bearer_token(self):
-        """Refresh the bearer token if the current token is expired."""
+        """Refresh the bearer token if the current token is expired.
+        Encapsulates a small unit of SDK logic and returns the computed result."""
         try:
             if self.auth_token:
                 jwt.decode(
@@ -97,8 +100,8 @@ class APIClient(BaseModel):
                     json=payload,
                     files=files or None,
                 )
-                #response.raise_for_status()
-                #return response
+                # response.raise_for_status()
+                # return response
 
             res = None
             try:
@@ -115,7 +118,8 @@ class APIClient(BaseModel):
             raise e
 
     def request(self, method, uri, payload):
-        """Refresh credentials and dispatch a base request."""
+        """Refresh credentials and dispatch a base request.
+        Encapsulates a small unit of SDK logic and returns the computed result."""
         self.refresh_bearer_token()
         response = self.base_request(method, uri, payload)
         return response
@@ -147,7 +151,8 @@ class APIClient(BaseModel):
         return response.json()
 
     def stream(self, uri, method, payload=None):
-        """Server-Sent Events / line-streaming endpoint."""
+        """Server-Sent Events / line-streaming endpoint.
+        Encapsulates a small unit of SDK logic and returns the computed result."""
         self.refresh_bearer_token()
         url = f"{self.base_url}/{uri}"
         # if SSE, this header helps
@@ -163,8 +168,9 @@ class APIClient(BaseModel):
                         error_body = "Something went wrong while streaming response"
                     raise Exception(error_body)
                 for line in response.iter_lines():  # no decode_unicode arg in httpx
-                    if not line: continue
-                    if line.startswith("data: "):      # typical SSE prefix
+                    if not line:
+                        continue
+                    if line.startswith("data: "):  # typical SSE prefix
                         if line.strip() == "data: [DONE]":
                             break
                         yield json.loads(line[6:])

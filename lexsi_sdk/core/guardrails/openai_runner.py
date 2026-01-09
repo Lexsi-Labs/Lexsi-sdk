@@ -97,21 +97,24 @@ from dataclasses import dataclass, field
 
 @dataclass
 class ModelInputData:
-    """Container for the data that will be sent to the model."""
+    """Dataclass container for model input data passed through guardrails and execution runners."""
 
     input: list[TResponseInputItem]
     instructions: str | None
 
+
 @dataclass
 class CallModelData(Generic[TContext]):
-    """Data passed to `RunConfig.call_model_input_filter` prior to model call."""
+    """Dataclass representing a normalized model invocation payload used by execution runners."""
 
     model_data: ModelInputData
     agent: Agent[TContext]
     context: TContext | None
 
+
 class Runner:
-    """Orchestrates agent execution loops for OpenAI Agents."""
+    """Execution orchestrator for OpenAI agents and guardrails, supporting both synchronous and asynchronous execution flows."""
+
     @classmethod
     async def run(
         cls,
@@ -259,13 +262,15 @@ class Runner:
 
 class AgentRunner:
     """Async runner that manages the OpenAI Agents control loop."""
+
     async def run(
         self,
         starting_agent: Agent[TContext],
         input: str | list[TResponseInputItem],
         **kwargs: Unpack[RunOptions[TContext]],
     ) -> RunResult:
-        """Run the agent workflow asynchronously until completion."""
+        """Run the agent workflow asynchronously until completion.
+        Encapsulates a small unit of SDK logic and returns the computed result."""
         context = kwargs.get("context")
         max_turns = kwargs.get("max_turns", DEFAULT_MAX_TURNS)
         hooks = kwargs.get("hooks")
@@ -290,7 +295,9 @@ class AgentRunner:
             disabled=run_config.tracing_disabled,
         ):
             current_turn = 0
-            original_input: str | list[TResponseInputItem] = _copy_str_or_list(prepared_input)
+            original_input: str | list[TResponseInputItem] = _copy_str_or_list(
+                prepared_input
+            )
             generated_items: list[RunItem] = []
             model_responses: list[ModelResponse] = []
 
@@ -306,15 +313,21 @@ class AgentRunner:
 
             try:
                 while True:
-                    all_tools = await AgentRunner._get_all_tools(current_agent, context_wrapper)
+                    all_tools = await AgentRunner._get_all_tools(
+                        current_agent, context_wrapper
+                    )
 
                     # Start an agent span if we don't have one
                     if current_span is None:
                         handoff_names = [
                             h.agent_name
-                            for h in await AgentRunner._get_handoffs(current_agent, context_wrapper)
+                            for h in await AgentRunner._get_handoffs(
+                                current_agent, context_wrapper
+                            )
                         ]
-                        if output_schema := AgentRunner._get_output_schema(current_agent):
+                        if output_schema := AgentRunner._get_output_schema(
+                            current_agent
+                        ):
                             output_type_name = output_schema.name()
                         else:
                             output_type_name = "str"
@@ -339,18 +352,28 @@ class AgentRunner:
                         raise MaxTurnsExceeded(f"Max turns ({max_turns}) exceeded")
 
                     # Run input guardrails for the first turn or after a handoff
-                    if current_turn == 1 or isinstance(turn_result.next_step, NextStepHandoff):
+                    if current_turn == 1 or isinstance(
+                        turn_result.next_step, NextStepHandoff
+                    ):
                         input_guardrail_results.extend(
                             await self._run_input_guardrails(
                                 current_agent,
-                                current_agent.input_guardrails + (run_config.input_guardrails or []),
-                                _copy_str_or_list(prepared_input if current_turn == 1 else original_input),
+                                current_agent.input_guardrails
+                                + (run_config.input_guardrails or []),
+                                _copy_str_or_list(
+                                    prepared_input
+                                    if current_turn == 1
+                                    else original_input
+                                ),
                                 context_wrapper,
                             )
                         )
                         # Update original_input with sanitized content if any guardrail used 'retry'
                         for result in input_guardrail_results:
-                            if hasattr(result.output, 'sanitized_content') and result.output.sanitized_content:
+                            if (
+                                hasattr(result.output, "sanitized_content")
+                                and result.output.sanitized_content
+                            ):
                                 original_input = result.output.sanitized_content
 
                     turn_result = await self._run_single_turn(
@@ -373,7 +396,8 @@ class AgentRunner:
 
                     if isinstance(turn_result.next_step, NextStepFinalOutput):
                         output_guardrail_results = await self._run_output_guardrails(
-                            current_agent.output_guardrails + (run_config.output_guardrails or []),
+                            current_agent.output_guardrails
+                            + (run_config.output_guardrails or []),
                             current_agent,
                             turn_result.next_step.output,
                             context_wrapper,
@@ -381,7 +405,10 @@ class AgentRunner:
                         # Use sanitized content as final output if available
                         final_output = turn_result.next_step.output
                         for result in output_guardrail_results:
-                            if hasattr(result.output, 'sanitized_content') and result.output.sanitized_content:
+                            if (
+                                hasattr(result.output, "sanitized_content")
+                                and result.output.sanitized_content
+                            ):
                                 final_output = result.output.sanitized_content
 
                         result = RunResult(
@@ -400,10 +427,15 @@ class AgentRunner:
 
                         return result
                     elif isinstance(turn_result.next_step, NextStepHandoff):
-                        current_agent = cast(Agent[TContext], turn_result.next_step.new_agent)
+                        current_agent = cast(
+                            Agent[TContext], turn_result.next_step.new_agent
+                        )
                         # Pass sanitized input to the handoff agent
                         for result in input_guardrail_results:
-                            if hasattr(result.output, 'sanitized_content') and result.output.sanitized_content:
+                            if (
+                                hasattr(result.output, "sanitized_content")
+                                and result.output.sanitized_content
+                            ):
                                 original_input = result.output.sanitized_content
                         current_span.finish(reset_current=True)
                         current_span = None
@@ -435,7 +467,8 @@ class AgentRunner:
         input: str | list[TResponseInputItem],
         **kwargs: Unpack[RunOptions[TContext]],
     ) -> RunResult:
-        """Synchronous wrapper that runs the async agent loop to completion."""
+        """Synchronous wrapper that runs the async agent loop to completion.
+        Encapsulates a small unit of SDK logic and returns the computed result."""
         context = kwargs.get("context")
         max_turns = kwargs.get("max_turns", DEFAULT_MAX_TURNS)
         hooks = kwargs.get("hooks")
@@ -462,7 +495,8 @@ class AgentRunner:
         input: str | list[TResponseInputItem],
         **kwargs: Unpack[RunOptions[TContext]],
     ) -> RunResultStreaming:
-        """Run the agent loop while streaming intermediate responses."""
+        """Run the agent loop while streaming intermediate responses.
+        Encapsulates a small unit of SDK logic and returns the computed result."""
         context = kwargs.get("context")
         max_turns = kwargs.get("max_turns", DEFAULT_MAX_TURNS)
         hooks = kwargs.get("hooks")
@@ -541,7 +575,9 @@ class AgentRunner:
         effective_input: list[TResponseInputItem] = input_items
 
         if run_config.call_model_input_filter is None:
-            return ModelInputData(input=effective_input, instructions=effective_instructions)
+            return ModelInputData(
+                input=effective_input, instructions=effective_instructions
+            )
 
         try:
             model_input = ModelInputData(
@@ -554,13 +590,21 @@ class AgentRunner:
                 context=context_wrapper.context,
             )
             maybe_updated = run_config.call_model_input_filter(filter_payload)
-            updated = await maybe_updated if inspect.isawaitable(maybe_updated) else maybe_updated
+            updated = (
+                await maybe_updated
+                if inspect.isawaitable(maybe_updated)
+                else maybe_updated
+            )
             if not isinstance(updated, ModelInputData):
-                raise UserError("call_model_input_filter must return a ModelInputData instance")
+                raise UserError(
+                    "call_model_input_filter must return a ModelInputData instance"
+                )
             return updated
         except Exception as e:
             _error_tracing.attach_error_to_current_span(
-                SpanError(message="Error in call_model_input_filter", data={"error": str(e)})
+                SpanError(
+                    message="Error in call_model_input_filter", data={"error": str(e)}
+                )
             )
             raise
 
@@ -574,7 +618,8 @@ class AgentRunner:
         streamed_result: RunResultStreaming,
         parent_span: Span[Any],
     ):
-        """Run input guardrails concurrently and enqueue results during streaming."""
+        """Run input guardrails concurrently and enqueue results during streaming.
+        Encapsulates a small unit of SDK logic and returns the computed result."""
         queue = streamed_result._input_guardrail_queue
 
         # We'll run the guardrails and push them onto the queue as they complete
@@ -609,7 +654,10 @@ class AgentRunner:
         streamed_result.input_guardrail_results = guardrail_results
         # Update streamed_result.input with sanitized content if available
         for result in guardrail_results:
-            if hasattr(result.output, 'sanitized_content') and result.output.sanitized_content:
+            if (
+                hasattr(result.output, "sanitized_content")
+                and result.output.sanitized_content
+            ):
                 streamed_result.input = result.output.sanitized_content
 
     @classmethod
@@ -625,7 +673,8 @@ class AgentRunner:
         previous_response_id: str | None,
         session: Session | None,
     ):
-        """Primary loop for streaming agent executions."""
+        """Primary loop for streaming agent executions.
+        Encapsulates a small unit of SDK logic and returns the computed result."""
         if streamed_result.trace:
             streamed_result.trace.start(mark_as_current=True)
 
@@ -635,11 +684,15 @@ class AgentRunner:
         should_run_agent_start_hooks = True
         tool_use_tracker = AgentToolUseTracker()
 
-        streamed_result._event_queue.put_nowait(AgentUpdatedStreamEvent(new_agent=current_agent))
+        streamed_result._event_queue.put_nowait(
+            AgentUpdatedStreamEvent(new_agent=current_agent)
+        )
 
         try:
             # Prepare input with session if enabled
-            prepared_input = await AgentRunner._prepare_input_with_session(starting_input, session)
+            prepared_input = await AgentRunner._prepare_input_with_session(
+                starting_input, session
+            )
 
             # Update the streamed result with the prepared input
             streamed_result.input = prepared_input
@@ -683,13 +736,20 @@ class AgentRunner:
                     streamed_result._event_queue.put_nowait(QueueCompleteSentinel())
                     break
 
-                if current_turn == 1 or isinstance(turn_result.next_step, NextStepHandoff):
+                if current_turn == 1 or isinstance(
+                    turn_result.next_step, NextStepHandoff
+                ):
                     # Run input guardrails in the background and put the results on the queue
                     streamed_result._input_guardrails_task = asyncio.create_task(
                         cls._run_input_guardrails_with_queue(
                             current_agent,
-                            current_agent.input_guardrails + (run_config.input_guardrails or []),
-                            ItemHelpers.input_to_new_input_list(prepared_input if current_turn == 1 else streamed_result.input),
+                            current_agent.input_guardrails
+                            + (run_config.input_guardrails or []),
+                            ItemHelpers.input_to_new_input_list(
+                                prepared_input
+                                if current_turn == 1
+                                else streamed_result.input
+                            ),
                             context_wrapper,
                             streamed_result,
                             current_span,
@@ -719,7 +779,10 @@ class AgentRunner:
                         current_agent = turn_result.next_step.new_agent
                         # Update input with sanitized content from input guardrails for handoff
                         for result in streamed_result.input_guardrail_results:
-                            if hasattr(result.output, 'sanitized_content') and result.output.sanitized_content:
+                            if (
+                                hasattr(result.output, "sanitized_content")
+                                and result.output.sanitized_content
+                            ):
                                 streamed_result.input = result.output.sanitized_content
                         current_span.finish(reset_current=True)
                         current_span = None
@@ -739,15 +802,22 @@ class AgentRunner:
                         )
 
                         try:
-                            output_guardrail_results = await streamed_result._output_guardrails_task
+                            output_guardrail_results = (
+                                await streamed_result._output_guardrails_task
+                            )
                         except Exception:
                             output_guardrail_results = []
 
-                        streamed_result.output_guardrail_results = output_guardrail_results
+                        streamed_result.output_guardrail_results = (
+                            output_guardrail_results
+                        )
                         # Use sanitized content as final output if available
                         final_output = turn_result.next_step.output
                         for result in output_guardrail_results:
-                            if hasattr(result.output, 'sanitized_content') and result.output.sanitized_content:
+                            if (
+                                hasattr(result.output, "sanitized_content")
+                                and result.output.sanitized_content
+                            ):
                                 final_output = result.output.sanitized_content
                         streamed_result.final_output = final_output
                         streamed_result.is_complete = True
@@ -816,7 +886,8 @@ class AgentRunner:
         all_tools: list[Tool],
         previous_response_id: str | None,
     ) -> SingleStepResult:
-        """Execute a single streamed agent turn including tools and guardrails."""
+        """Execute a single streamed agent turn including tools and guardrails.
+        Encapsulates a small unit of SDK logic and returns the computed result."""
         if should_run_agent_start_hooks:
             await asyncio.gather(
                 hooks.on_agent_start(context_wrapper, agent),
@@ -840,7 +911,9 @@ class AgentRunner:
         handoffs = await cls._get_handoffs(agent, context_wrapper)
         model = cls._get_model(agent, run_config)
         model_settings = agent.model_settings.resolve(run_config.model_settings)
-        model_settings = RunImpl.maybe_reset_tool_choice(agent, tool_use_tracker, model_settings)
+        model_settings = RunImpl.maybe_reset_tool_choice(
+            agent, tool_use_tracker, model_settings
+        )
 
         final_response: ModelResponse | None = None
 
@@ -934,7 +1007,8 @@ class AgentRunner:
         tool_use_tracker: AgentToolUseTracker,
         previous_response_id: str | None,
     ) -> SingleStepResult:
-        """Run one non-streaming agent turn including guardrails and tools."""
+        """Run one non-streaming agent turn including guardrails and tools.
+        Encapsulates a small unit of SDK logic and returns the computed result."""
         # Ensure we run the hooks before anything else
         if should_run_agent_start_hooks:
             await asyncio.gather(
@@ -954,7 +1028,9 @@ class AgentRunner:
         output_schema = cls._get_output_schema(agent)
         handoffs = await cls._get_handoffs(agent, context_wrapper)
         input = ItemHelpers.input_to_new_input_list(original_input)
-        input.extend([generated_item.to_input_item() for generated_item in generated_items])
+        input.extend(
+            [generated_item.to_input_item() for generated_item in generated_items]
+        )
 
         new_response = await cls._get_new_response(
             agent,
@@ -1000,7 +1076,8 @@ class AgentRunner:
         run_config: RunConfig,
         tool_use_tracker: AgentToolUseTracker,
     ) -> SingleStepResult:
-        """Process a model response and execute any resulting tool calls."""
+        """Process a model response and execute any resulting tool calls.
+        Encapsulates a small unit of SDK logic and returns the computed result."""
         processed_response = RunImpl.process_model_response(
             agent=agent,
             all_tools=all_tools,
@@ -1038,7 +1115,8 @@ class AgentRunner:
         run_config: RunConfig,
         tool_use_tracker: AgentToolUseTracker,
     ) -> SingleStepResult:
-        """Process a streamed model response and enqueue resulting events."""
+        """Process a streamed model response and enqueue resulting events.
+        Encapsulates a small unit of SDK logic and returns the computed result."""
         original_input = streamed_result.input
         pre_step_items = streamed_result.new_items
         event_queue = streamed_result._event_queue
@@ -1082,7 +1160,8 @@ class AgentRunner:
         input: str | list[TResponseInputItem],
         context: RunContextWrapper[TContext],
     ) -> list[InputGuardrailResult]:
-        """Run configured input guardrails for a given agent."""
+        """Run configured input guardrails for a given agent.
+        Encapsulates a small unit of SDK logic and returns the computed result."""
         if not guardrails:
             return []
 
@@ -1121,13 +1200,16 @@ class AgentRunner:
         agent_output: Any,
         context: RunContextWrapper[TContext],
     ) -> list[OutputGuardrailResult]:
-        """Run configured output guardrails for a given agent output."""
+        """Run configured output guardrails for a given agent output.
+        Encapsulates a small unit of SDK logic and returns the computed result."""
         if not guardrails:
             return []
 
         guardrail_tasks = [
             asyncio.create_task(
-                RunImpl.run_single_output_guardrail(guardrail, agent, agent_output, context)
+                RunImpl.run_single_output_guardrail(
+                    guardrail, agent, agent_output, context
+                )
             )
             for guardrail in guardrails
         ]
@@ -1167,7 +1249,8 @@ class AgentRunner:
         previous_response_id: str | None,
         prompt_config: ResponsePromptParam | None,
     ) -> ModelResponse:
-        """Call the model provider to obtain a new response for this turn."""
+        """Call the model provider to obtain a new response for this turn.
+        Encapsulates a small unit of SDK logic and returns the computed result."""
         # Allow user to modify model input right before the call, if configured
         filtered = await cls._maybe_filter_model_input(
             agent=agent,
@@ -1179,7 +1262,9 @@ class AgentRunner:
 
         model = cls._get_model(agent, run_config)
         model_settings = agent.model_settings.resolve(run_config.model_settings)
-        model_settings = RunImpl.maybe_reset_tool_choice(agent, tool_use_tracker, model_settings)
+        model_settings = RunImpl.maybe_reset_tool_choice(
+            agent, tool_use_tracker, model_settings
+        )
         # If the agent has hooks, we need to call them before and after the LLM call
         if agent.hooks:
             await agent.hooks.on_llm_start(
@@ -1212,7 +1297,8 @@ class AgentRunner:
 
     @classmethod
     def _get_output_schema(cls, agent: Agent[Any]) -> AgentOutputSchemaBase | None:
-        """Resolve the output schema for the provided agent."""
+        """Resolve the output schema for the provided agent.
+        Encapsulates a small unit of SDK logic and returns the computed result."""
         if agent.output_type is None or agent.output_type is str:
             return None
         elif isinstance(agent.output_type, AgentOutputSchemaBase):
@@ -1224,7 +1310,8 @@ class AgentRunner:
     async def _get_handoffs(
         cls, agent: Agent[Any], context_wrapper: RunContextWrapper[Any]
     ) -> list[Handoff]:
-        """Collect enabled handoffs for the given agent."""
+        """Collect enabled handoffs for the given agent.
+        Encapsulates a small unit of SDK logic and returns the computed result."""
         handoffs = []
         for handoff_item in agent.handoffs:
             if isinstance(handoff_item, Handoff):
@@ -1233,7 +1320,8 @@ class AgentRunner:
                 handoffs.append(handoff(handoff_item))
 
         async def _check_handoff_enabled(handoff_obj: Handoff) -> bool:
-            """Determine whether a handoff should run for the current context."""
+            """Determine whether a handoff should run for the current context.
+            Encapsulates a small unit of SDK logic and returns the computed result."""
             attr = handoff_obj.is_enabled
             if isinstance(attr, bool):
                 return attr
@@ -1250,12 +1338,14 @@ class AgentRunner:
     async def _get_all_tools(
         cls, agent: Agent[Any], context_wrapper: RunContextWrapper[Any]
     ) -> list[Tool]:
-        """Gather all tools available to the agent from hooks and config."""
+        """Gather all tools available to the agent from hooks and config.
+        Encapsulates a small unit of SDK logic and returns the computed result."""
         return await agent.get_all_tools(context_wrapper)
 
     @classmethod
     def _get_model(cls, agent: Agent[Any], run_config: RunConfig) -> Model:
-        """Resolve which model to call for this agent run."""
+        """Resolve which model to call for this agent run.
+        Encapsulates a small unit of SDK logic and returns the computed result."""
         if isinstance(run_config.model, Model):
             return run_config.model
         elif isinstance(run_config.model, str):
@@ -1271,7 +1361,8 @@ class AgentRunner:
         input: str | list[TResponseInputItem],
         session: Session | None,
     ) -> str | list[TResponseInputItem]:
-        """Prepare input by combining it with session history if enabled."""
+        """Prepare input by combining it with session history if enabled.
+        Encapsulates a small unit of SDK logic and returns the computed result."""
         if session is None:
             return input
 
@@ -1303,7 +1394,8 @@ class AgentRunner:
         original_input: str | list[TResponseInputItem],
         result: RunResult,
     ) -> None:
-        """Save the conversation turn to session."""
+        """Save the conversation turn to session.
+        Encapsulates a small unit of SDK logic and returns the computed result."""
         if session is None:
             return
 
@@ -1321,8 +1413,11 @@ class AgentRunner:
 DEFAULT_AGENT_RUNNER = AgentRunner()
 
 
-def _copy_str_or_list(input: str | list[TResponseInputItem]) -> str | list[TResponseInputItem]:
-    """Return a shallow copy of list inputs while leaving strings untouched."""
+def _copy_str_or_list(
+    input: str | list[TResponseInputItem],
+) -> str | list[TResponseInputItem]:
+    """Return a shallow copy of list inputs while leaving strings untouched.
+    Encapsulates a small unit of SDK logic and returns the computed result."""
     if isinstance(input, str):
         return input
     return input.copy()

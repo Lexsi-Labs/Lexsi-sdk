@@ -1,17 +1,20 @@
 # SDK Documentation
 
 ## Getting Started
-The recommended pattern is:
+
+SDK token can be generated from the [Lexsi Console](https://console.lexsi.ai) under  
+**Dashboard → Access Token**:  
+[https://console.lexsi.ai/dashboard/access-token](https://console.lexsi.ai/dashboard/access-token)
 
 ```python
-from lexsi_sdk import xai as lexsi
+from lexsi_sdk import lexsi
 
-# Login using your Lexsi API key
-lexsi.login(api_key="YOUR_API_KEY")
+# Login using your Lexsi SDK Token
+lexsi.login(sdk_access_token="YOUR_SDK_TOKEN")
 
 ```
 
-::: lexsi_sdk.core.xai
+::: lexsi_sdk.core.lexsi
     options:
       show_root_heading: false
       show_root_full_path: false
@@ -65,7 +68,42 @@ project = workspace.project("Your Project name")
       show_root_toc_entry: false
       show_source: true
 
+::: lexsi_sdk.core.case
+    options:
+      show_root_heading: false
+      show_root_full_path: false
+      show_root_toc_entry: false
+      show_source: true
+
+::: lexsi_sdk.core.dashboard
+    options:
+      show_root_heading: false
+      show_root_full_path: false
+      show_root_toc_entry: false
+      show_source: true
+
+::: lexsi_sdk.core.alert
+    options:
+      show_root_heading: false
+      show_root_full_path: false
+      show_root_toc_entry: false
+      show_source: true
+
 ::: lexsi_sdk.core.text
+    options:
+      show_root_heading: false
+      show_root_full_path: false
+      show_root_toc_entry: false
+      show_source: true
+
+::: lexsi_sdk.core.tracer
+    options:
+      show_root_heading: false
+      show_root_full_path: false
+      show_root_toc_entry: false
+      show_source: true
+
+::: lexsi_sdk.core.model_summary
     options:
       show_root_heading: false
       show_root_full_path: false
@@ -79,16 +117,18 @@ project = workspace.project("Your Project name")
       show_root_toc_entry: false
       show_source: true
 
-::: lexsi_sdk.core.guardrails.guardrails_langgraph
+::: lexsi_sdk.core.agent
     options:
       show_root_heading: false
       show_root_full_path: false
       show_root_toc_entry: false
       show_source: true
 
-::: lexsi_sdk.core.guardrails.guardrails_openai
+
+## Data Classes
+::: lexsi_sdk.common.types
     options:
       show_root_heading: false
       show_root_full_path: false
       show_root_toc_entry: false
-      show_source: true
+      show_source: false

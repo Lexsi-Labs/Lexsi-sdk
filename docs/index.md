@@ -23,18 +23,6 @@
 `lexsi-sdk` is the official Python SDK for interacting with the Lexsi.ai platform.  
 It provides a clean, high-performance interface for accessing chat completions, embeddings, model management, logging, and more — optimized for production workloads, enterprise integration, and research workflows.
 
----
-
-## 🚀 **Features**
-
-- **Simple, modern API client** with async & sync support  
-- **Automatic retries**, connection pooling, and HTTP/2  
-- **Streaming support** for chat completions  
-- **Typed request/response models** for reliability  
-- **Secure authentication** with API keys  
-- **Lightweight**, no heavy dependencies — ideal for serverless or microservices  
-
----
 
 ## 📦 **Installation**
 
@@ -43,3 +31,10 @@ Install from PyPI:
 ```bash
 pip install lexsi-sdk
 ```
+
+## 📓 Examples Notebooks for SDK
+
+| Modality | Notebook | Description |
+| --- | --- | --- |
+| Tabular | [Classic ML](https://colab.research.google.com/drive/1gYRRyGWKealUhqE2MibK5YG_MycThE5e?usp=sharing) | ML Models |
+| Tabular | [TabTune](https://colab.research.google.com/drive/1vnu-iiKzgk5hG4-6Z9pLLoXsn0llJlZH?usp=sharing) | TabTune Project |

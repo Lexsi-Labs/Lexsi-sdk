@@ -7,7 +7,7 @@ from IPython.display import SVG, display
 
 
 class ModelSummary(BaseModel):
-    """Container for model metadata and visualization helpers."""
+    """Provides high-level summaries of trained models including features, metrics, drift indicators, and metadata for quick inspection."""
 
     project_name: str
     project_type: str
@@ -24,12 +24,13 @@ class ModelSummary(BaseModel):
     api_client: APIClient
 
     def __init__(self, **kwargs):
-        """Store API client reference for subsequent calls."""
+        """Store API client reference for subsequent calls.
+        Stores configuration and prepares the object for use."""
         super().__init__(**kwargs)
         self.api_client = kwargs.get("api_client")
 
     def info(self) -> dict:
-        """Model Info
+        """Return a dictionary summarizing model details such as source, name, type, parameters, data tags used for modeling, and modelling info.
 
         :return: model info dict
         """
@@ -45,11 +46,11 @@ class ModelSummary(BaseModel):
         return info
 
     def feature_importance(self, xai_method: str):
-        """Global features plot"""
+        """Plot global feature importance for the model using the specified explainability method (SHAP or LIME)."""
         global_features = None
-        if xai_method=="shap":
+        if xai_method == "shap":
             global_features = self.model_results.get("GFI", {}).get("shap_gfi", None)
-        if xai_method=="lime":
+        if xai_method == "lime":
             global_features = self.model_results.get("GFI", {}).get("lime_gfi", None)
         # if not global_features:
         #     global_features = self.model_results.get("GFI")
@@ -81,7 +82,7 @@ class ModelSummary(BaseModel):
         fig.show(config={"displaylogo": False})
 
     def prediction_path(self):
-        """Prediction path plot"""
+        """Display the model’s prediction path as an SVG for the current case, retrieving it from the API."""
         model_name = self.model_results.get("model_name")
         res = self.api_client.get(
             f"{MODEL_SVG_URI}?project_name={self.project_name}&model_name={model_name}"
@@ -94,7 +95,7 @@ class ModelSummary(BaseModel):
         display(svg)
 
     def data_config(self):
-        """returns data config for the project
+        """Return the data configuration used for the project (e.g., feature exclusions and encodings) by calling the API.
 
         :return: response
         """
