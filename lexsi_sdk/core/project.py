@@ -142,7 +142,7 @@ from lexsi_sdk.common.xai_uris import (
 )
 import io
 from lexsi_sdk.core.alert import Alert
-from lexsi_sdk.core.case import Case, CaseText
+from lexsi_sdk.core.case import CaseImage, CaseTabular, CaseText
 from lexsi_sdk.core.model_summary import ModelSummary
 
 from lexsi_sdk.core.dashboard import DASHBOARD_TYPES, Dashboard
@@ -2700,14 +2700,14 @@ class Project(BaseModel):
         if tunning_strategy != "inference" and instance_type:
             custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
             available_custom_batch_servers = custom_batch_servers.get("details", []) + custom_batch_servers.get("available_gpu_custom_servers", [])
-            Validate.value_against_list(
-                "instance_type",
-                instance_type,
-                [
-                    server["instance_name"]
-                    for server in available_custom_batch_servers
-                ],
-            )
+            # Validate.value_against_list(
+            #     "instance_type",
+            #     instance_type,
+            #     [
+            #         server["instance_name"]
+            #         for server in available_custom_batch_servers
+            #     ],
+            # )
 
         if data_config:
             if data_config.get("feature_exclude"):
@@ -3890,7 +3890,7 @@ class Project(BaseModel):
         instance_type: Optional[str] = None,
         xai: Optional[list] = [],
         risk_policies: Optional[bool] = False,
-    ) -> Case:
+    ):
         """Case Info
 
         :param unique_identifer: unique identifer of case
@@ -3950,7 +3950,11 @@ class Project(BaseModel):
                 ]["compute_type"]
         res["details"]["project_name"] = self.project_name
         res["details"]["api_client"] = self.api_client
-        case = Case(**res["details"])
+        if self.metadata.get("modality") == "tabular":
+            case = CaseTabular(**res["details"])
+        elif self.metadata.get("modality") == "image":
+            case = CaseImage(**res["details"])
+
 
         return case
 
