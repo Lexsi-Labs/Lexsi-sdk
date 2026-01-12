@@ -65,7 +65,8 @@ class TextProject(Project):
     def messages(self, session_id: str) -> pd.DataFrame:
         """Return a DataFrame listing all messages in a given session. Requires the session_id.
 
-        :param session_id: id of the session
+        :param session_id: uuid of the session
+            (e.g., 10f2510c-17dd-4b99-8926-ef4625513a2f).
         :return: response
         """
         res = self.api_client.get(
@@ -79,7 +80,8 @@ class TextProject(Project):
     def traces(self, trace_id: str) -> pd.DataFrame:
         """Retrieve the execution traces for a given trace ID and return them as a DataFrame.
 
-        :param trace_id: id of the trace
+        :param trace_id: uuid of the trace
+            (e.g., 10f2510c-17dd-4b99-8926-ef4625513a2f).
         :return: response
         """
         res = self.api_client.get(
@@ -190,9 +192,55 @@ class TextProject(Project):
     ) -> str:
         """Initialize a text model for the project, specifying the model provider, model name, task type, model type (classification/regression), inference compute settings, inference settings, and optional assets. Polls for completion and returns when done.
 
-        :param model_provider: model of provider
+        :param model_provider: model provider name for initialization
+            **Model Providers**
+            - ``Hugging Face``
+            - ``OpenAI``
+            - ``Anthropic``
+            - ``Groq``
+            - ``Grok``
+            - ``Gemini``
+            - ``Together``
+            - ``Replicate``
+            - ``Mistral``
+            - ``AWS Bedrock``
+            - ``Open Router``
+
         :param model_name: name of the model to be initialized
+            (e.g., meta-llama/Llama-3.2-1B-Instruct).
+
         :param model_task_type: task type of model
+            **Model Task Types**
+            - ``question-answering``
+            - ``summarization``
+            - ``text-classification``
+            - ``text-generation``
+            - ``text2text-generation``
+            - ``token-classification``
+
+        :param model_type: architecture of the model to be initialized
+            **Model Types**
+            - ``bert``
+            - ``llm``
+
+        :param inference_compute: inference compute for the model
+            Required for the Hugging Face provider models, not required for other providers
+        :type inference_compute: InferenceCompute | None
+
+        :param inference_settings: inference settings for the model
+            Required for the Hugging Face provider models, not required for other providers
+        :type inference_settings: InferenceSettings | None
+
+        :param assets: assets for the models
+            (e.g., {"HF_TOKEN":"hf_njbjkfdsnjfkdnskbfk"}).
+
+        :param requirements_file: file path for the requirements file
+            yaml file for the requirements,user can pass base docker image system dependencies python packages required for model deployment
+            not required for transformers serverless inference engine
+
+        :param app_file: file path for the app file
+            python app file for model inference
+
         :return: response
         """
         data = {
@@ -227,9 +275,17 @@ class TextProject(Project):
     ) -> str:
         """Model Inference Settings
 
-        :param model_provider: model of provider
         :param model_name: name of the model to be initialized
-        :param model_task_type: task type of model
+            (e.g., meta-llama/Llama-3.2-1B-Instruct).
+
+        :param inference_compute: inference compute for the model
+            Required for the Hugging Face provider models, not required for other providers
+        :type inference_compute: InferenceCompute | None
+
+        :param inference_settings: inference settings for the model
+            Required for the Hugging Face provider models, not required for other providers
+        :type inference_settings: InferenceSettings | None
+
         :return: response
         """
         payload = {
@@ -259,13 +315,15 @@ class TextProject(Project):
         """Generate Text Case
 
         :param model_name: name of the model
-        :param model_type: type of the model
-        :param input_text: input text for the case
-        :param tag: tag for the case
-        :param task_type: task type for the case, defaults to None
-        :param instance_type: instance type for the case, defaults to None
+        :param prompt: prompt for the model
+        :param serverless_instance_type: serverless instance type for the case inference
+        :param instance_type: instance type for the case explainability, defaults to None
         :param explainability_method: explainability method for the case, defaults to None
         :param explain_model: explain model for the case, defaults to False
+        :param session_id: session id for the case 
+        :param max_tokens: maximum tokens to generate 
+        :param min_tokens: minimum tokens to generate
+        :param stream: whether to stream the response
         :return: response
         """
         if explain_model and not instance_type:
@@ -287,18 +345,6 @@ class TextProject(Project):
             stream=stream,
         )
         return res
-
-    def available_text_models(self) -> pd.DataFrame:
-        """Get available text models
-
-        :return: list of available text models
-        """
-        res = self.api_client.get(f"{GET_AVAILABLE_TEXT_MODELS_URI}")
-        if not res["success"]:
-            raise Exception(
-                res.get("details", " Failed to fetch available text models")
-            )
-        return pd.DataFrame(res.get("details"))
 
     def upload_data(
         self,
@@ -471,8 +517,25 @@ class TextProject(Project):
 
         :param model_name: name of the model
         :param quant_name: quant name of the model
+            **Quant Name**
+            - ``quanto``
+            - ``bnb``
+            - ``hqq``
+            - ``torchao``
+            - ``gptq``
+            - ``awq``
+            - ``llmcomp-awq``
+            - ``llmcomp-gptq``
+            - ``llmcomp-simple``
+            - ``llmcomp-smoothquant``
         :param quantization_type: type of quantization
+            **Quantization Type**
+            - ``static``
+            - ``dynamic``
         :param qbit: quantization bit
+            **Quantization BIt**
+            - ``4``
+            - ``8``
         :param instance_type: instance type for the quantization
         :param tag: tag name to pass
         :param input_column: input column for the data
@@ -507,12 +570,13 @@ class TextProject(Project):
         max_tokens: Optional[int] = None,
         stream: Optional[bool] = False,
     ) -> Union[dict, Iterator[str]]:
-        """Chat completion endpoint wrapper
+        """OpenAI Compliant Chat completion
 
         :param model: name of the model
         :param messages: list of chat messages
-        :param provider: model provider (e.g., "openai", "anthropic")
+        :param provider: model provider (e.g., "OpenAI", "Anthropic")
         :param api_key: API key for the provider
+        :param session_id: session id for the chat completion response 
         :param max_tokens: maximum tokens to generate
         :param stream: whether to stream the response
         :return: chat completion response or stream iterator
@@ -543,8 +607,16 @@ class TextProject(Project):
         api_key : Optional[str] = None,
         session_id : Optional[UUID] = None,
     ) -> dict:  
-        """Create a new embeddings.
-        Builds a new object or request payload and returns the created result."""
+        """OpenAI Compliant embeddings creation
+
+        :param input: input to create embeddings
+        :param model: name of the model
+        :param provider: model provider (e.g., "OpenAI", "Anthropic")
+        :param api_key: API key for the provider
+        :param session_id: session id for the case 
+
+        :return: embeddings response
+        """
         payload = {
             "model": model,
             "input": input,
@@ -567,8 +639,17 @@ class TextProject(Project):
         max_tokens: Optional[int] = None,
         stream: Optional[bool] = False,
     ) -> dict:
-        """Run completion.
-        Encapsulates a small unit of SDK logic and returns the computed result."""
+        """OpenAI Compliant completion
+        
+        :param model: name of the model
+        :param prompt: input prompt for the model
+        :param provider: model provider (e.g., "OpenAI", "Anthropic")
+        :param api_key: API key for the provider
+        :param session_id: session id for the completion response 
+        :param max_tokens: maximum tokens to generate
+        :param stream: whether to stream the response
+        :return: completion response or stream iterator
+       """
 
         payload = {
             "model": model,
@@ -595,12 +676,13 @@ class TextProject(Project):
         api_key: Optional[str] = None,
         session_id : Optional[UUID] = None,
     ) -> dict:
-        """Image generation endpoint wrapper
+        """OpenAI complaint image generation
 
         :param model: name of the model
-        :param prompt: image generation prompt
-        :param provider: model provider (e.g., "openai", "stability")
+        :param prompt: image generation promptwrapper
+        :param provider: model provider (e.g., "OpenAI", "Anthropic")
         :param api_key: API key for the provider
+        :param session_id: session id for the image generation response 
         :return: image generation response
         """
         payload = {
