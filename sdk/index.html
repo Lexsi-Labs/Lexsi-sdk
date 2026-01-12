@@ -2516,17 +2516,6 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#lexsi_sdk.core.text.TextProject.available_text_models" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        available_text_models
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#lexsi_sdk.core.text.TextProject.chat_completion" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4021,18 +4010,17 @@ Stores configuration and prepares the object for use.</p>
       <tbody>
           <tr class="doc-section-item">
             <td>
-                <code>sdk_access_token</code>
+                <code>api_key</code>
             </td>
             <td>
-                  <code><span title="typing.Optional">Optional</span>[<span title="str">str</span>]</code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>SDK Access Token, defaults to XAI_ACCESS_TOKEN environment variable</p>
+                <p>API key, defaults to XAI_ACCESS_TOKEN environment variable</p>
               </div>
             </td>
             <td>
-                  <code>None</code>
+                <em>required</em>
             </td>
           </tr>
       </tbody>
@@ -4061,7 +4049,7 @@ Stores configuration and prepares the object for use.</p>
 <span class="normal">59</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">login</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sdk_access_token</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Authenticate with Lexsi.ai using an access token. It prompts for or reads the access token from the environment variable XAI_ACCESS_TOKEN and sets it on the API client, enabling subsequent calls to the platform.</span>
 
-<span class="sd">    :param sdk_access_token: SDK Access Token, defaults to XAI_ACCESS_TOKEN environment variable</span>
+<span class="sd">    :param api_key: API key, defaults to XAI_ACCESS_TOKEN environment variable</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">sdk_access_token</span><span class="p">:</span>
         <span class="n">sdk_access_token</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;XAI_ACCESS_TOKEN&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="n">getpass</span><span class="o">.</span><span class="n">getpass</span><span class="p">(</span>
@@ -31337,16 +31325,16 @@ Stores configuration and prepares the object for use.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/text.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">140</span>
-<span class="normal">141</span>
-<span class="normal">142</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">142</span>
 <span class="normal">143</span>
 <span class="normal">144</span>
 <span class="normal">145</span>
 <span class="normal">146</span>
 <span class="normal">147</span>
 <span class="normal">148</span>
-<span class="normal">149</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">available_guardrails</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="normal">149</span>
+<span class="normal">150</span>
+<span class="normal">151</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">available_guardrails</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a DataFrame of all guardrails available to configure in this project. Each row describes a guardrail type.</span>
 
 <span class="sd">    :return: response</span>
@@ -31355,74 +31343,6 @@ Stores configuration and prepares the object for use.</p>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">res</span><span class="p">[</span><span class="s2">&quot;success&quot;</span><span class="p">]:</span>
         <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;details&quot;</span><span class="p">))</span>
 
-    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;details&quot;</span><span class="p">))</span>
-</code></pre></div></td></tr></table></div>
-            </details>
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h3 id="lexsi_sdk.core.text.TextProject.available_text_models" class="doc doc-heading">
-            <span class="doc doc-object-name doc-function-name">available_text_models</span>
-
-
-<a href="#lexsi_sdk.core.text.TextProject.available_text_models" class="headerlink" title="Permanent link">&para;</a></h3>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">available_text_models</span><span class="p">()</span>
-</code></pre></div>
-
-    <div class="doc doc-contents ">
-
-        <p>Get available text models</p>
-
-
-    <p><span class="doc-section-title">Returns:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Type</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                  <code><span title="pandas.DataFrame">DataFrame</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>list of available text models</p>
-              </div>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-
-            <details class="mkdocstrings-source">
-              <summary>Source code in <code>lexsi_sdk/core/text.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">281</span>
-<span class="normal">282</span>
-<span class="normal">283</span>
-<span class="normal">284</span>
-<span class="normal">285</span>
-<span class="normal">286</span>
-<span class="normal">287</span>
-<span class="normal">288</span>
-<span class="normal">289</span>
-<span class="normal">290</span>
-<span class="normal">291</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">available_text_models</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get available text models</span>
-
-<span class="sd">    :return: list of available text models</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">api_client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">GET_AVAILABLE_TEXT_MODELS_URI</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">res</span><span class="p">[</span><span class="s2">&quot;success&quot;</span><span class="p">]:</span>
-        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
-            <span class="n">res</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;details&quot;</span><span class="p">,</span> <span class="s2">&quot; Failed to fetch available text models&quot;</span><span class="p">)</span>
-        <span class="p">)</span>
     <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;details&quot;</span><span class="p">))</span>
 </code></pre></div></td></tr></table></div>
             </details>
@@ -31451,7 +31371,7 @@ Stores configuration and prepares the object for use.</p>
 
     <div class="doc doc-contents ">
 
-        <p>Chat completion endpoint wrapper</p>
+        <p>OpenAI Compliant Chat completion</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -31506,7 +31426,7 @@ Stores configuration and prepares the object for use.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>model provider (e.g., "openai", "anthropic")</p>
+                <p>model provider (e.g., "OpenAI", "Anthropic")</p>
               </div>
             </td>
             <td>
@@ -31523,6 +31443,22 @@ Stores configuration and prepares the object for use.</p>
             <td>
               <div class="doc-md-description">
                 <p>API key for the provider</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>session_id</code>
+            </td>
+            <td>
+                  <code><span title="typing.Optional">Optional</span>[<span title="uuid.UUID">UUID</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>session id for the chat completion response</p>
               </div>
             </td>
             <td>
@@ -31590,43 +31526,44 @@ Stores configuration and prepares the object for use.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/text.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">490</span>
-<span class="normal">491</span>
-<span class="normal">492</span>
-<span class="normal">493</span>
-<span class="normal">494</span>
-<span class="normal">495</span>
-<span class="normal">496</span>
-<span class="normal">497</span>
-<span class="normal">498</span>
-<span class="normal">499</span>
-<span class="normal">500</span>
-<span class="normal">501</span>
-<span class="normal">502</span>
-<span class="normal">503</span>
-<span class="normal">504</span>
-<span class="normal">505</span>
-<span class="normal">506</span>
-<span class="normal">507</span>
-<span class="normal">508</span>
-<span class="normal">509</span>
-<span class="normal">510</span>
-<span class="normal">511</span>
-<span class="normal">512</span>
-<span class="normal">513</span>
-<span class="normal">514</span>
-<span class="normal">515</span>
-<span class="normal">516</span>
-<span class="normal">517</span>
-<span class="normal">518</span>
-<span class="normal">519</span>
-<span class="normal">520</span>
-<span class="normal">521</span>
-<span class="normal">522</span>
-<span class="normal">523</span>
-<span class="normal">524</span>
-<span class="normal">525</span>
-<span class="normal">526</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">chat_completion</span><span class="p">(</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">563</span>
+<span class="normal">564</span>
+<span class="normal">565</span>
+<span class="normal">566</span>
+<span class="normal">567</span>
+<span class="normal">568</span>
+<span class="normal">569</span>
+<span class="normal">570</span>
+<span class="normal">571</span>
+<span class="normal">572</span>
+<span class="normal">573</span>
+<span class="normal">574</span>
+<span class="normal">575</span>
+<span class="normal">576</span>
+<span class="normal">577</span>
+<span class="normal">578</span>
+<span class="normal">579</span>
+<span class="normal">580</span>
+<span class="normal">581</span>
+<span class="normal">582</span>
+<span class="normal">583</span>
+<span class="normal">584</span>
+<span class="normal">585</span>
+<span class="normal">586</span>
+<span class="normal">587</span>
+<span class="normal">588</span>
+<span class="normal">589</span>
+<span class="normal">590</span>
+<span class="normal">591</span>
+<span class="normal">592</span>
+<span class="normal">593</span>
+<span class="normal">594</span>
+<span class="normal">595</span>
+<span class="normal">596</span>
+<span class="normal">597</span>
+<span class="normal">598</span>
+<span class="normal">599</span>
+<span class="normal">600</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">chat_completion</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">model</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">messages</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
@@ -31636,12 +31573,13 @@ Stores configuration and prepares the object for use.</p>
     <span class="n">max_tokens</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">stream</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">dict</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Chat completion endpoint wrapper</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;OpenAI Compliant Chat completion</span>
 
 <span class="sd">    :param model: name of the model</span>
 <span class="sd">    :param messages: list of chat messages</span>
-<span class="sd">    :param provider: model provider (e.g., &quot;openai&quot;, &quot;anthropic&quot;)</span>
+<span class="sd">    :param provider: model provider (e.g., &quot;OpenAI&quot;, &quot;Anthropic&quot;)</span>
 <span class="sd">    :param api_key: API key for the provider</span>
+<span class="sd">    :param session_id: session id for the chat completion response </span>
 <span class="sd">    :param max_tokens: maximum tokens to generate</span>
 <span class="sd">    :param stream: whether to stream the response</span>
 <span class="sd">    :return: chat completion response or stream iterator</span>
@@ -31690,41 +31628,199 @@ Stores configuration and prepares the object for use.</p>
 
     <div class="doc doc-contents ">
 
-        <p>Run completion.
-Encapsulates a small unit of SDK logic and returns the computed result.</p>
+        <p>OpenAI Compliant completion</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>model</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>name of the model</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>prompt</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>input prompt for the model</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>provider</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>model provider (e.g., "OpenAI", "Anthropic")</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>api_key</code>
+            </td>
+            <td>
+                  <code><span title="typing.Optional">Optional</span>[<span title="str">str</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>API key for the provider</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>session_id</code>
+            </td>
+            <td>
+                  <code><span title="typing.Optional">Optional</span>[<span title="uuid.UUID">UUID</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>session id for the completion response</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>max_tokens</code>
+            </td>
+            <td>
+                  <code><span title="typing.Optional">Optional</span>[<span title="int">int</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>maximum tokens to generate</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>stream</code>
+            </td>
+            <td>
+                  <code><span title="typing.Optional">Optional</span>[<span title="bool">bool</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>whether to stream the response</p>
+              </div>
+            </td>
+            <td>
+                  <code>False</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="dict">dict</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>completion response or stream iterator</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/text.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">550</span>
-<span class="normal">551</span>
-<span class="normal">552</span>
-<span class="normal">553</span>
-<span class="normal">554</span>
-<span class="normal">555</span>
-<span class="normal">556</span>
-<span class="normal">557</span>
-<span class="normal">558</span>
-<span class="normal">559</span>
-<span class="normal">560</span>
-<span class="normal">561</span>
-<span class="normal">562</span>
-<span class="normal">563</span>
-<span class="normal">564</span>
-<span class="normal">565</span>
-<span class="normal">566</span>
-<span class="normal">567</span>
-<span class="normal">568</span>
-<span class="normal">569</span>
-<span class="normal">570</span>
-<span class="normal">571</span>
-<span class="normal">572</span>
-<span class="normal">573</span>
-<span class="normal">574</span>
-<span class="normal">575</span>
-<span class="normal">576</span>
-<span class="normal">577</span>
-<span class="normal">578</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">completion</span><span class="p">(</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">632</span>
+<span class="normal">633</span>
+<span class="normal">634</span>
+<span class="normal">635</span>
+<span class="normal">636</span>
+<span class="normal">637</span>
+<span class="normal">638</span>
+<span class="normal">639</span>
+<span class="normal">640</span>
+<span class="normal">641</span>
+<span class="normal">642</span>
+<span class="normal">643</span>
+<span class="normal">644</span>
+<span class="normal">645</span>
+<span class="normal">646</span>
+<span class="normal">647</span>
+<span class="normal">648</span>
+<span class="normal">649</span>
+<span class="normal">650</span>
+<span class="normal">651</span>
+<span class="normal">652</span>
+<span class="normal">653</span>
+<span class="normal">654</span>
+<span class="normal">655</span>
+<span class="normal">656</span>
+<span class="normal">657</span>
+<span class="normal">658</span>
+<span class="normal">659</span>
+<span class="normal">660</span>
+<span class="normal">661</span>
+<span class="normal">662</span>
+<span class="normal">663</span>
+<span class="normal">664</span>
+<span class="normal">665</span>
+<span class="normal">666</span>
+<span class="normal">667</span>
+<span class="normal">668</span>
+<span class="normal">669</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">completion</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">model</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -31734,8 +31830,17 @@ Encapsulates a small unit of SDK logic and returns the computed result.</p>
     <span class="n">max_tokens</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">stream</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Run completion.</span>
-<span class="sd">    Encapsulates a small unit of SDK logic and returns the computed result.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;OpenAI Compliant completion</span>
+
+<span class="sd">    :param model: name of the model</span>
+<span class="sd">    :param prompt: input prompt for the model</span>
+<span class="sd">    :param provider: model provider (e.g., &quot;OpenAI&quot;, &quot;Anthropic&quot;)</span>
+<span class="sd">    :param api_key: API key for the provider</span>
+<span class="sd">    :param session_id: session id for the completion response </span>
+<span class="sd">    :param max_tokens: maximum tokens to generate</span>
+<span class="sd">    :param stream: whether to stream the response</span>
+<span class="sd">    :return: completion response or stream iterator</span>
+<span class="sd">   &quot;&quot;&quot;</span>
 
     <span class="n">payload</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="n">model</span><span class="p">,</span>
@@ -31881,9 +31986,7 @@ Encapsulates a small unit of SDK logic and returns the computed result.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/text.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">151</span>
-<span class="normal">152</span>
-<span class="normal">153</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">153</span>
 <span class="normal">154</span>
 <span class="normal">155</span>
 <span class="normal">156</span>
@@ -31907,7 +32010,9 @@ Encapsulates a small unit of SDK logic and returns the computed result.</p>
 <span class="normal">174</span>
 <span class="normal">175</span>
 <span class="normal">176</span>
-<span class="normal">177</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">configure_guardrail</span><span class="p">(</span>
+<span class="normal">177</span>
+<span class="normal">178</span>
+<span class="normal">179</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">configure_guardrail</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">guardrail_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">guardrail_config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
@@ -31949,48 +32054,181 @@ Encapsulates a small unit of SDK logic and returns the computed result.</p>
 
 <a href="#lexsi_sdk.core.text.TextProject.create_embeddings" class="headerlink" title="Permanent link">&para;</a></h3>
 <div class="doc-signature highlight"><pre><span></span><code><span class="nf">create_embeddings</span><span class="p">(</span>
-    <span class="nb">input</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">api_key</span><span class="p">,</span> <span class="n">provider</span><span class="p">,</span> <span class="n">session_id</span><span class="o">=</span><span class="kc">None</span>
+    <span class="nb">input</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">provider</span><span class="p">,</span> <span class="n">api_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">session_id</span><span class="o">=</span><span class="kc">None</span>
 <span class="p">)</span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
 
-        <p>Create a new embeddings.
-Builds a new object or request payload and returns the created result.</p>
+        <p>OpenAI Compliant embeddings creation</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>input</code>
+            </td>
+            <td>
+                  <code><span title="typing.Union">Union</span>[<span title="str">str</span>, <span title="typing.List">List</span>[<span title="str">str</span>]]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>input to create embeddings</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>model</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>name of the model</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>provider</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>model provider (e.g., "OpenAI", "Anthropic")</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>api_key</code>
+            </td>
+            <td>
+                  <code><span title="typing.Optional">Optional</span>[<span title="str">str</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>API key for the provider</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>session_id</code>
+            </td>
+            <td>
+                  <code><span title="typing.Optional">Optional</span>[<span title="uuid.UUID">UUID</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>session id for the case</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="dict">dict</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>embeddings response</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/text.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">528</span>
-<span class="normal">529</span>
-<span class="normal">530</span>
-<span class="normal">531</span>
-<span class="normal">532</span>
-<span class="normal">533</span>
-<span class="normal">534</span>
-<span class="normal">535</span>
-<span class="normal">536</span>
-<span class="normal">537</span>
-<span class="normal">538</span>
-<span class="normal">539</span>
-<span class="normal">540</span>
-<span class="normal">541</span>
-<span class="normal">542</span>
-<span class="normal">543</span>
-<span class="normal">544</span>
-<span class="normal">545</span>
-<span class="normal">546</span>
-<span class="normal">547</span>
-<span class="normal">548</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">create_embeddings</span><span class="p">(</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">602</span>
+<span class="normal">603</span>
+<span class="normal">604</span>
+<span class="normal">605</span>
+<span class="normal">606</span>
+<span class="normal">607</span>
+<span class="normal">608</span>
+<span class="normal">609</span>
+<span class="normal">610</span>
+<span class="normal">611</span>
+<span class="normal">612</span>
+<span class="normal">613</span>
+<span class="normal">614</span>
+<span class="normal">615</span>
+<span class="normal">616</span>
+<span class="normal">617</span>
+<span class="normal">618</span>
+<span class="normal">619</span>
+<span class="normal">620</span>
+<span class="normal">621</span>
+<span class="normal">622</span>
+<span class="normal">623</span>
+<span class="normal">624</span>
+<span class="normal">625</span>
+<span class="normal">626</span>
+<span class="normal">627</span>
+<span class="normal">628</span>
+<span class="normal">629</span>
+<span class="normal">630</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">create_embeddings</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="nb">input</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
     <span class="n">model</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-    <span class="n">api_key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">provider</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-    <span class="n">session_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">UUID</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a new embeddings.</span>
-<span class="sd">    Builds a new object or request payload and returns the created result.&quot;&quot;&quot;</span>
+    <span class="n">api_key</span> <span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">session_id</span> <span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">UUID</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>  
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;OpenAI Compliant embeddings creation</span>
+
+<span class="sd">    :param input: input to create embeddings</span>
+<span class="sd">    :param model: name of the model</span>
+<span class="sd">    :param provider: model provider (e.g., &quot;OpenAI&quot;, &quot;Anthropic&quot;)</span>
+<span class="sd">    :param api_key: API key for the provider</span>
+<span class="sd">    :param session_id: session id for the case </span>
+
+<span class="sd">    :return: embeddings response</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">payload</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="n">model</span><span class="p">,</span>
         <span class="s2">&quot;input&quot;</span><span class="p">:</span> <span class="nb">input</span><span class="p">,</span>
@@ -32080,9 +32318,7 @@ Builds a new object or request payload and returns the created result.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/text.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">124</span>
-<span class="normal">125</span>
-<span class="normal">126</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">126</span>
 <span class="normal">127</span>
 <span class="normal">128</span>
 <span class="normal">129</span>
@@ -32094,7 +32330,9 @@ Builds a new object or request payload and returns the created result.</p>
 <span class="normal">135</span>
 <span class="normal">136</span>
 <span class="normal">137</span>
-<span class="normal">138</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">delete_guardrail</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">guardrail_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="normal">138</span>
+<span class="normal">139</span>
+<span class="normal">140</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">delete_guardrail</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">guardrail_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Delete a guardrail from the project using its ID. Returns the API response message.</span>
 
 <span class="sd">    :param guardrail_id: id of the guardrail</span>
@@ -32171,13 +32409,14 @@ Builds a new object or request payload and returns the created result.</p>
           </tr>
           <tr class="doc-section-item">
             <td>
-                <code>model_type</code>
+                <code>prompt</code>
             </td>
             <td>
+                  <code><span title="str">str</span></code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>type of the model</p>
+                <p>prompt for the model</p>
               </div>
             </td>
             <td>
@@ -32186,43 +32425,14 @@ Builds a new object or request payload and returns the created result.</p>
           </tr>
           <tr class="doc-section-item">
             <td>
-                <code>input_text</code>
+                <code>serverless_instance_type</code>
             </td>
             <td>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>input text for the case</p>
-              </div>
-            </td>
-            <td>
-                <em>required</em>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td>
-                <code>tag</code>
-            </td>
-            <td>
+                  <code><span title="str">str</span></code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>tag for the case</p>
-              </div>
-            </td>
-            <td>
-                <em>required</em>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td>
-                <code>task_type</code>
-            </td>
-            <td>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>task type for the case, defaults to None</p>
+                <p>serverless instance type for the case inference</p>
               </div>
             </td>
             <td>
@@ -32238,7 +32448,7 @@ Builds a new object or request payload and returns the created result.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>instance type for the case, defaults to None</p>
+                <p>instance type for the case explainability, defaults to None</p>
               </div>
             </td>
             <td>
@@ -32277,6 +32487,70 @@ Builds a new object or request payload and returns the created result.</p>
                   <code>False</code>
             </td>
           </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>session_id</code>
+            </td>
+            <td>
+                  <code><span title="typing.Optional">Optional</span>[<span title="str">str</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>session id for the case</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>max_tokens</code>
+            </td>
+            <td>
+                  <code><span title="typing.Optional">Optional</span>[<span title="int">int</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>maximum tokens to generate</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>min_tokens</code>
+            </td>
+            <td>
+                  <code><span title="typing.Optional">Optional</span>[<span title="int">int</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>minimum tokens to generate</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>stream</code>
+            </td>
+            <td>
+                  <code><span title="typing.Optional">Optional</span>[<span title="bool">bool</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>whether to stream the response</p>
+              </div>
+            </td>
+            <td>
+                  <code>False</code>
+            </td>
+          </tr>
       </tbody>
     </table>
 
@@ -32306,50 +32580,52 @@ Builds a new object or request payload and returns the created result.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/text.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">236</span>
-<span class="normal">237</span>
-<span class="normal">238</span>
-<span class="normal">239</span>
-<span class="normal">240</span>
-<span class="normal">241</span>
-<span class="normal">242</span>
-<span class="normal">243</span>
-<span class="normal">244</span>
-<span class="normal">245</span>
-<span class="normal">246</span>
-<span class="normal">247</span>
-<span class="normal">248</span>
-<span class="normal">249</span>
-<span class="normal">250</span>
-<span class="normal">251</span>
-<span class="normal">252</span>
-<span class="normal">253</span>
-<span class="normal">254</span>
-<span class="normal">255</span>
-<span class="normal">256</span>
-<span class="normal">257</span>
-<span class="normal">258</span>
-<span class="normal">259</span>
-<span class="normal">260</span>
-<span class="normal">261</span>
-<span class="normal">262</span>
-<span class="normal">263</span>
-<span class="normal">264</span>
-<span class="normal">265</span>
-<span class="normal">266</span>
-<span class="normal">267</span>
-<span class="normal">268</span>
-<span class="normal">269</span>
-<span class="normal">270</span>
-<span class="normal">271</span>
-<span class="normal">272</span>
-<span class="normal">273</span>
-<span class="normal">274</span>
-<span class="normal">275</span>
-<span class="normal">276</span>
-<span class="normal">277</span>
-<span class="normal">278</span>
-<span class="normal">279</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">generate_text_case</span><span class="p">(</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">302</span>
+<span class="normal">303</span>
+<span class="normal">304</span>
+<span class="normal">305</span>
+<span class="normal">306</span>
+<span class="normal">307</span>
+<span class="normal">308</span>
+<span class="normal">309</span>
+<span class="normal">310</span>
+<span class="normal">311</span>
+<span class="normal">312</span>
+<span class="normal">313</span>
+<span class="normal">314</span>
+<span class="normal">315</span>
+<span class="normal">316</span>
+<span class="normal">317</span>
+<span class="normal">318</span>
+<span class="normal">319</span>
+<span class="normal">320</span>
+<span class="normal">321</span>
+<span class="normal">322</span>
+<span class="normal">323</span>
+<span class="normal">324</span>
+<span class="normal">325</span>
+<span class="normal">326</span>
+<span class="normal">327</span>
+<span class="normal">328</span>
+<span class="normal">329</span>
+<span class="normal">330</span>
+<span class="normal">331</span>
+<span class="normal">332</span>
+<span class="normal">333</span>
+<span class="normal">334</span>
+<span class="normal">335</span>
+<span class="normal">336</span>
+<span class="normal">337</span>
+<span class="normal">338</span>
+<span class="normal">339</span>
+<span class="normal">340</span>
+<span class="normal">341</span>
+<span class="normal">342</span>
+<span class="normal">343</span>
+<span class="normal">344</span>
+<span class="normal">345</span>
+<span class="normal">346</span>
+<span class="normal">347</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">generate_text_case</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">model_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -32365,13 +32641,15 @@ Builds a new object or request payload and returns the created result.</p>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate Text Case</span>
 
 <span class="sd">    :param model_name: name of the model</span>
-<span class="sd">    :param model_type: type of the model</span>
-<span class="sd">    :param input_text: input text for the case</span>
-<span class="sd">    :param tag: tag for the case</span>
-<span class="sd">    :param task_type: task type for the case, defaults to None</span>
-<span class="sd">    :param instance_type: instance type for the case, defaults to None</span>
+<span class="sd">    :param prompt: prompt for the model</span>
+<span class="sd">    :param serverless_instance_type: serverless instance type for the case inference</span>
+<span class="sd">    :param instance_type: instance type for the case explainability, defaults to None</span>
 <span class="sd">    :param explainability_method: explainability method for the case, defaults to None</span>
 <span class="sd">    :param explain_model: explain model for the case, defaults to False</span>
+<span class="sd">    :param session_id: session id for the case </span>
+<span class="sd">    :param max_tokens: maximum tokens to generate </span>
+<span class="sd">    :param min_tokens: minimum tokens to generate</span>
+<span class="sd">    :param stream: whether to stream the response</span>
 <span class="sd">    :return: response</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">explain_model</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">instance_type</span><span class="p">:</span>
@@ -32440,9 +32718,7 @@ Builds a new object or request payload and returns the created result.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/text.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 93</span>
-<span class="normal"> 94</span>
-<span class="normal"> 95</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 95</span>
 <span class="normal"> 96</span>
 <span class="normal"> 97</span>
 <span class="normal"> 98</span>
@@ -32451,7 +32727,9 @@ Builds a new object or request payload and returns the created result.</p>
 <span class="normal">101</span>
 <span class="normal">102</span>
 <span class="normal">103</span>
-<span class="normal">104</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">guardrails</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">guardrails</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;List all guardrails currently configured for the project. Returns a DataFrame describing each guardrail and its configuration.</span>
 
 <span class="sd">    :return: response</span>
@@ -32478,13 +32756,13 @@ Builds a new object or request payload and returns the created result.</p>
 
 <a href="#lexsi_sdk.core.text.TextProject.image_generation" class="headerlink" title="Permanent link">&para;</a></h3>
 <div class="doc-signature highlight"><pre><span></span><code><span class="nf">image_generation</span><span class="p">(</span>
-    <span class="n">model</span><span class="p">,</span> <span class="n">prompt</span><span class="p">,</span> <span class="n">provider</span><span class="p">,</span> <span class="n">api_key</span><span class="p">,</span> <span class="n">session_id</span><span class="o">=</span><span class="kc">None</span>
+    <span class="n">model</span><span class="p">,</span> <span class="n">prompt</span><span class="p">,</span> <span class="n">provider</span><span class="p">,</span> <span class="n">api_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">session_id</span><span class="o">=</span><span class="kc">None</span>
 <span class="p">)</span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
 
-        <p>Image generation endpoint wrapper</p>
+        <p>OpenAI complaint image generation</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -32523,7 +32801,7 @@ Builds a new object or request payload and returns the created result.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>image generation prompt</p>
+                <p>image generation promptwrapper</p>
               </div>
             </td>
             <td>
@@ -32539,7 +32817,7 @@ Builds a new object or request payload and returns the created result.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>model provider (e.g., "openai", "stability")</p>
+                <p>model provider (e.g., "OpenAI", "Anthropic")</p>
               </div>
             </td>
             <td>
@@ -32551,7 +32829,7 @@ Builds a new object or request payload and returns the created result.</p>
                 <code>api_key</code>
             </td>
             <td>
-                  <code><span title="str">str</span></code>
+                  <code><span title="typing.Optional">Optional</span>[<span title="str">str</span>]</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -32559,7 +32837,23 @@ Builds a new object or request payload and returns the created result.</p>
               </div>
             </td>
             <td>
-                <em>required</em>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>session_id</code>
+            </td>
+            <td>
+                  <code><span title="typing.Optional">Optional</span>[<span title="uuid.UUID">UUID</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>session id for the image generation response</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
             </td>
           </tr>
       </tbody>
@@ -32591,47 +32885,49 @@ Builds a new object or request payload and returns the created result.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/text.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">580</span>
-<span class="normal">581</span>
-<span class="normal">582</span>
-<span class="normal">583</span>
-<span class="normal">584</span>
-<span class="normal">585</span>
-<span class="normal">586</span>
-<span class="normal">587</span>
-<span class="normal">588</span>
-<span class="normal">589</span>
-<span class="normal">590</span>
-<span class="normal">591</span>
-<span class="normal">592</span>
-<span class="normal">593</span>
-<span class="normal">594</span>
-<span class="normal">595</span>
-<span class="normal">596</span>
-<span class="normal">597</span>
-<span class="normal">598</span>
-<span class="normal">599</span>
-<span class="normal">600</span>
-<span class="normal">601</span>
-<span class="normal">602</span>
-<span class="normal">603</span>
-<span class="normal">604</span>
-<span class="normal">605</span>
-<span class="normal">606</span>
-<span class="normal">607</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">image_generation</span><span class="p">(</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">671</span>
+<span class="normal">672</span>
+<span class="normal">673</span>
+<span class="normal">674</span>
+<span class="normal">675</span>
+<span class="normal">676</span>
+<span class="normal">677</span>
+<span class="normal">678</span>
+<span class="normal">679</span>
+<span class="normal">680</span>
+<span class="normal">681</span>
+<span class="normal">682</span>
+<span class="normal">683</span>
+<span class="normal">684</span>
+<span class="normal">685</span>
+<span class="normal">686</span>
+<span class="normal">687</span>
+<span class="normal">688</span>
+<span class="normal">689</span>
+<span class="normal">690</span>
+<span class="normal">691</span>
+<span class="normal">692</span>
+<span class="normal">693</span>
+<span class="normal">694</span>
+<span class="normal">695</span>
+<span class="normal">696</span>
+<span class="normal">697</span>
+<span class="normal">698</span>
+<span class="normal">699</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">image_generation</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">model</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">provider</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-    <span class="n">api_key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-    <span class="n">session_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">UUID</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">api_key</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">session_id</span> <span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">UUID</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Image generation endpoint wrapper</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;OpenAI complaint image generation</span>
 
 <span class="sd">    :param model: name of the model</span>
-<span class="sd">    :param prompt: image generation prompt</span>
-<span class="sd">    :param provider: model provider (e.g., &quot;openai&quot;, &quot;stability&quot;)</span>
+<span class="sd">    :param prompt: image generation promptwrapper</span>
+<span class="sd">    :param provider: model provider (e.g., &quot;OpenAI&quot;, &quot;Anthropic&quot;)</span>
 <span class="sd">    :param api_key: API key for the provider</span>
+<span class="sd">    :param session_id: session id for the image generation response </span>
 <span class="sd">    :return: image generation response</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">payload</span> <span class="o">=</span> <span class="p">{</span>
@@ -32665,9 +32961,11 @@ Builds a new object or request payload and returns the created result.</p>
     <span class="n">model_name</span><span class="p">,</span>
     <span class="n">model_task_type</span><span class="p">,</span>
     <span class="n">model_type</span><span class="p">,</span>
-    <span class="n">inference_compute</span><span class="p">,</span>
-    <span class="n">inference_settings</span><span class="p">,</span>
+    <span class="n">inference_compute</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">inference_settings</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">assets</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">requirements_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">app_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span>
 </code></pre></div>
 
@@ -32696,7 +32994,7 @@ Builds a new object or request payload and returns the created result.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>model of provider</p>
+                <p>model provider name for initialization <strong>Model Providers</strong> - <code>Hugging Face</code> - <code>OpenAI</code> - <code>Anthropic</code> - <code>Groq</code> - <code>Grok</code> - <code>Gemini</code> - <code>Together</code> - <code>Replicate</code> - <code>Mistral</code> - <code>AWS Bedrock</code> - <code>Open Router</code></p>
               </div>
             </td>
             <td>
@@ -32712,7 +33010,7 @@ Builds a new object or request payload and returns the created result.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>name of the model to be initialized</p>
+                <p>name of the model to be initialized (e.g., meta-llama/Llama-3.2-1B-Instruct).</p>
               </div>
             </td>
             <td>
@@ -32728,11 +33026,107 @@ Builds a new object or request payload and returns the created result.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>task type of model</p>
+                <p>task type of model <strong>Model Task Types</strong> - <code>question-answering</code> - <code>summarization</code> - <code>text-classification</code> - <code>text-generation</code> - <code>text2text-generation</code> - <code>token-classification</code></p>
               </div>
             </td>
             <td>
                 <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>model_type</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>architecture of the model to be initialized <strong>Model Types</strong> - <code>bert</code> - <code>llm</code></p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>inference_compute</code>
+            </td>
+            <td>
+                  <code><span title="typing.Optional">Optional</span>[<a class="autorefs autorefs-internal" title="InferenceCompute (lexsi_sdk.common.types.InferenceCompute)" href="#lexsi_sdk.common.types.InferenceCompute">InferenceCompute</a>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>inference compute for the model Required for the Hugging Face provider models, not required for other providers</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>inference_settings</code>
+            </td>
+            <td>
+                  <code><span title="typing.Optional">Optional</span>[<a class="autorefs autorefs-internal" title="InferenceSettings (lexsi_sdk.common.types.InferenceSettings)" href="#lexsi_sdk.common.types.InferenceSettings">InferenceSettings</a>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>inference settings for the model Required for the Hugging Face provider models, not required for other providers</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>assets</code>
+            </td>
+            <td>
+                  <code><span title="typing.Optional">Optional</span>[<span title="dict">dict</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>assets for the models (e.g., {"HF_TOKEN":"hf_njbjkfdsnjfkdnskbfk"}).</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>requirements_file</code>
+            </td>
+            <td>
+                  <code><span title="typing.Optional">Optional</span>[<span title="str">str</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>file path for the requirements file yaml file for the requirements,user can pass base docker image system dependencies python packages required for model deployment not required for transformers serverless inference engine</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>app_file</code>
+            </td>
+            <td>
+                  <code><span title="typing.Optional">Optional</span>[<span title="str">str</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>file path for the app file python app file for model inference</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
             </td>
           </tr>
       </tbody>
@@ -32764,9 +33158,7 @@ Builds a new object or request payload and returns the created result.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/text.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">179</span>
-<span class="normal">180</span>
-<span class="normal">181</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">181</span>
 <span class="normal">182</span>
 <span class="normal">183</span>
 <span class="normal">184</span>
@@ -32795,24 +33187,130 @@ Builds a new object or request payload and returns the created result.</p>
 <span class="normal">207</span>
 <span class="normal">208</span>
 <span class="normal">209</span>
-<span class="normal">210</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">initialize_text_model</span><span class="p">(</span>
-    <span class="bp">self</span><span class="p">,</span>
-    <span class="n">model_provider</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-    <span class="n">model_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-    <span class="n">model_task_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-    <span class="n">model_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-    <span class="n">inference_compute</span><span class="p">:</span> <span class="n">InferenceCompute</span><span class="p">,</span>
-    <span class="n">inference_settings</span><span class="p">:</span> <span class="n">InferenceSettings</span><span class="p">,</span>
+<span class="normal">210</span>
+<span class="normal">211</span>
+<span class="normal">212</span>
+<span class="normal">213</span>
+<span class="normal">214</span>
+<span class="normal">215</span>
+<span class="normal">216</span>
+<span class="normal">217</span>
+<span class="normal">218</span>
+<span class="normal">219</span>
+<span class="normal">220</span>
+<span class="normal">221</span>
+<span class="normal">222</span>
+<span class="normal">223</span>
+<span class="normal">224</span>
+<span class="normal">225</span>
+<span class="normal">226</span>
+<span class="normal">227</span>
+<span class="normal">228</span>
+<span class="normal">229</span>
+<span class="normal">230</span>
+<span class="normal">231</span>
+<span class="normal">232</span>
+<span class="normal">233</span>
+<span class="normal">234</span>
+<span class="normal">235</span>
+<span class="normal">236</span>
+<span class="normal">237</span>
+<span class="normal">238</span>
+<span class="normal">239</span>
+<span class="normal">240</span>
+<span class="normal">241</span>
+<span class="normal">242</span>
+<span class="normal">243</span>
+<span class="normal">244</span>
+<span class="normal">245</span>
+<span class="normal">246</span>
+<span class="normal">247</span>
+<span class="normal">248</span>
+<span class="normal">249</span>
+<span class="normal">250</span>
+<span class="normal">251</span>
+<span class="normal">252</span>
+<span class="normal">253</span>
+<span class="normal">254</span>
+<span class="normal">255</span>
+<span class="normal">256</span>
+<span class="normal">257</span>
+<span class="normal">258</span>
+<span class="normal">259</span>
+<span class="normal">260</span>
+<span class="normal">261</span>
+<span class="normal">262</span>
+<span class="normal">263</span>
+<span class="normal">264</span>
+<span class="normal">265</span>
+<span class="normal">266</span>
+<span class="normal">267</span>
+<span class="normal">268</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">initialize_text_model</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span> 
+    <span class="n">model_provider</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> 
+    <span class="n">model_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> 
+    <span class="n">model_task_type</span><span class="p">:</span><span class="nb">str</span><span class="p">,</span> 
+    <span class="n">model_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>  
+    <span class="n">inference_compute</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">InferenceCompute</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">inference_settings</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">InferenceSettings</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">assets</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">requirements_file</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">app_file</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Initialize a text model for the project, specifying the model provider, model name, task type, model type (classification/regression), inference compute settings, inference settings, and optional assets. Polls for completion and returns when done.</span>
 
-<span class="sd">    :param model_provider: model of provider</span>
+<span class="sd">    :param model_provider: model provider name for initialization</span>
+<span class="sd">        **Model Providers**</span>
+<span class="sd">        - ``Hugging Face``</span>
+<span class="sd">        - ``OpenAI``</span>
+<span class="sd">        - ``Anthropic``</span>
+<span class="sd">        - ``Groq``</span>
+<span class="sd">        - ``Grok``</span>
+<span class="sd">        - ``Gemini``</span>
+<span class="sd">        - ``Together``</span>
+<span class="sd">        - ``Replicate``</span>
+<span class="sd">        - ``Mistral``</span>
+<span class="sd">        - ``AWS Bedrock``</span>
+<span class="sd">        - ``Open Router``</span>
+
 <span class="sd">    :param model_name: name of the model to be initialized</span>
+<span class="sd">        (e.g., meta-llama/Llama-3.2-1B-Instruct).</span>
+
 <span class="sd">    :param model_task_type: task type of model</span>
+<span class="sd">        **Model Task Types**</span>
+<span class="sd">        - ``question-answering``</span>
+<span class="sd">        - ``summarization``</span>
+<span class="sd">        - ``text-classification``</span>
+<span class="sd">        - ``text-generation``</span>
+<span class="sd">        - ``text2text-generation``</span>
+<span class="sd">        - ``token-classification``</span>
+
+<span class="sd">    :param model_type: architecture of the model to be initialized</span>
+<span class="sd">        **Model Types**</span>
+<span class="sd">        - ``bert``</span>
+<span class="sd">        - ``llm``</span>
+
+<span class="sd">    :param inference_compute: inference compute for the model</span>
+<span class="sd">        Required for the Hugging Face provider models, not required for other providers</span>
+<span class="sd">    :type inference_compute: InferenceCompute | None</span>
+
+<span class="sd">    :param inference_settings: inference settings for the model</span>
+<span class="sd">        Required for the Hugging Face provider models, not required for other providers</span>
+<span class="sd">    :type inference_settings: InferenceSettings | None</span>
+
+<span class="sd">    :param assets: assets for the models</span>
+<span class="sd">        (e.g., {&quot;HF_TOKEN&quot;:&quot;hf_njbjkfdsnjfkdnskbfk&quot;}).</span>
+
+<span class="sd">    :param requirements_file: file path for the requirements file</span>
+<span class="sd">        yaml file for the requirements,user can pass base docker image system dependencies python packages required for model deployment</span>
+<span class="sd">        not required for transformers serverless inference engine</span>
+
+<span class="sd">    :param app_file: file path for the app file</span>
+<span class="sd">        python app file for model inference</span>
+
 <span class="sd">    :return: response</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">payload</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;model_provider&quot;</span><span class="p">:</span> <span class="n">model_provider</span><span class="p">,</span>
         <span class="s2">&quot;model_name&quot;</span><span class="p">:</span> <span class="n">model_name</span><span class="p">,</span>
         <span class="s2">&quot;model_task_type&quot;</span><span class="p">:</span> <span class="n">model_task_type</span><span class="p">,</span>
@@ -32820,11 +33318,19 @@ Builds a new object or request payload and returns the created result.</p>
         <span class="s2">&quot;model_type&quot;</span><span class="p">:</span> <span class="n">model_type</span><span class="p">,</span>
         <span class="s2">&quot;inference_compute&quot;</span><span class="p">:</span> <span class="n">inference_compute</span><span class="p">,</span>
         <span class="s2">&quot;inference_settings&quot;</span><span class="p">:</span> <span class="n">inference_settings</span><span class="p">,</span>
+        <span class="s2">&quot;assets&quot;</span><span class="p">:</span> <span class="n">assets</span>
     <span class="p">}</span>
-    <span class="k">if</span> <span class="n">assets</span><span class="p">:</span>
-        <span class="n">payload</span><span class="p">[</span><span class="s2">&quot;assets&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">assets</span>
-    <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">api_client</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">INITIALIZE_TEXT_MODEL_URI</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">payload</span><span class="p">)</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">res</span><span class="p">[</span><span class="s2">&quot;success&quot;</span><span class="p">]:</span>
+
+    <span class="n">payload</span> <span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">data</span><span class="p">)),</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="n">requirements_file</span><span class="p">:</span>
+        <span class="n">payload</span><span class="p">[</span><span class="s2">&quot;requirements_file&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;requirements.yaml&quot;</span><span class="p">,</span> <span class="nb">open</span><span class="p">(</span><span class="n">requirements_file</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">app_file</span><span class="p">:</span>
+        <span class="n">payload</span><span class="p">[</span><span class="s2">&quot;app_file&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;app.py&quot;</span><span class="p">,</span> <span class="nb">open</span><span class="p">(</span><span class="n">app_file</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">))</span>
+
+    <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">api_client</span><span class="o">.</span><span class="n">file</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">INITIALIZE_TEXT_MODEL_URI</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">payload</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">res</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;success&quot;</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;details&quot;</span><span class="p">,</span> <span class="s2">&quot;Model Initialization Failed&quot;</span><span class="p">))</span>
     <span class="n">poll_events</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">api_client</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">project_name</span><span class="p">,</span> <span class="n">res</span><span class="p">[</span><span class="s2">&quot;event_id&quot;</span><span class="p">])</span>
 </code></pre></div></td></tr></table></div>
@@ -32975,7 +33481,7 @@ Builds a new object or request payload and returns the created result.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>id of the session</p>
+                <p>uuid of the session (e.g., 10f2510c-17dd-4b99-8926-ef4625513a2f).</p>
               </div>
             </td>
             <td>
@@ -33023,10 +33529,12 @@ Builds a new object or request payload and returns the created result.</p>
 <span class="normal">74</span>
 <span class="normal">75</span>
 <span class="normal">76</span>
-<span class="normal">77</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">messages</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">session_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="normal">77</span>
+<span class="normal">78</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">messages</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">session_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a DataFrame listing all messages in a given session. Requires the session_id.</span>
 
-<span class="sd">    :param session_id: id of the session</span>
+<span class="sd">    :param session_id: uuid of the session</span>
+<span class="sd">        (e.g., 10f2510c-17dd-4b99-8926-ef4625513a2f).</span>
 <span class="sd">    :return: response</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">api_client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
@@ -33073,21 +33581,6 @@ Builds a new object or request payload and returns the created result.</p>
       <tbody>
           <tr class="doc-section-item">
             <td>
-                <code>model_provider</code>
-            </td>
-            <td>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>model of provider</p>
-              </div>
-            </td>
-            <td>
-                <em>required</em>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td>
                 <code>model_name</code>
             </td>
             <td>
@@ -33095,7 +33588,7 @@ Builds a new object or request payload and returns the created result.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>name of the model to be initialized</p>
+                <p>name of the model to be initialized (e.g., meta-llama/Llama-3.2-1B-Instruct).</p>
               </div>
             </td>
             <td>
@@ -33104,13 +33597,30 @@ Builds a new object or request payload and returns the created result.</p>
           </tr>
           <tr class="doc-section-item">
             <td>
-                <code>model_task_type</code>
+                <code>inference_compute</code>
             </td>
             <td>
+                  <code><a class="autorefs autorefs-internal" title="InferenceCompute (lexsi_sdk.common.types.InferenceCompute)" href="#lexsi_sdk.common.types.InferenceCompute">InferenceCompute</a></code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>task type of model</p>
+                <p>inference compute for the model Required for the Hugging Face provider models, not required for other providers</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>inference_settings</code>
+            </td>
+            <td>
+                  <code><a class="autorefs autorefs-internal" title="InferenceSettings (lexsi_sdk.common.types.InferenceSettings)" href="#lexsi_sdk.common.types.InferenceSettings">InferenceSettings</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>inference settings for the model Required for the Hugging Face provider models, not required for other providers</p>
               </div>
             </td>
             <td>
@@ -33146,29 +33656,37 @@ Builds a new object or request payload and returns the created result.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/text.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">212</span>
-<span class="normal">213</span>
-<span class="normal">214</span>
-<span class="normal">215</span>
-<span class="normal">216</span>
-<span class="normal">217</span>
-<span class="normal">218</span>
-<span class="normal">219</span>
-<span class="normal">220</span>
-<span class="normal">221</span>
-<span class="normal">222</span>
-<span class="normal">223</span>
-<span class="normal">224</span>
-<span class="normal">225</span>
-<span class="normal">226</span>
-<span class="normal">227</span>
-<span class="normal">228</span>
-<span class="normal">229</span>
-<span class="normal">230</span>
-<span class="normal">231</span>
-<span class="normal">232</span>
-<span class="normal">233</span>
-<span class="normal">234</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">model_inference_settings</span><span class="p">(</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">270</span>
+<span class="normal">271</span>
+<span class="normal">272</span>
+<span class="normal">273</span>
+<span class="normal">274</span>
+<span class="normal">275</span>
+<span class="normal">276</span>
+<span class="normal">277</span>
+<span class="normal">278</span>
+<span class="normal">279</span>
+<span class="normal">280</span>
+<span class="normal">281</span>
+<span class="normal">282</span>
+<span class="normal">283</span>
+<span class="normal">284</span>
+<span class="normal">285</span>
+<span class="normal">286</span>
+<span class="normal">287</span>
+<span class="normal">288</span>
+<span class="normal">289</span>
+<span class="normal">290</span>
+<span class="normal">291</span>
+<span class="normal">292</span>
+<span class="normal">293</span>
+<span class="normal">294</span>
+<span class="normal">295</span>
+<span class="normal">296</span>
+<span class="normal">297</span>
+<span class="normal">298</span>
+<span class="normal">299</span>
+<span class="normal">300</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">model_inference_settings</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">model_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">inference_compute</span><span class="p">:</span> <span class="n">InferenceCompute</span><span class="p">,</span>
@@ -33176,9 +33694,17 @@ Builds a new object or request payload and returns the created result.</p>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Model Inference Settings</span>
 
-<span class="sd">    :param model_provider: model of provider</span>
 <span class="sd">    :param model_name: name of the model to be initialized</span>
-<span class="sd">    :param model_task_type: task type of model</span>
+<span class="sd">        (e.g., meta-llama/Llama-3.2-1B-Instruct).</span>
+
+<span class="sd">    :param inference_compute: inference compute for the model</span>
+<span class="sd">        Required for the Hugging Face provider models, not required for other providers</span>
+<span class="sd">    :type inference_compute: InferenceCompute | None</span>
+
+<span class="sd">    :param inference_settings: inference settings for the model</span>
+<span class="sd">        Required for the Hugging Face provider models, not required for other providers</span>
+<span class="sd">    :type inference_settings: InferenceSettings | None</span>
+
 <span class="sd">    :return: response</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">payload</span> <span class="o">=</span> <span class="p">{</span>
@@ -33258,7 +33784,7 @@ Builds a new object or request payload and returns the created result.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>quant name of the model</p>
+                <p>quant name of the model <strong>Quant Name</strong> - <code>quanto</code> - <code>bnb</code> - <code>hqq</code> - <code>torchao</code> - <code>gptq</code> - <code>awq</code> - <code>llmcomp-awq</code> - <code>llmcomp-gptq</code> - <code>llmcomp-simple</code> - <code>llmcomp-smoothquant</code></p>
               </div>
             </td>
             <td>
@@ -33274,7 +33800,7 @@ Builds a new object or request payload and returns the created result.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>type of quantization</p>
+                <p>type of quantization <strong>Quantization Type</strong> - <code>static</code> - <code>dynamic</code></p>
               </div>
             </td>
             <td>
@@ -33290,7 +33816,7 @@ Builds a new object or request payload and returns the created result.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>quantization bit</p>
+                <p>quantization bit <strong>Quantization BIt</strong> - <code>4</code> - <code>8</code></p>
               </div>
             </td>
             <td>
@@ -33389,46 +33915,63 @@ Builds a new object or request payload and returns the created result.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/text.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">449</span>
-<span class="normal">450</span>
-<span class="normal">451</span>
-<span class="normal">452</span>
-<span class="normal">453</span>
-<span class="normal">454</span>
-<span class="normal">455</span>
-<span class="normal">456</span>
-<span class="normal">457</span>
-<span class="normal">458</span>
-<span class="normal">459</span>
-<span class="normal">460</span>
-<span class="normal">461</span>
-<span class="normal">462</span>
-<span class="normal">463</span>
-<span class="normal">464</span>
-<span class="normal">465</span>
-<span class="normal">466</span>
-<span class="normal">467</span>
-<span class="normal">468</span>
-<span class="normal">469</span>
-<span class="normal">470</span>
-<span class="normal">471</span>
-<span class="normal">472</span>
-<span class="normal">473</span>
-<span class="normal">474</span>
-<span class="normal">475</span>
-<span class="normal">476</span>
-<span class="normal">477</span>
-<span class="normal">478</span>
-<span class="normal">479</span>
-<span class="normal">480</span>
-<span class="normal">481</span>
-<span class="normal">482</span>
-<span class="normal">483</span>
-<span class="normal">484</span>
-<span class="normal">485</span>
-<span class="normal">486</span>
-<span class="normal">487</span>
-<span class="normal">488</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">quantize_model</span><span class="p">(</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">505</span>
+<span class="normal">506</span>
+<span class="normal">507</span>
+<span class="normal">508</span>
+<span class="normal">509</span>
+<span class="normal">510</span>
+<span class="normal">511</span>
+<span class="normal">512</span>
+<span class="normal">513</span>
+<span class="normal">514</span>
+<span class="normal">515</span>
+<span class="normal">516</span>
+<span class="normal">517</span>
+<span class="normal">518</span>
+<span class="normal">519</span>
+<span class="normal">520</span>
+<span class="normal">521</span>
+<span class="normal">522</span>
+<span class="normal">523</span>
+<span class="normal">524</span>
+<span class="normal">525</span>
+<span class="normal">526</span>
+<span class="normal">527</span>
+<span class="normal">528</span>
+<span class="normal">529</span>
+<span class="normal">530</span>
+<span class="normal">531</span>
+<span class="normal">532</span>
+<span class="normal">533</span>
+<span class="normal">534</span>
+<span class="normal">535</span>
+<span class="normal">536</span>
+<span class="normal">537</span>
+<span class="normal">538</span>
+<span class="normal">539</span>
+<span class="normal">540</span>
+<span class="normal">541</span>
+<span class="normal">542</span>
+<span class="normal">543</span>
+<span class="normal">544</span>
+<span class="normal">545</span>
+<span class="normal">546</span>
+<span class="normal">547</span>
+<span class="normal">548</span>
+<span class="normal">549</span>
+<span class="normal">550</span>
+<span class="normal">551</span>
+<span class="normal">552</span>
+<span class="normal">553</span>
+<span class="normal">554</span>
+<span class="normal">555</span>
+<span class="normal">556</span>
+<span class="normal">557</span>
+<span class="normal">558</span>
+<span class="normal">559</span>
+<span class="normal">560</span>
+<span class="normal">561</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">quantize_model</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">model_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">quant_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -33443,8 +33986,25 @@ Builds a new object or request payload and returns the created result.</p>
 
 <span class="sd">    :param model_name: name of the model</span>
 <span class="sd">    :param quant_name: quant name of the model</span>
+<span class="sd">        **Quant Name**</span>
+<span class="sd">        - ``quanto``</span>
+<span class="sd">        - ``bnb``</span>
+<span class="sd">        - ``hqq``</span>
+<span class="sd">        - ``torchao``</span>
+<span class="sd">        - ``gptq``</span>
+<span class="sd">        - ``awq``</span>
+<span class="sd">        - ``llmcomp-awq``</span>
+<span class="sd">        - ``llmcomp-gptq``</span>
+<span class="sd">        - ``llmcomp-simple``</span>
+<span class="sd">        - ``llmcomp-smoothquant``</span>
 <span class="sd">    :param quantization_type: type of quantization</span>
+<span class="sd">        **Quantization Type**</span>
+<span class="sd">        - ``static``</span>
+<span class="sd">        - ``dynamic``</span>
 <span class="sd">    :param qbit: quantization bit</span>
+<span class="sd">        **Quantization BIt**</span>
+<span class="sd">        - ``4``</span>
+<span class="sd">        - ``8``</span>
 <span class="sd">    :param instance_type: instance type for the quantization</span>
 <span class="sd">    :param tag: tag name to pass</span>
 <span class="sd">    :param input_column: input column for the data</span>
@@ -33576,7 +34136,7 @@ Builds a new object or request payload and returns the created result.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>id of the trace</p>
+                <p>uuid of the trace (e.g., 10f2510c-17dd-4b99-8926-ef4625513a2f).</p>
               </div>
             </td>
             <td>
@@ -33612,8 +34172,7 @@ Builds a new object or request payload and returns the created result.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/text.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">79</span>
-<span class="normal">80</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">80</span>
 <span class="normal">81</span>
 <span class="normal">82</span>
 <span class="normal">83</span>
@@ -33624,10 +34183,13 @@ Builds a new object or request payload and returns the created result.</p>
 <span class="normal">88</span>
 <span class="normal">89</span>
 <span class="normal">90</span>
-<span class="normal">91</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">traces</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">trace_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="normal">91</span>
+<span class="normal">92</span>
+<span class="normal">93</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">traces</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">trace_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Retrieve the execution traces for a given trace ID and return them as a DataFrame.</span>
 
-<span class="sd">    :param trace_id: id of the trace</span>
+<span class="sd">    :param trace_id: uuid of the trace</span>
+<span class="sd">        (e.g., 10f2510c-17dd-4b99-8926-ef4625513a2f).</span>
 <span class="sd">    :return: response</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">api_client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
@@ -33731,9 +34293,7 @@ Builds a new object or request payload and returns the created result.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/text.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">106</span>
-<span class="normal">107</span>
-<span class="normal">108</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">108</span>
 <span class="normal">109</span>
 <span class="normal">110</span>
 <span class="normal">111</span>
@@ -33747,7 +34307,9 @@ Builds a new object or request payload and returns the created result.</p>
 <span class="normal">119</span>
 <span class="normal">120</span>
 <span class="normal">121</span>
-<span class="normal">122</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">update_guardrail_status</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">guardrail_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">status</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">update_guardrail_status</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">guardrail_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">status</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Update the status (active/inactive) of a specified guardrail. Requires the guardrail_id and a boolean status value.</span>
 
 <span class="sd">    :param guardrail_id: id of the guardrail</span>
@@ -33858,63 +34420,7 @@ Builds a new object or request payload and returns the created result.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/text.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">293</span>
-<span class="normal">294</span>
-<span class="normal">295</span>
-<span class="normal">296</span>
-<span class="normal">297</span>
-<span class="normal">298</span>
-<span class="normal">299</span>
-<span class="normal">300</span>
-<span class="normal">301</span>
-<span class="normal">302</span>
-<span class="normal">303</span>
-<span class="normal">304</span>
-<span class="normal">305</span>
-<span class="normal">306</span>
-<span class="normal">307</span>
-<span class="normal">308</span>
-<span class="normal">309</span>
-<span class="normal">310</span>
-<span class="normal">311</span>
-<span class="normal">312</span>
-<span class="normal">313</span>
-<span class="normal">314</span>
-<span class="normal">315</span>
-<span class="normal">316</span>
-<span class="normal">317</span>
-<span class="normal">318</span>
-<span class="normal">319</span>
-<span class="normal">320</span>
-<span class="normal">321</span>
-<span class="normal">322</span>
-<span class="normal">323</span>
-<span class="normal">324</span>
-<span class="normal">325</span>
-<span class="normal">326</span>
-<span class="normal">327</span>
-<span class="normal">328</span>
-<span class="normal">329</span>
-<span class="normal">330</span>
-<span class="normal">331</span>
-<span class="normal">332</span>
-<span class="normal">333</span>
-<span class="normal">334</span>
-<span class="normal">335</span>
-<span class="normal">336</span>
-<span class="normal">337</span>
-<span class="normal">338</span>
-<span class="normal">339</span>
-<span class="normal">340</span>
-<span class="normal">341</span>
-<span class="normal">342</span>
-<span class="normal">343</span>
-<span class="normal">344</span>
-<span class="normal">345</span>
-<span class="normal">346</span>
-<span class="normal">347</span>
-<span class="normal">348</span>
-<span class="normal">349</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">349</span>
 <span class="normal">350</span>
 <span class="normal">351</span>
 <span class="normal">352</span>
@@ -33923,7 +34429,63 @@ Builds a new object or request payload and returns the created result.</p>
 <span class="normal">355</span>
 <span class="normal">356</span>
 <span class="normal">357</span>
-<span class="normal">358</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">upload_data</span><span class="p">(</span>
+<span class="normal">358</span>
+<span class="normal">359</span>
+<span class="normal">360</span>
+<span class="normal">361</span>
+<span class="normal">362</span>
+<span class="normal">363</span>
+<span class="normal">364</span>
+<span class="normal">365</span>
+<span class="normal">366</span>
+<span class="normal">367</span>
+<span class="normal">368</span>
+<span class="normal">369</span>
+<span class="normal">370</span>
+<span class="normal">371</span>
+<span class="normal">372</span>
+<span class="normal">373</span>
+<span class="normal">374</span>
+<span class="normal">375</span>
+<span class="normal">376</span>
+<span class="normal">377</span>
+<span class="normal">378</span>
+<span class="normal">379</span>
+<span class="normal">380</span>
+<span class="normal">381</span>
+<span class="normal">382</span>
+<span class="normal">383</span>
+<span class="normal">384</span>
+<span class="normal">385</span>
+<span class="normal">386</span>
+<span class="normal">387</span>
+<span class="normal">388</span>
+<span class="normal">389</span>
+<span class="normal">390</span>
+<span class="normal">391</span>
+<span class="normal">392</span>
+<span class="normal">393</span>
+<span class="normal">394</span>
+<span class="normal">395</span>
+<span class="normal">396</span>
+<span class="normal">397</span>
+<span class="normal">398</span>
+<span class="normal">399</span>
+<span class="normal">400</span>
+<span class="normal">401</span>
+<span class="normal">402</span>
+<span class="normal">403</span>
+<span class="normal">404</span>
+<span class="normal">405</span>
+<span class="normal">406</span>
+<span class="normal">407</span>
+<span class="normal">408</span>
+<span class="normal">409</span>
+<span class="normal">410</span>
+<span class="normal">411</span>
+<span class="normal">412</span>
+<span class="normal">413</span>
+<span class="normal">414</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">upload_data</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">data</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
     <span class="n">tag</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -34136,63 +34698,7 @@ Builds a new object or request payload and returns the created result.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/text.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">360</span>
-<span class="normal">361</span>
-<span class="normal">362</span>
-<span class="normal">363</span>
-<span class="normal">364</span>
-<span class="normal">365</span>
-<span class="normal">366</span>
-<span class="normal">367</span>
-<span class="normal">368</span>
-<span class="normal">369</span>
-<span class="normal">370</span>
-<span class="normal">371</span>
-<span class="normal">372</span>
-<span class="normal">373</span>
-<span class="normal">374</span>
-<span class="normal">375</span>
-<span class="normal">376</span>
-<span class="normal">377</span>
-<span class="normal">378</span>
-<span class="normal">379</span>
-<span class="normal">380</span>
-<span class="normal">381</span>
-<span class="normal">382</span>
-<span class="normal">383</span>
-<span class="normal">384</span>
-<span class="normal">385</span>
-<span class="normal">386</span>
-<span class="normal">387</span>
-<span class="normal">388</span>
-<span class="normal">389</span>
-<span class="normal">390</span>
-<span class="normal">391</span>
-<span class="normal">392</span>
-<span class="normal">393</span>
-<span class="normal">394</span>
-<span class="normal">395</span>
-<span class="normal">396</span>
-<span class="normal">397</span>
-<span class="normal">398</span>
-<span class="normal">399</span>
-<span class="normal">400</span>
-<span class="normal">401</span>
-<span class="normal">402</span>
-<span class="normal">403</span>
-<span class="normal">404</span>
-<span class="normal">405</span>
-<span class="normal">406</span>
-<span class="normal">407</span>
-<span class="normal">408</span>
-<span class="normal">409</span>
-<span class="normal">410</span>
-<span class="normal">411</span>
-<span class="normal">412</span>
-<span class="normal">413</span>
-<span class="normal">414</span>
-<span class="normal">415</span>
-<span class="normal">416</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">416</span>
 <span class="normal">417</span>
 <span class="normal">418</span>
 <span class="normal">419</span>
@@ -34223,7 +34729,63 @@ Builds a new object or request payload and returns the created result.</p>
 <span class="normal">444</span>
 <span class="normal">445</span>
 <span class="normal">446</span>
-<span class="normal">447</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">upload_data_dataconnectors</span><span class="p">(</span>
+<span class="normal">447</span>
+<span class="normal">448</span>
+<span class="normal">449</span>
+<span class="normal">450</span>
+<span class="normal">451</span>
+<span class="normal">452</span>
+<span class="normal">453</span>
+<span class="normal">454</span>
+<span class="normal">455</span>
+<span class="normal">456</span>
+<span class="normal">457</span>
+<span class="normal">458</span>
+<span class="normal">459</span>
+<span class="normal">460</span>
+<span class="normal">461</span>
+<span class="normal">462</span>
+<span class="normal">463</span>
+<span class="normal">464</span>
+<span class="normal">465</span>
+<span class="normal">466</span>
+<span class="normal">467</span>
+<span class="normal">468</span>
+<span class="normal">469</span>
+<span class="normal">470</span>
+<span class="normal">471</span>
+<span class="normal">472</span>
+<span class="normal">473</span>
+<span class="normal">474</span>
+<span class="normal">475</span>
+<span class="normal">476</span>
+<span class="normal">477</span>
+<span class="normal">478</span>
+<span class="normal">479</span>
+<span class="normal">480</span>
+<span class="normal">481</span>
+<span class="normal">482</span>
+<span class="normal">483</span>
+<span class="normal">484</span>
+<span class="normal">485</span>
+<span class="normal">486</span>
+<span class="normal">487</span>
+<span class="normal">488</span>
+<span class="normal">489</span>
+<span class="normal">490</span>
+<span class="normal">491</span>
+<span class="normal">492</span>
+<span class="normal">493</span>
+<span class="normal">494</span>
+<span class="normal">495</span>
+<span class="normal">496</span>
+<span class="normal">497</span>
+<span class="normal">498</span>
+<span class="normal">499</span>
+<span class="normal">500</span>
+<span class="normal">501</span>
+<span class="normal">502</span>
+<span class="normal">503</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">upload_data_dataconnectors</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">data_connector_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">tag</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
