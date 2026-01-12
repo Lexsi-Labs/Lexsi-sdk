@@ -2700,14 +2700,14 @@ class Project(BaseModel):
         if tunning_strategy != "inference" and instance_type:
             custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
             available_custom_batch_servers = custom_batch_servers.get("details", []) + custom_batch_servers.get("available_gpu_custom_servers", [])
-            # Validate.value_against_list(
-            #     "instance_type",
-            #     instance_type,
-            #     [
-            #         server["instance_name"]
-            #         for server in available_custom_batch_servers
-            #     ],
-            # )
+            Validate.value_against_list(
+                "instance_type",
+                instance_type,
+                [
+                    server["instance_name"]
+                    for server in available_custom_batch_servers
+                ],
+            )
 
         if data_config:
             if data_config.get("feature_exclude"):
