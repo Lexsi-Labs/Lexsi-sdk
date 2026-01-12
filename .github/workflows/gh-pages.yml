@@ -27,6 +27,8 @@ jobs:
           python -m pip install -e ".[docs]"
       - name: Build site
         run: mkdocs build
+      - name: Add CNAME for custom domain
+        run: echo "sdk.lexsi.io" > ./site/CNAME
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
