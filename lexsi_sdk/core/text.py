@@ -251,18 +251,19 @@ class TextProject(Project):
             system-level dependencies, and Python packages required for model deployment.
             Not required for the transformers serverless inference engine
 
-            eg.,
-            
+            Example:
+            ```yaml
             image: nvidia/cuda:12.1.1-cudnn8-runtime-ubuntu22.04
             system_packages:
-            - build-essential
+                - build-essential
             python_packages:
-            - fastapi>=0.115.5
-            - uvicorn>=0.30.6
-            - transformers==4.52.3
-            - pydantic>=2.9.2
-            - torch==2.7.0
-            - accelerate==1.8.1
+                - fastapi>=0.115.5
+                - uvicorn>=0.30.6
+                - transformers==4.52.3
+                - pydantic>=2.9.2
+                - torch==2.7.0
+                - accelerate==1.8.1
+            ```
 
         :param app_file: file path for the app file
             a Python application file that implements the model inference logic,
