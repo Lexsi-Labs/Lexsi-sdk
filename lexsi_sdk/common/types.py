@@ -8,7 +8,7 @@ ServerlessInstanceType = Literal[
 
 class ServerlessInstanceTypeValues(TypedDict):
     """
-    Allowed values for serverless EC2 instance types.
+    Allowed values for serverless instance types.
 
     Values::
 
@@ -54,7 +54,7 @@ DedicatedGPUInstanceType = Literal[
 
 class DedicatedGPUInstanceTypeValues(TypedDict):
     """
-    Allowed values for dedicated GPU EC2 instance types.
+    Allowed values for dedicated GPU instance types.
 
     Values::
 
@@ -83,7 +83,7 @@ BatchCPUInstanceType = Literal[
 
 class BatchCPUInstanceTypeValues(TypedDict):
     """
-    Allowed values for batch CPU EC2 instance types.
+    Allowed values for batch CPU instance types.
 
     Values::
 
@@ -112,7 +112,7 @@ BatchGPUInstanceType = Literal[
 
 class BatchGPUInstanceTypeValues(TypedDict):
     """
-    Allowed values for batch GPU EC2 instance types.
+    Allowed values for batch GPU instance types.
 
     Values::
 
@@ -130,7 +130,7 @@ class BatchGPUInstanceTypeValues(TypedDict):
     pass
 class DedicatedCPUInstanceTypeValues(TypedDict):
     """
-    Allowed values for dedicated CPU EC2 instance types.
+    Allowed values for dedicated CPU instance types.
 
     Values::
 
@@ -155,8 +155,9 @@ class DedicatedCPUInstanceTypeValues(TypedDict):
         "c5.18xlarge"
         "c5.24xlarge"
     """
-    #instance_type: Union[DedicatedCPUInstanceType, DedicatedGPUInstanceType, ServerlessInstanceType]
     pass
+
+
 class ProjectConfig(TypedDict):
     """
     Configuration keys required to describe a project.
@@ -952,7 +953,7 @@ class InferenceCompute(TypedDict):
     :type custom_server_config: CustomServerConfig | None
     """
 
-    instance_type: Union[DedicatedCPUInstanceTypeValues,DedicatedGPUInstanceTypeValues, ServerlessInstanceTypeValues]
+    instance_type: Union[DedicatedCPUInstanceTypeValues, DedicatedGPUInstanceTypeValues, ServerlessInstanceTypeValues]
     custom_server_config: Optional[CustomServerConfig] = CustomServerConfig()
 
 

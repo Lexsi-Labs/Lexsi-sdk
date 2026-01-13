@@ -3,7 +3,7 @@ import io
 from typing import Optional, List, Dict, Any, Union
 
 import httpx
-from lexsi_sdk.common.types import InferenceCompute, InferenceSettings
+from lexsi_sdk.common.types import BatchCPUInstanceTypeValues, BatchGPUInstanceTypeValues, InferenceCompute, InferenceSettings, ServerlessInstanceTypeValues
 from lexsi_sdk.common.utils import poll_events
 from lexsi_sdk.common.xai_uris import (
     AVAILABLE_GUARDRAILS_URI,
@@ -329,8 +329,8 @@ class TextProject(Project):
         self,
         model_name: str,
         prompt: str,
-        serverless_instance_type: str,
-        instance_type: Optional[str] = None,
+        serverless_instance_type: ServerlessInstanceTypeValues,
+        instance_type: Optional[Union[BatchCPUInstanceTypeValues, BatchGPUInstanceTypeValues]] = None,
         explainability_method: Optional[list] = ["DLB"],
         explain_model: Optional[bool] = False,
         session_id: Optional[str] = None,
@@ -343,7 +343,12 @@ class TextProject(Project):
         :param model_name: Name of the model to use for text generation
         :param prompt: Input prompt to be provided to the model
         :param serverless_instance_type: Serverless instance type used for case inference
+            Use str values from supported instance types defined in classes:
+            - ``ServerlessInstanceTypeValues``
         :param instance_type: Instance type used for explainability processing, defaults to None
+            Use str values from supported instance types defined in classes:
+            - ``BatchCPUInstanceTypeValues``
+            - ``BatchGPUInstanceTypeValues``
         :param explainability_method: Explainability method(s) for the case, defaults to ["DLB"]
         :param explain_model: Boolean flag indicating whether to run explainability for the case, defaults to False
         :param session_id: Session ID associated with this case, if applicable
