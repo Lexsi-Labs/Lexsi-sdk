@@ -1600,6 +1600,15 @@ class Project(BaseModel):
         )
 
         custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
+        if payload.get("instance_type", None):
+            Validate.value_against_list(
+                "instance_type",
+                payload.get("instance_type"),
+                [
+                    server["instance_name"]
+                    for server in custom_batch_servers.get("details", [])
+                ],
+            )
         Validate.value_against_list(
             "instance_type",
             instance_type,
@@ -1816,6 +1825,15 @@ class Project(BaseModel):
             )
 
         custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
+        if payload.get("instance_type", None):
+            Validate.value_against_list(
+                "instance_type",
+                payload.get("instance_type"),
+                [
+                    server["instance_name"]
+                    for server in custom_batch_servers.get("details", [])
+                ],
+            )
         Validate.value_against_list(
             "instance_type",
             instance_type,
@@ -1919,6 +1937,15 @@ class Project(BaseModel):
             )
 
         custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
+        if payload.get("instance_type", None):
+            Validate.value_against_list(
+                "instance_type",
+                payload.get("instance_type"),
+                [
+                    server["instance_name"]
+                    for server in custom_batch_servers.get("details", [])
+                ],
+            )
         Validate.value_against_list(
             "instance_type",
             instance_type,
@@ -1972,6 +1999,15 @@ class Project(BaseModel):
         Validate.value_against_list("current_tag", payload["current_tag"], all_tags)
 
         custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
+        if payload.get("instance_type", None):
+            Validate.value_against_list(
+                "instance_type",
+                payload.get("instance_type"),
+                [
+                    server["instance_name"]
+                    for server in custom_batch_servers.get("details", [])
+                ],
+            )
         Validate.value_against_list(
             "instance_type",
             instance_type,
@@ -2025,6 +2061,15 @@ class Project(BaseModel):
         Validate.value_against_list("current_tag", payload["current_tag"], all_tags)
 
         custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
+        if payload.get("instance_type", None):
+            Validate.value_against_list(
+                "instance_type",
+                payload.get("instance_type"),
+                [
+                    server["instance_name"]
+                    for server in custom_batch_servers.get("details", [])
+                ],
+            )
         Validate.value_against_list(
             "instance_type",
             instance_type,
@@ -2078,6 +2123,15 @@ class Project(BaseModel):
         Validate.value_against_list("current_tag", payload["current_tag"], all_tags)
 
         custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
+        if payload.get("instance_type", None):
+            Validate.value_against_list(
+                "instance_type",
+                payload.get("instance_type"),
+                [
+                    server["instance_name"]
+                    for server in custom_batch_servers.get("details", [])
+                ],
+            )
         Validate.value_against_list(
             "instance_type",
             instance_type,
@@ -2131,6 +2185,15 @@ class Project(BaseModel):
         Validate.value_against_list("current_tag", payload["current_tag"], all_tags)
 
         custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
+        if payload.get("instance_type", None):
+            Validate.value_against_list(
+                "instance_type",
+                payload.get("instance_type"),
+                [
+                    server["instance_name"]
+                    for server in custom_batch_servers.get("details", [])
+                ],
+            )
         Validate.value_against_list(
             "instance_type",
             instance_type,
