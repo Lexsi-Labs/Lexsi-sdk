@@ -25,7 +25,8 @@ from lexsi_sdk.common.xai_uris import (
     RUN_CHAT_COMPLETION,
     RUN_IMAGE_GENERATION,
     RUN_CREATE_EMBEDDING,
-    RUN_COMPLETION
+    RUN_COMPLETION,
+    GENERATE_TEXT_CASE_URI
 )
 from lexsi_sdk.core.project import Project
 import pandas as pd
@@ -541,4 +542,48 @@ class TextProject(Project):
 
         res = self.api_client.post(RUN_IMAGE_GENERATION, payload=payload)
             
+        return res
+    
+    def text_generation(
+        self,
+        model: str,
+        prompt: str,
+        instance_type: Optional[str] = "xlarge",
+        explainability_method: list = ["DLB"],
+        explain_model: bool = False,
+        session_id: str = None,
+        min_tokens: int = 100,
+        max_tokens: int = 1024,
+    ):
+        """Generate an explainable text case using a hosted Lexsi model.
+
+        :param model_name: Name of the deployed text model.
+        :param prompt: Input prompt for generation.
+        :param instance_type: Dedicated instance type (if applicable).
+        :param serverless_instance_type: Serverless instance flavor.
+        :param explainability_method: Methods to compute explanations with.
+        :param explain_model: Whether to explain the model behavior.
+        :param trace_id: Optional existing trace id.
+        :param session_id: Optional existing session id.
+        :param min_tokens: Minimum tokens to generate.
+        :param max_tokens: Maximum tokens to generate.
+        :param stream: Whether to stream responses.
+        :return: API response with generation details.
+        """
+        payload = {
+            "session_id": session_id,
+            "project_name": self.project_name,
+            "model": model,
+            "prompt": prompt,
+            "instance_type": instance_type,
+            "provider" : "Lexsi",
+            "explainability_method": explainability_method,
+            "explain_model": explain_model,
+            "max_tokens": max_tokens,
+            "min_tokens": min_tokens,
+        }
+    
+        res = self.api_client.post(GENERATE_TEXT_CASE_URI, payload)
+        if not res.get("success"):
+            raise Exception(res.get("details"))
         return res

@@ -379,7 +379,7 @@ class GuardrailSupervisor:
                     # Set comprehensive telemetry attributes
                     guard_span.set_attribute("input.value", self._safe_str(content))
                     guard_span.set_attribute("output.value", 
-                                        self._safe_str(run_result.get("response", "")))
+                                        json.dumps(run_result.get("response", "").get("details" , "")))
                     guard_span.set_attribute("start_time", start_time.isoformat())
                     guard_span.set_attribute("end_time", end_time.isoformat())
                     guard_span.set_attribute("duration", 
@@ -462,7 +462,7 @@ class GuardrailSupervisor:
                     # Set comprehensive telemetry attributes
                     guard_span.set_attribute("input.value", self._safe_str(content))
                     guard_span.set_attribute("output.value", 
-                                        self._safe_str(run_result.get("response", "")))
+                                        json.dumps(run_result.get("response", "").get("details" , "")))
                     guard_span.set_attribute("start_time", start_time.isoformat())
                     guard_span.set_attribute("end_time", end_time.isoformat())
                     guard_span.set_attribute("duration", 
