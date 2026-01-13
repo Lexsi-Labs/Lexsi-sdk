@@ -6,6 +6,39 @@ ServerlessInstanceType = Literal[
     "gova-0.5", "gova-1", "gova-1.5", "gova-2", "gova-4", "gova-6", "gova-8", "gova-10", "gova-12", "gova-14", "gova-16", "gova-18", "gova-20", "gova-22", "gova-24"
 ]
 
+class ServerlessInstanceTypeValues(TypedDict):
+    """
+    Allowed values for serverless EC2 instance types.
+
+    Values::
+
+        "nova-0.5"
+        "nova-1"
+        "nova-1.5"
+        "nova-2"
+        "nova-4"
+        "nova-6"
+        "nova-8"
+        "nova-10"
+
+        "gova-0.5"
+        "gova-1"
+        "gova-1.5"
+        "gova-2"
+        "gova-4"
+        "gova-6"
+        "gova-8"
+        "gova-10"
+        "gova-12"
+        "gova-14"
+        "gova-16"
+        "gova-18"
+        "gova-20"
+        "gova-22"
+        "gova-24"
+    """
+    pass
+
 DedicatedCPUInstanceType = Literal[
     "t3.xlarge", "t3.2xlarge", 
     "m4.large", "m4.xlarge", "m4.2xlarge", "m4.4xlarge", "m4.10xlarge", "m4.16xlarge",
@@ -19,17 +52,111 @@ DedicatedGPUInstanceType = Literal[
     "4xlargeH100", 
 ]
 
+class DedicatedGPUInstanceTypeValues(TypedDict):
+    """
+    Allowed values for dedicated GPU EC2 instance types.
+
+    Values::
+
+        "xlargeT4"
+        "2xlargeT4"
+        "4xlargeT4"
+        "8xlargeT4"
+        "12xlargeT4"
+        "16xlargeT4"
+        "32xlargeT4"
+
+        "xlargeA10G"
+        "2xlargeA10G"
+        "4xlargeA10G"
+        "8xlargeA10G"
+
+        "4xlargeH100"
+    """
+    pass
+
 BatchCPUInstanceType = Literal[
     "small", "xsmall", "2xsmall", "3xsmall",
     "medium", "xmedium", "2xmedium", "3xmedium",
     "large", "xlarge", "2xlarge", "3xlarge"
 ]
 
+class BatchCPUInstanceTypeValues(TypedDict):
+    """
+    Allowed values for batch CPU EC2 instance types.
+
+    Values::
+
+        "small"
+        "xsmall"
+        "2xsmall"
+        "3xsmall"
+
+        "medium"
+        "xmedium"
+        "2xmedium"
+        "3xmedium"
+
+        "large"
+        "xlarge"
+        "2xlarge"
+        "3xlarge"
+    """
+    #instance_type: BatchCPUInstanceType
+    pass
+
 BatchGPUInstanceType = Literal[
     "T4.small", "T4.xsmall", "T4.2xsmall", "T4.3xsmall",
     "A10G.medium", "A10G.xmedium", "A10G.2xmedium", "A10G.3xmedium"
 ]
 
+class BatchGPUInstanceTypeValues(TypedDict):
+    """
+    Allowed values for batch GPU EC2 instance types.
+
+    Values::
+
+        "T4.small"
+        "T4.xsmall"
+        "T4.2xsmall"
+        "T4.3xsmall"
+
+        "A10G.medium"
+        "A10G.xmedium"
+        "A10G.2xmedium"
+        "A10G.3xmedium"
+    """
+    #instance_type: BatchGPUInstanceType
+    pass
+class DedicatedCPUInstanceTypeValues(TypedDict):
+    """
+    Allowed values for dedicated CPU EC2 instance types.
+
+    Values::
+
+        "t3.xlarge"
+        "t3.2xlarge"
+
+        "m4.large"
+        "m4.xlarge"
+        "m4.2xlarge"
+        "m4.4xlarge"
+        "m4.10xlarge"
+        "m4.16xlarge"
+
+        "c4.large"
+        "c4.xlarge"
+        "c4.2xlarge"
+        "c4.4xlarge"
+        "c4.8xlarge"
+
+        "c5.9xlarge"
+        "c5.12xlarge"
+        "c5.18xlarge"
+        "c5.24xlarge"
+    """
+    #instance_type: Union[DedicatedCPUInstanceType, DedicatedGPUInstanceType, ServerlessInstanceType]
+    pass
 class ProjectConfig(TypedDict):
     """
     Configuration keys required to describe a project.
@@ -141,6 +268,7 @@ class DataConfig(TypedDict):
     lime_explainability_iterations: int
     explainability_method: List[str]
     handle_data_imbalance: Optional[bool]
+
 
 class XGBoostParams(TypedDict, total=False):
     """
@@ -804,28 +932,27 @@ class CustomServerConfig(TypedDict):
     op_hours: Optional[bool] = None
     auto_start: bool = False
 
-
 class InferenceCompute(TypedDict):
     """
     Inference compute selection payload.
 
     :param instance_type: Instance type identifier.
-        Use one of the supported instance types defined in:
-        - :class:`DedicatedCPUInstanceType`
-        - :class:`DedicatedGPUInstanceType`
-        - :class:`ServerlessInstanceType`
+        Use str values from supported instance types defined in classes:
+        - ``DedicatedCPUInstanceTypeValues``
+        - ``DedicatedGPUInstanceTypeValues``
+        - ``ServerlessInstanceTypeValues``
 
     :type instance_type: Union[
-        DedicatedCPUInstanceType,
-        DedicatedGPUInstanceType,
-        ServerlessInstanceType
+        DedicatedCPUInstanceTypeValues,
+        DedicatedGPUInstanceTypeValues,
+        ServerlessInstanceTypeValues
     ]
     
     :param custom_server_config: Optional scheduling configuration.
     :type custom_server_config: CustomServerConfig | None
     """
 
-    instance_type: Union[DedicatedCPUInstanceType, DedicatedGPUInstanceType, ServerlessInstanceType]
+    instance_type: Union[DedicatedCPUInstanceTypeValues,DedicatedGPUInstanceTypeValues, ServerlessInstanceTypeValues]
     custom_server_config: Optional[CustomServerConfig] = CustomServerConfig()
 
 
@@ -849,3 +976,6 @@ class InferenceSettings(TypedDict):
     """
 
     inference_engine: str
+
+
+
