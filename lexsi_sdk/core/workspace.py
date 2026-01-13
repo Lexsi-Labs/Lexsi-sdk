@@ -20,7 +20,7 @@ from lexsi_sdk.core.agent import AgentProject
 
 
 class Workspace(BaseModel):
-    """Class to work with Lexsi.ai workspaces"""
+    """Logical container inside an organization that groups projects, users, and compute resources. Supports workspace-level user access and project lifecycle management."""
 
     organization_id: Optional[str] = None
     created_by: str
@@ -31,12 +31,13 @@ class Workspace(BaseModel):
     api_client: APIClient
 
     def __init__(self, **kwargs):
-        """Attach API client for workspace operations."""
+        """Attach API client for workspace operations.
+        Stores configuration and prepares the object for use."""
         super().__init__(**kwargs)
         self.api_client = kwargs.get("api_client")
 
     def rename_workspace(self, new_workspace_name: str) -> str:
-        """rename the current workspace to new name
+        """Rename the current workspace to a new name by sending an update request to the API. Updates internal properties and returns the response message.
 
         :param new_workspace_name: name for the workspace to be renamed to
         :return: response
@@ -54,7 +55,7 @@ class Workspace(BaseModel):
         return res.get("details")
 
     def delete_workspace(self) -> str:
-        """deletes the current workspace
+        """Delete the current workspace by sending a delete request. Returns a confirmation message upon success.
         :return: response
         """
         payload = {
@@ -65,7 +66,7 @@ class Workspace(BaseModel):
         return res.get("details")
 
     def add_user_to_workspace(self, email: str, role: str) -> str:
-        """adds user to current workspace
+        """Add a user to the workspace with a specified role. Valid roles include admin, manager, or user.
 
         :param email: user email
         :param role: user role ["admin", "manager", "user"]
@@ -84,7 +85,7 @@ class Workspace(BaseModel):
         return res.get("details")
 
     def remove_user_from_workspace(self, email: str) -> str:
-        """removes user from the current workspace
+        """Remove a user from the workspace using their email address. Returns a response message.
 
         :param email: user email
         :return: response
@@ -99,7 +100,7 @@ class Workspace(BaseModel):
         return res.get("details")
 
     def update_user_access_for_workspace(self, email: str, role: UserRole) -> str:
-        """update the user access for the workspace
+        """Update the role of a user in the workspace. Accepts the user’s email and the new role (admin or user).
 
         :param email: user email
         :param role: new user role ["admin", "user"]
@@ -118,7 +119,7 @@ class Workspace(BaseModel):
         return res.get("details")
 
     def projects(self) -> pd.DataFrame:
-        """get user projects for this Workspace
+        """Retrieve a DataFrame listing all projects in the workspace, with details like project name, access type, creator, and instance type.
 
         :return: Projects details dataframe
         """
@@ -140,7 +141,7 @@ class Workspace(BaseModel):
         return projects_df
 
     def project(self, project_name: str) -> Project:
-        """Select specific project
+        """Select a specific project by name from the workspace. Returns a Project object (or a subclass like TextProject or AgentProject) for the chosen project.
 
         :param project_name: Name of the project
         :return: Project
@@ -150,15 +151,20 @@ class Workspace(BaseModel):
         )
 
         project = next(
-            filter(lambda project: project.get("user_project_name") == project_name, workspace.get("data", {}).get("projects", [])),
+            filter(
+                lambda project: project.get("user_project_name") == project_name,
+                workspace.get("data", {}).get("projects", []),
+            ),
             None,
         )
 
         if project is None:
             raise Exception("Project Not Found")
-        
-        if project.get("metadata",{}).get("modality") == "text": return TextProject(api_client=self.api_client, **project)
-        elif project.get("metadata",{}).get("modality") == "agent": return AgentProject(api_client=self.api_client, **project)
+
+        if project.get("metadata", {}).get("modality") == "text":
+            return TextProject(api_client=self.api_client, **project)
+        elif project.get("metadata", {}).get("modality") == "agent":
+            return AgentProject(api_client=self.api_client, **project)
 
         return Project(api_client=self.api_client, **project)
 
@@ -170,7 +176,7 @@ class Workspace(BaseModel):
         project_sub_type: Optional[str] = None,
         server_type: Optional[str] = None,
     ) -> Project:
-        """creates new project in the current workspace
+        """Create a new project within the workspace. Requires project_name, modality (e.g., tabular, text, image), project_type (e.g., classification), and optional project_sub_type and server_type. Returns the created Project object.
 
         :param project_name: name for the project
         :param modality: modality for the project
@@ -205,7 +211,7 @@ class Workspace(BaseModel):
 
         if not res["success"]:
             raise Exception(res["details"])
-        
+
         if modality == "text":
             project = TextProject(api_client=self.api_client, **res["details"])
         elif modality == "agent":
@@ -216,7 +222,7 @@ class Workspace(BaseModel):
         return project
 
     def get_notifications(self) -> pd.DataFrame:
-        """get user workspace notifications
+        """Get notifications specific to the workspace. Returns a DataFrame listing notifications including the project name, message, and timestamp.
 
         :return: DataFrame
         """
@@ -237,7 +243,7 @@ class Workspace(BaseModel):
         )
 
     def clear_notifications(self) -> str:
-        """clear user workspace notifications
+        """Clear all notifications for the workspace. Sends a POST request and returns a confirmation message.
 
         :raises Exception: _description_
         :return: str
@@ -252,7 +258,7 @@ class Workspace(BaseModel):
         return res["details"]
 
     def start_server(self) -> str:
-        """start dedicated workspace server
+        """Start a dedicated compute server for the workspace, enabling compute-intensive tasks.
 
         :return: response
         """
@@ -267,7 +273,7 @@ class Workspace(BaseModel):
         return res["message"]
 
     def stop_server(self) -> str:
-        """stop dedicated workspace server
+        """Stop the dedicated compute server associated with the workspace.
 
         :return: response
         """
@@ -281,7 +287,7 @@ class Workspace(BaseModel):
         return res["message"]
 
     def update_server(self, server_type: str) -> str:
-        """update dedicated workspace server
+        """Change the compute instance type for the workspace by specifying a new server_type. Valid values depend on available custom servers.
         :param server_type: dedicated instance to run workloads
             for all available instances check xai.available_custom_servers()
 
@@ -313,13 +319,16 @@ class Workspace(BaseModel):
         return "Server Updated"
 
     def __print__(self) -> str:
-        """User-friendly string representation."""
+        """User-friendly string representation.
+        Encapsulates a small unit of SDK logic and returns the computed result."""
         return f"Workspace(user_workspace_name='{self.user_workspace_name}', created_by='{self.created_by}', created_at='{self.created_at}')"
 
     def __str__(self) -> str:
-        """Return printable representation."""
+        """Return printable representation.
+        Summarizes the instance in a concise form."""
         return self.__print__()
 
     def __repr__(self) -> str:
-        """Return developer-friendly representation."""
+        """Return developer-friendly representation.
+        Includes key fields useful for logging and troubleshooting."""
         return self.__print__()

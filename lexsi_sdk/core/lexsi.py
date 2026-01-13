@@ -23,7 +23,7 @@ from lexsi_sdk.common.xai_uris import (
 import getpass
 
 
-class XAI(BaseModel):
+class LEXSI(BaseModel):
     """Base entry-point class for interacting with the Lexsi.ai platform. Handles authentication, organization discovery and selection, notification retrieval, and provides access to higher-level SDK abstractions."""
 
     env: Environment = Environment()
@@ -42,7 +42,7 @@ class XAI(BaseModel):
     def login(self, sdk_access_token: Optional[str] = None):
         """Authenticate with Lexsi.ai using an access token. It prompts for or reads the access token from the environment variable XAI_ACCESS_TOKEN and sets it on the API client, enabling subsequent calls to the platform.
 
-        :param api_key: API key, defaults to XAI_ACCESS_TOKEN environment variable
+        :param sdk_access_token: SDK Access Token, defaults to XAI_ACCESS_TOKEN environment variable
         """
         if not sdk_access_token:
             sdk_access_token = os.environ.get("XAI_ACCESS_TOKEN", None) or getpass.getpass(

@@ -38,14 +38,12 @@ from typing import AsyncIterator, Iterator
 import requests
 from uuid import UUID
 
-class TextProject(Project):
-    """Project for text modality
 
-    :return: TextProject
-    """
+class TextProject(Project):
+    """Specialized project abstraction for text and LLM-based workloads. Supports sessions, messages, traces, guardrails, and token-level explainability."""
 
     def sessions(self) -> pd.DataFrame:
-        """All sessions
+        """Return a DataFrame listing all conversation sessions for this text project. Each row corresponds to a session metadata record.
 
         :return: response
         """
@@ -56,7 +54,7 @@ class TextProject(Project):
         return pd.DataFrame(res.get("details"))
 
     def messages(self, session_id: str) -> pd.DataFrame:
-        """All messages for a session
+        """Return a DataFrame listing all messages in a given session. Requires the session_id.
 
         :param session_id: id of the session
         :return: response
@@ -70,7 +68,7 @@ class TextProject(Project):
         return pd.DataFrame(res.get("details"))
 
     def traces(self, trace_id: str) -> pd.DataFrame:
-        """Traces generated for trace_id
+        """Retrieve the execution traces for a given trace ID and return them as a DataFrame.
 
         :param trace_id: id of the trace
         :return: response
@@ -84,7 +82,7 @@ class TextProject(Project):
         return pd.DataFrame(res.get("details"))
 
     def guardrails(self) -> pd.DataFrame:
-        """Guardrails configured in project
+        """List all guardrails currently configured for the project. Returns a DataFrame describing each guardrail and its configuration.
 
         :return: response
         """
@@ -97,7 +95,7 @@ class TextProject(Project):
         return pd.DataFrame(res.get("details"))
 
     def update_guardrail_status(self, guardrail_id: str, status: bool) -> str:
-        """Update Guardrail Status
+        """Update the status (active/inactive) of a specified guardrail. Requires the guardrail_id and a boolean status value.
 
         :param guardrail_id: id of the guardrail
         :param status: status to active/inactive
@@ -115,7 +113,7 @@ class TextProject(Project):
         return res.get("details")
 
     def delete_guardrail(self, guardrail_id: str) -> str:
-        """Deletes Guardrail
+        """Delete a guardrail from the project using its ID. Returns the API response message.
 
         :param guardrail_id: id of the guardrail
         :return: response
@@ -131,7 +129,7 @@ class TextProject(Project):
         return res.get("details")
 
     def available_guardrails(self) -> pd.DataFrame:
-        """Available guardrails to configure
+        """Return a DataFrame of all guardrails available to configure in this project. Each row describes a guardrail type.
 
         :return: response
         """
@@ -148,7 +146,7 @@ class TextProject(Project):
         model_name: str,
         apply_on: str,
     ) -> str:
-        """Configure guardrail for project
+        """Configure a new guardrail in the project. Requires the guardrail name, configuration dictionary, model name, and where to apply it (input or output). Returns a confirmation message.
 
         :param guardrail_name: name of the guardrail
         :param guardrail_config: config for the guardrail
@@ -170,16 +168,16 @@ class TextProject(Project):
         return res.get("details")
 
     def initialize_text_model(
-        self, 
-        model_provider: str, 
-        model_name: str, 
-        model_task_type:str, 
-        model_type: str,  
+        self,
+        model_provider: str,
+        model_name: str,
+        model_task_type: str,
+        model_type: str,
         inference_compute: InferenceCompute,
         inference_settings: InferenceSettings,
         assets: Optional[dict] = None,
     ) -> str:
-        """Initialize text model
+        """Initialize a text model for the project, specifying the model provider, model name, task type, model type (classification/regression), inference compute settings, inference settings, and optional assets. Polls for completion and returns when done.
 
         :param model_provider: model of provider
         :param model_name: name of the model to be initialized
@@ -193,7 +191,7 @@ class TextProject(Project):
             "project_name": self.project_name,
             "model_type": model_type,
             "inference_compute": inference_compute,
-            "inference_settings": inference_settings
+            "inference_settings": inference_settings,
         }
         if assets:
             payload["assets"] = assets
@@ -203,7 +201,7 @@ class TextProject(Project):
         poll_events(self.api_client, self.project_name, res["event_id"])
 
     def model_inference_settings(
-        self,  
+        self,
         model_name: str,
         inference_compute: InferenceCompute,
         inference_settings: InferenceSettings,
@@ -219,7 +217,7 @@ class TextProject(Project):
             "model_name": model_name,
             "project_name": self.project_name,
             "inference_compute": inference_compute,
-            "inference_settings": inference_settings
+            "inference_settings": inference_settings,
         }
 
         res = self.api_client.post(f"{TEXT_MODEL_INFERENCE_SETTINGS_URI}", payload)
@@ -233,20 +231,23 @@ class TextProject(Project):
         """
         res = self.api_client.get(f"{GET_AVAILABLE_TEXT_MODELS_URI}")
         if not res["success"]:
-            raise Exception(res.get("details"," Failed to fetch available text models"))
+            raise Exception(
+                res.get("details", " Failed to fetch available text models")
+            )
         return pd.DataFrame(res.get("details"))
-    
+
     def upload_data(
-        self, 
+        self,
         data: str | pd.DataFrame,
         tag: str,
     ) -> str:
-        """Upload text data for the current project.
+        """Upload text data to the project by specifying either a file path or a pandas DataFrame and a tag. Handles conversion to CSV for DataFrame uploads and returns the API response.
 
         :param data: File path or DataFrame containing rows to upload.
         :param tag: Tag to associate with the uploaded data.
         :return: Server response details.
         """
+
         def build_upload_data(data):
             """Prepare file payload from path or DataFrame.
 
@@ -285,7 +286,7 @@ class TextProject(Project):
             uploaded_path = res.get("metadata").get("filepath")
 
             return uploaded_path
-        
+
         uploaded_path = upload_file_and_return_path(data, "data", tag)
 
         payload = {
@@ -308,9 +309,9 @@ class TextProject(Project):
         tag: str,
         bucket_name: Optional[str] = None,
         file_path: Optional[str] = None,
-        dataset_name: Optional[str] = None
+        dataset_name: Optional[str] = None,
     ):
-        """Upload text data stored in a configured data connector.
+        """Upload text data stored in a configured data connector (e.g., S3 or GCS). Requires the connector name, a tag, and optionally the bucket name and file path. Returns the API response.
 
         :param data_connector_name: Name of the configured connector.
         :param tag: Tag to associate with uploaded data.
@@ -319,6 +320,7 @@ class TextProject(Project):
         :param dataset_name: Optional dataset name to persist.
         :return: Server response details.
         """
+
         def get_connector() -> str | pd.DataFrame:
             """Fetch connector metadata for the requested link service.
 
@@ -373,9 +375,9 @@ class TextProject(Project):
             uploaded_path = res.get("metadata").get("filepath")
 
             return uploaded_path
-        
+
         uploaded_path = upload_file_and_return_path(file_path, "data", tag)
-        
+
         payload = {
             "path": uploaded_path,
             "tag": tag,
@@ -389,29 +391,28 @@ class TextProject(Project):
             raise Exception(res.get("details"))
 
         return res.get("details")
-    
 
     def quantize_model(
         self,
-        model_name:str,
-        quant_name:str,
-        quantization_type:str,
+        model_name: str,
+        quant_name: str,
+        quantization_type: str,
         qbit: int,
         instance_type: str,
         tag: Optional[str] = None,
         input_column: Optional[str] = None,
         no_of_samples: Optional[str] = None,
     ):
-        """Quantize Model
+        """Quantize a trained model by specifying the model name, a new quantized model name, quantization type (e.g., int8), number of bits, compute instance type, and optional tag, input column, and number of samples. This process reduces model size and improves inference efficiency.
 
         :param model_name: name of the model
         :param quant_name: quant name of the model
-        :param quantization_type: type of quantization 
+        :param quantization_type: type of quantization
         :param qbit: quantization bit
-        :param instance_type: instance type for the quantization 
+        :param instance_type: instance type for the quantization
         :param tag: tag name to pass
         :param input_column: input column for the data
-        :param no_of_samples: no of samples for quantization to perform 
+        :param no_of_samples: no of samples for quantization to perform
         :return: response
         """
         payload = {
@@ -423,15 +424,14 @@ class TextProject(Project):
             "instance_type": instance_type,
             "tag": tag,
             "input_column": input_column,
-            "no_of_samples": no_of_samples
+            "no_of_samples": no_of_samples,
         }
 
         res = self.api_client.post(QUANTIZE_MODELS_URI, payload)
         if not res["success"]:
             raise Exception(res.get("details"))
-        
-        poll_events(self.api_client, self.project_name, res.get("event_id"))
 
+        poll_events(self.api_client, self.project_name, res.get("event_id"))
 
     def chat_completion(
         self,
@@ -439,7 +439,7 @@ class TextProject(Project):
         messages: List[Dict[str, Any]],
         provider: str,
         api_key: Optional[str] = None,
-        session_id : Optional[UUID] = None,
+        session_id: Optional[UUID] = None,
         max_tokens: Optional[int] = None,
         stream: Optional[bool] = False,
     ) -> Union[dict, Iterator[str]]:
@@ -461,45 +461,51 @@ class TextProject(Project):
             "project_name": self.project_name,
             "provider": provider,
             "api_key": api_key,
-            "session_id" : session_id
+            "session_id": session_id,
         }
 
         if not stream:
             return self.api_client.post(RUN_CHAT_COMPLETION, payload=payload)
-        
-        return self.api_client.stream(uri=RUN_CHAT_COMPLETION, method="POST", payload=payload)
+
+        return self.api_client.stream(
+            uri=RUN_CHAT_COMPLETION, method="POST", payload=payload
+        )
 
     def create_embeddings(
         self,
-        input : Union[str, List[str]],
+        input: Union[str, List[str]],
         model: str,
-        api_key : str,
+        api_key: str,
         provider: str,
-        session_id : Optional[UUID] = None,
-    ) -> dict:  
+        session_id: Optional[UUID] = None,
+    ) -> dict:
+        """Create a new embeddings.
+        Builds a new object or request payload and returns the created result."""
         payload = {
             "model": model,
             "input": input,
             "project_name": self.project_name,
             "provider": provider,
             "api_key": api_key,
-            "session_id" : session_id
+            "session_id": session_id,
         }
 
         res = self.api_client.post(RUN_CREATE_EMBEDDING, payload=payload)
         return res
-    
+
     def completion(
         self,
         model: str,
         prompt: str,
         provider: str,
         api_key: Optional[str] = None,
-        session_id : Optional[UUID] = None,
+        session_id: Optional[UUID] = None,
         max_tokens: Optional[int] = None,
-        stream: Optional[bool] = False,            
+        stream: Optional[bool] = False,
     ) -> dict:
-        
+        """Run completion.
+        Encapsulates a small unit of SDK logic and returns the computed result."""
+
         payload = {
             "model": model,
             "prompt": prompt,
@@ -508,12 +514,14 @@ class TextProject(Project):
             "project_name": self.project_name,
             "provider": provider,
             "api_key": api_key,
-            "session_id" : session_id
+            "session_id": session_id,
         }
         if not stream:
             return self.api_client.post(RUN_COMPLETION, payload=payload)
-        
-        return self.api_client.stream(uri=RUN_COMPLETION, method="POST", payload=payload)
+
+        return self.api_client.stream(
+            uri=RUN_COMPLETION, method="POST", payload=payload
+        )
 
     def image_generation(
         self,
@@ -521,7 +529,7 @@ class TextProject(Project):
         prompt: str,
         provider: str,
         api_key: str,
-        session_id : Optional[UUID] = None,
+        session_id: Optional[UUID] = None,
     ) -> dict:
         """Image generation endpoint wrapper
 
@@ -537,11 +545,11 @@ class TextProject(Project):
             "project_name": self.project_name,
             "provider": provider,
             "api_key": api_key,
-            "session_id" : session_id
+            "session_id": session_id,
         }
 
         res = self.api_client.post(RUN_IMAGE_GENERATION, payload=payload)
-            
+
         return res
     
     def text_generation(

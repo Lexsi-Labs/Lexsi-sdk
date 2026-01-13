@@ -173,11 +173,11 @@ TABULAR_DL = f"{API_VERSION_V2}/evals/evals-tabular"
 IMAGE_DL = f"{API_VERSION_V2}/evals/"
 
 
-# Agents 
+# Agents
 EXPLAINABILITY_SUMMARY = f"{API_VERSION_V2}/agents/explainability_summary"
 
-#Text
-MESSAGES_URI =  f"sessions/get_session_messages"
+# Text
+MESSAGES_URI = f"sessions/get_session_messages"
 SESSIONS_URI = f"sessions/get_sessions"
 TRACES_URI = f"traces/get_traces"
 GET_GUARDRAILS_URI = f"guardrails/active_guardrails"
@@ -185,13 +185,15 @@ UPDATE_GUARDRAILS_STATUS_URI = f"guardrails/update_guardrail_status"
 DELETE_GUARDRAILS_URI = f"guardrails/delete_guardrail"
 AVAILABLE_GUARDRAILS_URI = f"guardrails/all"
 CONFIGURE_GUARDRAILS_URI = f"guardrails/configure"
-RUN_GUARDRAILS_URI=f"guardrails/run_guardrail"
+RUN_GUARDRAILS_URI = f"guardrails/run_guardrail"
 GET_AVAILABLE_TEXT_MODELS_URI = f"{API_VERSION_V2}/users/get_available_text_models"
 QUANTIZE_MODELS_URI = f"{API_VERSION_V2}/ai-models/run_quantization_on_model"
 INITIALIZE_TEXT_MODEL_URI = f"{API_VERSION_V2}/users/initalize_text_model"
-TEXT_MODEL_INFERENCE_SETTINGS_URI = f"{API_VERSION_V2}/ai-models/update_inference_settings"
-RUN_GUARDRAILS_PARALLEL_URI=f"guardrails/run_guardrail_parallel"
-RUN_CHAT_COMPLETION = f"gateway/v1/chat/completions" 
+TEXT_MODEL_INFERENCE_SETTINGS_URI = (
+    f"{API_VERSION_V2}/ai-models/update_inference_settings"
+)
+RUN_GUARDRAILS_PARALLEL_URI = f"guardrails/run_guardrail_parallel"
+RUN_CHAT_COMPLETION = f"gateway/v1/chat/completions"
 RUN_IMAGE_GENERATION = f"gateway/v1/images/generations"
 RUN_CREATE_EMBEDDING = f"gateway/v1/embeddings"
 RUN_COMPLETION = f"gateway/v1/completions"
