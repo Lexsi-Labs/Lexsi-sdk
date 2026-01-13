@@ -3107,6 +3107,28 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#lexsi_sdk.common.types.BatchCPUInstanceTypeValues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BatchCPUInstanceTypeValues
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lexsi_sdk.common.types.BatchGPUInstanceTypeValues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BatchGPUInstanceTypeValues
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#lexsi_sdk.common.types.CatBoostParams" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3133,6 +3155,28 @@
     <span class="md-ellipsis">
       
         DataConfig
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lexsi_sdk.common.types.DedicatedCPUInstanceTypeValues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DedicatedCPUInstanceTypeValues
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lexsi_sdk.common.types.DedicatedGPUInstanceTypeValues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DedicatedGPUInstanceTypeValues
       
     </span>
   </a>
@@ -3299,6 +3343,17 @@
     <span class="md-ellipsis">
       
         SFTPConfig
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lexsi_sdk.common.types.ServerlessInstanceTypeValues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ServerlessInstanceTypeValues
       
     </span>
   </a>
@@ -31529,12 +31584,7 @@ Each row describes a single guardrail type.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/text.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">594</span>
-<span class="normal">595</span>
-<span class="normal">596</span>
-<span class="normal">597</span>
-<span class="normal">598</span>
-<span class="normal">599</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">599</span>
 <span class="normal">600</span>
 <span class="normal">601</span>
 <span class="normal">602</span>
@@ -31566,7 +31616,12 @@ Each row describes a single guardrail type.</p>
 <span class="normal">628</span>
 <span class="normal">629</span>
 <span class="normal">630</span>
-<span class="normal">631</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">chat_completion</span><span class="p">(</span>
+<span class="normal">631</span>
+<span class="normal">632</span>
+<span class="normal">633</span>
+<span class="normal">634</span>
+<span class="normal">635</span>
+<span class="normal">636</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">chat_completion</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">model</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">messages</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
@@ -31786,12 +31841,7 @@ Each row describes a single guardrail type.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/text.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">662</span>
-<span class="normal">663</span>
-<span class="normal">664</span>
-<span class="normal">665</span>
-<span class="normal">666</span>
-<span class="normal">667</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">667</span>
 <span class="normal">668</span>
 <span class="normal">669</span>
 <span class="normal">670</span>
@@ -31823,7 +31873,12 @@ Each row describes a single guardrail type.</p>
 <span class="normal">696</span>
 <span class="normal">697</span>
 <span class="normal">698</span>
-<span class="normal">699</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">completion</span><span class="p">(</span>
+<span class="normal">699</span>
+<span class="normal">700</span>
+<span class="normal">701</span>
+<span class="normal">702</span>
+<span class="normal">703</span>
+<span class="normal">704</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">completion</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">model</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -32192,12 +32247,7 @@ Returns a confirmation message.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/text.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">633</span>
-<span class="normal">634</span>
-<span class="normal">635</span>
-<span class="normal">636</span>
-<span class="normal">637</span>
-<span class="normal">638</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">638</span>
 <span class="normal">639</span>
 <span class="normal">640</span>
 <span class="normal">641</span>
@@ -32219,7 +32269,12 @@ Returns a confirmation message.</p>
 <span class="normal">657</span>
 <span class="normal">658</span>
 <span class="normal">659</span>
-<span class="normal">660</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">create_embeddings</span><span class="p">(</span>
+<span class="normal">660</span>
+<span class="normal">661</span>
+<span class="normal">662</span>
+<span class="normal">663</span>
+<span class="normal">664</span>
+<span class="normal">665</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">create_embeddings</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="nb">input</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
     <span class="n">model</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -32438,11 +32493,11 @@ Returns the API response message.</p>
                 <code>serverless_instance_type</code>
             </td>
             <td>
-                  <code><span title="str">str</span></code>
+                  <code><a class="autorefs autorefs-internal" title="ServerlessInstanceTypeValues (lexsi_sdk.common.types.ServerlessInstanceTypeValues)" href="#lexsi_sdk.common.types.ServerlessInstanceTypeValues">ServerlessInstanceTypeValues</a></code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Serverless instance type used for case inference</p>
+                <p>Serverless instance type used for case inference Use str values from supported instance types defined in classes: - <code>ServerlessInstanceTypeValues</code></p>
               </div>
             </td>
             <td>
@@ -32454,11 +32509,11 @@ Returns the API response message.</p>
                 <code>instance_type</code>
             </td>
             <td>
-                  <code><span title="typing.Optional">Optional</span>[<span title="str">str</span>]</code>
+                  <code><span title="typing.Optional">Optional</span>[<span title="typing.Union">Union</span>[<a class="autorefs autorefs-internal" title="BatchCPUInstanceTypeValues (lexsi_sdk.common.types.BatchCPUInstanceTypeValues)" href="#lexsi_sdk.common.types.BatchCPUInstanceTypeValues">BatchCPUInstanceTypeValues</a>, <a class="autorefs autorefs-internal" title="BatchGPUInstanceTypeValues (lexsi_sdk.common.types.BatchGPUInstanceTypeValues)" href="#lexsi_sdk.common.types.BatchGPUInstanceTypeValues">BatchGPUInstanceTypeValues</a>]]</code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Instance type used for explainability processing, defaults to None</p>
+                <p>Instance type used for explainability processing, defaults to None Use str values from supported instance types defined in classes: - <code>BatchCPUInstanceTypeValues</code> - <code>BatchGPUInstanceTypeValues</code></p>
               </div>
             </td>
             <td>
@@ -32635,12 +32690,17 @@ Returns the API response message.</p>
 <span class="normal">370</span>
 <span class="normal">371</span>
 <span class="normal">372</span>
-<span class="normal">373</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">generate_text_case</span><span class="p">(</span>
+<span class="normal">373</span>
+<span class="normal">374</span>
+<span class="normal">375</span>
+<span class="normal">376</span>
+<span class="normal">377</span>
+<span class="normal">378</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">generate_text_case</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">model_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-    <span class="n">serverless_instance_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-    <span class="n">instance_type</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">serverless_instance_type</span><span class="p">:</span> <span class="n">ServerlessInstanceTypeValues</span><span class="p">,</span>
+    <span class="n">instance_type</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">BatchCPUInstanceTypeValues</span><span class="p">,</span> <span class="n">BatchGPUInstanceTypeValues</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">explainability_method</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;DLB&quot;</span><span class="p">],</span>
     <span class="n">explain_model</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">session_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -32653,7 +32713,12 @@ Returns the API response message.</p>
 <span class="sd">    :param model_name: Name of the model to use for text generation</span>
 <span class="sd">    :param prompt: Input prompt to be provided to the model</span>
 <span class="sd">    :param serverless_instance_type: Serverless instance type used for case inference</span>
+<span class="sd">        Use str values from supported instance types defined in classes:</span>
+<span class="sd">        - ``ServerlessInstanceTypeValues``</span>
 <span class="sd">    :param instance_type: Instance type used for explainability processing, defaults to None</span>
+<span class="sd">        Use str values from supported instance types defined in classes:</span>
+<span class="sd">        - ``BatchCPUInstanceTypeValues``</span>
+<span class="sd">        - ``BatchGPUInstanceTypeValues``</span>
 <span class="sd">    :param explainability_method: Explainability method(s) for the case, defaults to [&quot;DLB&quot;]</span>
 <span class="sd">    :param explain_model: Boolean flag indicating whether to run explainability for the case, defaults to False</span>
 <span class="sd">    :param session_id: Session ID associated with this case, if applicable</span>
@@ -32898,12 +32963,7 @@ Returns a DataFrame describing each guardrail and its configuration.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/text.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">701</span>
-<span class="normal">702</span>
-<span class="normal">703</span>
-<span class="normal">704</span>
-<span class="normal">705</span>
-<span class="normal">706</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">706</span>
 <span class="normal">707</span>
 <span class="normal">708</span>
 <span class="normal">709</span>
@@ -32927,7 +32987,12 @@ Returns a DataFrame describing each guardrail and its configuration.</p>
 <span class="normal">727</span>
 <span class="normal">728</span>
 <span class="normal">729</span>
-<span class="normal">730</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">image_generation</span><span class="p">(</span>
+<span class="normal">730</span>
+<span class="normal">731</span>
+<span class="normal">732</span>
+<span class="normal">733</span>
+<span class="normal">734</span>
+<span class="normal">735</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">image_generation</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">model</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -33967,12 +34032,7 @@ Optional parameters allow specifying a tag,input column, and number of samples u
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/text.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">534</span>
-<span class="normal">535</span>
-<span class="normal">536</span>
-<span class="normal">537</span>
-<span class="normal">538</span>
-<span class="normal">539</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">539</span>
 <span class="normal">540</span>
 <span class="normal">541</span>
 <span class="normal">542</span>
@@ -34025,7 +34085,12 @@ Optional parameters allow specifying a tag,input column, and number of samples u
 <span class="normal">589</span>
 <span class="normal">590</span>
 <span class="normal">591</span>
-<span class="normal">592</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">quantize_model</span><span class="p">(</span>
+<span class="normal">592</span>
+<span class="normal">593</span>
+<span class="normal">594</span>
+<span class="normal">595</span>
+<span class="normal">596</span>
+<span class="normal">597</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">quantize_model</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">model_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">quant_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -34488,12 +34553,7 @@ Handles conversion to CSV for DataFrame uploads and returns the API response.</p
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/text.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">375</span>
-<span class="normal">376</span>
-<span class="normal">377</span>
-<span class="normal">378</span>
-<span class="normal">379</span>
-<span class="normal">380</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">380</span>
 <span class="normal">381</span>
 <span class="normal">382</span>
 <span class="normal">383</span>
@@ -34554,7 +34614,12 @@ Handles conversion to CSV for DataFrame uploads and returns the API response.</p
 <span class="normal">438</span>
 <span class="normal">439</span>
 <span class="normal">440</span>
-<span class="normal">441</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">upload_data</span><span class="p">(</span>
+<span class="normal">441</span>
+<span class="normal">442</span>
+<span class="normal">443</span>
+<span class="normal">444</span>
+<span class="normal">445</span>
+<span class="normal">446</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">upload_data</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">data</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
     <span class="n">tag</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -34770,12 +34835,7 @@ Returns the API response.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/text.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">443</span>
-<span class="normal">444</span>
-<span class="normal">445</span>
-<span class="normal">446</span>
-<span class="normal">447</span>
-<span class="normal">448</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">448</span>
 <span class="normal">449</span>
 <span class="normal">450</span>
 <span class="normal">451</span>
@@ -34859,7 +34919,12 @@ Returns the API response.</p>
 <span class="normal">529</span>
 <span class="normal">530</span>
 <span class="normal">531</span>
-<span class="normal">532</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">upload_data_dataconnectors</span><span class="p">(</span>
+<span class="normal">532</span>
+<span class="normal">533</span>
+<span class="normal">534</span>
+<span class="normal">535</span>
+<span class="normal">536</span>
+<span class="normal">537</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">upload_data_dataconnectors</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">data_connector_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">tag</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -37892,6 +37957,95 @@ Stores configuration and prepares the object for use.</p>
 
 
 
+<h2 id="lexsi_sdk.common.types.BatchCPUInstanceTypeValues" class="doc doc-heading">
+            <span class="doc doc-object-name doc-class-name">BatchCPUInstanceTypeValues</span>
+
+
+<a href="#lexsi_sdk.common.types.BatchCPUInstanceTypeValues" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="typing.TypedDict">TypedDict</span></code></p>
+
+
+
+        <p>Allowed values for batch CPU instance types.</p>
+<p>Values::</p>
+<div class="highlight"><pre><span></span><code>&quot;small&quot;
+&quot;xsmall&quot;
+&quot;2xsmall&quot;
+&quot;3xsmall&quot;
+
+&quot;medium&quot;
+&quot;xmedium&quot;
+&quot;2xmedium&quot;
+&quot;3xmedium&quot;
+
+&quot;large&quot;
+&quot;xlarge&quot;
+&quot;2xlarge&quot;
+&quot;3xlarge&quot;
+</code></pre></div>
+
+
+
+
+
+
+
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="lexsi_sdk.common.types.BatchGPUInstanceTypeValues" class="doc doc-heading">
+            <span class="doc doc-object-name doc-class-name">BatchGPUInstanceTypeValues</span>
+
+
+<a href="#lexsi_sdk.common.types.BatchGPUInstanceTypeValues" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="typing.TypedDict">TypedDict</span></code></p>
+
+
+
+        <p>Allowed values for batch GPU instance types.</p>
+<p>Values::</p>
+<div class="highlight"><pre><span></span><code>&quot;T4.small&quot;
+&quot;T4.xsmall&quot;
+&quot;T4.2xsmall&quot;
+&quot;T4.3xsmall&quot;
+
+&quot;A10G.medium&quot;
+&quot;A10G.xmedium&quot;
+&quot;A10G.2xmedium&quot;
+&quot;A10G.3xmedium&quot;
+</code></pre></div>
+
+
+
+
+
+
+
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
 <h2 id="lexsi_sdk.common.types.CatBoostParams" class="doc doc-heading">
             <span class="doc doc-object-name doc-class-name">CatBoostParams</span>
 
@@ -38426,6 +38580,106 @@ imbalance handling, and explainability.</p>
 
 
   </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="lexsi_sdk.common.types.DedicatedCPUInstanceTypeValues" class="doc doc-heading">
+            <span class="doc doc-object-name doc-class-name">DedicatedCPUInstanceTypeValues</span>
+
+
+<a href="#lexsi_sdk.common.types.DedicatedCPUInstanceTypeValues" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="typing.TypedDict">TypedDict</span></code></p>
+
+
+
+        <p>Allowed values for dedicated CPU instance types.</p>
+<p>Values::</p>
+<div class="highlight"><pre><span></span><code>&quot;t3.xlarge&quot;
+&quot;t3.2xlarge&quot;
+
+&quot;m4.large&quot;
+&quot;m4.xlarge&quot;
+&quot;m4.2xlarge&quot;
+&quot;m4.4xlarge&quot;
+&quot;m4.10xlarge&quot;
+&quot;m4.16xlarge&quot;
+
+&quot;c4.large&quot;
+&quot;c4.xlarge&quot;
+&quot;c4.2xlarge&quot;
+&quot;c4.4xlarge&quot;
+&quot;c4.8xlarge&quot;
+
+&quot;c5.9xlarge&quot;
+&quot;c5.12xlarge&quot;
+&quot;c5.18xlarge&quot;
+&quot;c5.24xlarge&quot;
+</code></pre></div>
+
+
+
+
+
+
+
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="lexsi_sdk.common.types.DedicatedGPUInstanceTypeValues" class="doc doc-heading">
+            <span class="doc doc-object-name doc-class-name">DedicatedGPUInstanceTypeValues</span>
+
+
+<a href="#lexsi_sdk.common.types.DedicatedGPUInstanceTypeValues" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="typing.TypedDict">TypedDict</span></code></p>
+
+
+
+        <p>Allowed values for dedicated GPU instance types.</p>
+<p>Values::</p>
+<div class="highlight"><pre><span></span><code>&quot;xlargeT4&quot;
+&quot;2xlargeT4&quot;
+&quot;4xlargeT4&quot;
+&quot;8xlargeT4&quot;
+&quot;12xlargeT4&quot;
+&quot;16xlargeT4&quot;
+&quot;32xlargeT4&quot;
+
+&quot;xlargeA10G&quot;
+&quot;2xlargeA10G&quot;
+&quot;4xlargeA10G&quot;
+&quot;8xlargeA10G&quot;
+
+&quot;4xlargeH100&quot;
+</code></pre></div>
+
+
+
+
+
+
+
+
 
     </div>
 
@@ -39035,11 +39289,11 @@ reproducibility, and probability calibration.</p>
                 <code>instance_type</code>
             </td>
             <td>
-                  <code><span title="typing.Union">Union</span>[<span title="lexsi_sdk.common.types.DedicatedCPUInstanceType">DedicatedCPUInstanceType</span>, <span title="lexsi_sdk.common.types.DedicatedGPUInstanceType">DedicatedGPUInstanceType</span>, <span title="lexsi_sdk.common.types.ServerlessInstanceType">ServerlessInstanceType</span>]</code>
+                  <code><span title="typing.Union">Union</span>[<a class="autorefs autorefs-internal" title="DedicatedCPUInstanceTypeValues (lexsi_sdk.common.types.DedicatedCPUInstanceTypeValues)" href="#lexsi_sdk.common.types.DedicatedCPUInstanceTypeValues">DedicatedCPUInstanceTypeValues</a>, <a class="autorefs autorefs-internal" title="DedicatedGPUInstanceTypeValues (lexsi_sdk.common.types.DedicatedGPUInstanceTypeValues)" href="#lexsi_sdk.common.types.DedicatedGPUInstanceTypeValues">DedicatedGPUInstanceTypeValues</a>, <a class="autorefs autorefs-internal" title="ServerlessInstanceTypeValues (lexsi_sdk.common.types.ServerlessInstanceTypeValues)" href="#lexsi_sdk.common.types.ServerlessInstanceTypeValues">ServerlessInstanceTypeValues</a>]</code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Instance type identifier. Use one of the supported instance types defined in: - :class:<code>DedicatedCPUInstanceType</code> - :class:<code>DedicatedGPUInstanceType</code> - :class:<code>ServerlessInstanceType</code></p>
+                <p>Instance type identifier. Use str values from supported instance types defined in classes: - <code>DedicatedCPUInstanceTypeValues</code> - <code>DedicatedGPUInstanceTypeValues</code> - <code>ServerlessInstanceTypeValues</code></p>
               </div>
             </td>
             <td>
@@ -40360,6 +40614,63 @@ foundational tabular models.</p>
 
 
   </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="lexsi_sdk.common.types.ServerlessInstanceTypeValues" class="doc doc-heading">
+            <span class="doc doc-object-name doc-class-name">ServerlessInstanceTypeValues</span>
+
+
+<a href="#lexsi_sdk.common.types.ServerlessInstanceTypeValues" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="typing.TypedDict">TypedDict</span></code></p>
+
+
+
+        <p>Allowed values for serverless instance types.</p>
+<p>Values::</p>
+<div class="highlight"><pre><span></span><code>&quot;nova-0.5&quot;
+&quot;nova-1&quot;
+&quot;nova-1.5&quot;
+&quot;nova-2&quot;
+&quot;nova-4&quot;
+&quot;nova-6&quot;
+&quot;nova-8&quot;
+&quot;nova-10&quot;
+
+&quot;gova-0.5&quot;
+&quot;gova-1&quot;
+&quot;gova-1.5&quot;
+&quot;gova-2&quot;
+&quot;gova-4&quot;
+&quot;gova-6&quot;
+&quot;gova-8&quot;
+&quot;gova-10&quot;
+&quot;gova-12&quot;
+&quot;gova-14&quot;
+&quot;gova-16&quot;
+&quot;gova-18&quot;
+&quot;gova-20&quot;
+&quot;gova-22&quot;
+&quot;gova-24&quot;
+</code></pre></div>
+
+
+
+
+
+
+
+
 
     </div>
 
