@@ -297,33 +297,43 @@ class TextProject(Project):
         self,
         model_name: str,
         inference_compute: InferenceCompute,
-        inference_settings: InferenceSettings,
+        inference_settings: Optional[InferenceSettings] = None,
+        requirements_file: Optional[str] = None,
+        app_file: Optional[str] = None
     ) -> str:
         """Configure inference compute and runtime settings for a model.
+         Only for Hugging Face provider models
 
         :param model_name: Name of the model for inference settings update
             (e.g., meta-llama/Llama-3.2-1B-Instruct).
 
         :param inference_compute: Inference compute configuration for the model.
-            Required for Hugging Face provider models, not required for other providers
         :type inference_compute: InferenceCompute | None
 
         :param inference_settings: Inference runtime settings for the model.
-            Required for Hugging Face provider models, not required for other providers
         :type inference_settings: InferenceSettings | None
 
         :return: a response indicating the result of the inference settings configuration
         """
-        payload = {
+        data = {
             "model_name": model_name,
             "project_name": self.project_name,
             "inference_compute": inference_compute,
             "inference_settings": inference_settings,
         }
-
-        res = self.api_client.post(f"{TEXT_MODEL_INFERENCE_SETTINGS_URI}", payload)
-        if not res["success"]:
+        payload ={
+            "data": (None,json.dumps(data)),
+        }
+        if requirements_file:
+            payload["requirements_file"] = ("requirements.yaml", open(requirements_file, "rb"))
+        if app_file:
+            payload["app_file"] = ("app.py", open(app_file, "rb"))
+            
+        res = self.api_client.file(f"{TEXT_MODEL_INFERENCE_SETTINGS_URI}", payload)
+        if not res.get("success"):
             raise Exception(res.get("details", "Failed to update inference settings"))
+        
+        return res.get("details", "Inference Settings Updated")
 
     def generate_text_case(
         self,
