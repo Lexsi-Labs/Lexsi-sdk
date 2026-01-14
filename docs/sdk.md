@@ -66,7 +66,14 @@ project = workspace.project("Your Project name")
       show_root_heading: false
       show_root_full_path: false
       show_root_toc_entry: false
-      show_source: true
+      show_source: false
+      filters:
+        - "!generate_expression"
+        - "!build_expression"
+        - "!validate_configuration"
+        - "!__print__"
+        - "!__repr__"
+        - "!__str__"
 
 ::: lexsi_sdk.core.case
     options:
