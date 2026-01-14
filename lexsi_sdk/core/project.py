@@ -1816,7 +1816,7 @@ class Project(BaseModel):
         """Generate Bias Monitoring Dashboard for the given parameters.
 
         :param run_in_background: runs in background without waiting for dashboard generation to complete
-        :param instance_type: instance type for running on custom server
+        :param pod: pod for running on custom server
         :param payload: bias monitoring payload
                 {
                     "base_line_tag": "",
@@ -3247,7 +3247,7 @@ class Project(BaseModel):
         :param tag: data tag for running inference
         :param file_name: data file name for running inference
         :param model_name: name of the model, defaults to active model for the project
-        :param instance_type: instance type for running inference
+        :param pod: pod for running inference
         :return: model inference dataframe
         :rtype: pd.DataFrame
         """
