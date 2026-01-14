@@ -1713,7 +1713,7 @@ class Project(BaseModel):
         instance_type: Optional[str] = None,
         run_in_background: bool = False,
     ) -> Dashboard:
-        """Generate Target Drift Diagnosis for the project with specified parameters.
+        """Generate Target Drift Dashboard for the project with specified parameters.
 
         :param run_in_background: runs in background without waiting for dashboard generation to complete
         :param instance_type: instance type for running on custom server
