@@ -4078,7 +4078,7 @@ class Project(BaseModel):
         xai: Optional[list] = [],
         risk_policies: Optional[bool] = False,
     ) -> Case:
-        """Case Exaplainability for given unique identifer
+        """Case explainability for given unique identifer
 
         :param unique_identifer: unique identifer of case
         :param case_id: case id, defaults to None
