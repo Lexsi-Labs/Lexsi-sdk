@@ -426,7 +426,7 @@ class Project(BaseModel):
         return file_summary_df
 
     def delete_file(self, file_name: str) -> str:
-        """deletes file for the project
+        """Delete a file with the given name from the project. Accepts the file name.
 
         :param file_name: uploaded file name
         :return: response
@@ -460,7 +460,7 @@ class Project(BaseModel):
         return res.get("details")
 
     def update_config(self, config: DataConfig):
-        """updates config for the project
+        """Update the project configurations. Accepts a config dictionary.
 
         :param config: updated config
                     {
@@ -567,31 +567,108 @@ class Project(BaseModel):
         model_architecture: Optional[str] = None,
         model_type: Optional[str] = None,
         config: Optional[ProjectConfig] = None,
-        model_config: Optional[dict] = None,
-        tunning_config: Optional[dict] = None,
-        peft_config: Optional[dict] = None,
-        processor_config: Optional[dict] = None,
-        finetune_mode: Optional[dict] = None,
+        model_config: Optional[Union[XGBoostParams, LightGBMParams, CatBoostParams, RandomForestParams, FoundationalModelParams]] = None,
+        tunning_config: Optional[TuningParams] = None,
+        peft_config: Optional[PEFTParams] = None,
+        processor_config: Optional[ProcessorParams] = None,
+        finetune_mode: Optional[str] = None,
         tunning_strategy: Optional[str] = None,
         instance_type: Optional[str] = "shared"
     ) -> str:
-        """Uploads data for the current project
-        :param data: file path | dataframe to be uploaded
-        :param tag: tag for data
-        :param config: project config
-                {
-                    "project_type": "",
-                    "unique_identifier": "",
-                    "true_label": "",
-                    "pred_label": "",
-                    "feature_exclude": [],
-                    "drop_duplicate_uid: "",
-                    "handle_errors": False,
-                    "handle_data_imbalance": False, # SMOTE sampling
-                    "feature_encodings": Dict[str, str]   # {"feature_name":"labelencode | countencode | onehotencode"}
-                },
-                defaults to None
-        :return: response
+        """
+        Upload dataset(s) to the project and triggers model training.
+        If a model is specified, it trains the requested model; otherwise,
+        an ``XGBoost`` model is trained by default.
+
+        It executes the full end-to-end training pipeline:
+
+        - dataset upload (tag-based, feature exclusion, sampling)
+        - selects and prepares data (filtering, sampling, feature handling, imbalance handling)
+        - applies preprocessing / feature engineering (optional)
+        - trains either a **classic ML model** or a **tabular foundation model**
+        - optionally performs hyperparameter tuning (classic or foundational depending on strategy)
+        - optionally performs fine-tuning / PEFT for foundation models
+        - produces a trained model artifact and returns its identifier/reference
+
+        :param data: Dataset to upload. Can be a file path or an in-memory pandas DataFrame.
+        :type data: str | pandas.DataFrame
+
+        :param tag: Tag associated with the uploaded dataset, used for filtering
+            and train/test selection.
+        :type tag: str
+
+        :param model: Optional model identifier or alias.
+        :type model: str | None
+
+        :param model_name: Optional human-readable name for the trained model.
+        :type model_name: str | None
+
+        :param model_architecture: Optional architecture identifier
+            (used mainly for foundation models).
+        :type model_architecture: str | None
+
+        :param model_type: Type of model to train.
+
+            **Classic ML models**
+            - ``XGBoost``
+            - ``LightGBM``
+            - ``CatBoost``
+            - ``RandomForest``
+            - ``SGD``
+            - ``LogisticRegression``
+            - ``LinearRegression``
+            - ``GaussianNaiveBayes``
+
+            **Tabular foundation models**
+            - ``TabPFN``
+            - ``TabICL``
+            - ``TabDPT``
+            - ``OrionMSP``
+            - ``OrionBix``
+            - ``Mitra``
+            - ``ContextTab``
+        :type model_type: str | None
+
+        :param config: Dataset and training configuration controlling feature
+            selection, encodings, sampling, and data behavior.
+        :type config: ProjectConfig | None
+
+        :param processor_config: Optional preprocessing and feature engineering
+            configuration (e.g., imputation, scaling, resampling).
+        :type processor_config: ProcessorParams | None
+
+        :param model_config: Hyperparameters for the selected ``model_type``.
+            Must match the chosen model family.
+        :type model_config: XGBoostParams | LightGBMParams | CatBoostParams |
+            RandomForestParams | FoundationalModelParams | None
+
+        :param tunning_config: Optional tuning or adaptation configuration.
+        :type tunning_config: TuningParams | None
+
+        :param tunning_strategy: Training or fine-tuning strategy.
+
+            - ``"inference"``: Zero-shot inference only
+            - ``"base-ft"`` / ``"finetune"``: Full fine-tuning
+            - ``"peft"``: Parameter-efficient fine-tuning (requires ``peft_config``)
+        :type tunning_strategy: str | None
+
+        :param finetune_mode: Fine-tuning mode for foundation models.
+
+            - ``"meta-learning"``: Episodic meta-learning
+            - ``"sft"``: Standard supervised fine-tuning
+        :type finetune_mode: str | None
+
+        :param peft_config: PEFT (e.g., LoRA) configuration, used when
+            ``tunning_strategy="peft"``.
+        :type peft_config: PEFTParams | None
+
+        :param instance_type: Compute instance used for training.
+            Examples: ``"shared"``, ``"small"``, ``"medium"``, ``"large"``,
+            ``"T4.small"``, ``"A10G.xmedium"``.
+        :type instance_type: str | None
+
+        :return: Identifier or reference to the trained model artifact.
+        :rtype: str
         """
 
         def build_upload_data(data):
@@ -811,9 +888,9 @@ class Project(BaseModel):
         return res.get("details")
 
     def upload_feature_mapping(self, data: str | dict) -> str:
-        """uploads feature mapping for the project
+        """Upload feature mapping for the project
 
-        :param data: response
+        :param data: string | dict
         :return: response
         """
 
@@ -872,9 +949,9 @@ class Project(BaseModel):
         return res.get("details", "Feature mapping upload successful")
 
     def upload_data_description(self, data: str | pd.DataFrame) -> str:
-        """uploads data description for the project
+        """Uploads data description for the project
 
-        :param data: response
+        :param data: Dataset to upload. Can be a file path or an in-memory pandas DataFrame.
         :return: response
         """
 
@@ -937,7 +1014,7 @@ class Project(BaseModel):
         bucket_name: Optional[str] = None,
         file_path: Optional[str] = None,
     ) -> str:
-        """uploads feature mapping for the project
+        """Upload a feature-mapping file to the project using a configured data connector.
 
         :param data_connector_name: name of the data connector
         :param bucket_name: if data connector has buckets # Example: s3/gcs buckets
@@ -1019,7 +1096,7 @@ class Project(BaseModel):
         bucket_name: Optional[str] = None,
         file_path: Optional[str] = None,
     ) -> str:
-        """uploads data description for the project
+        """Upload data description for the project.
 
         :param data_connector_name: name of the data connector
         :param bucket_name: if data connector has buckets # Example: s3/gcs buckets
@@ -1116,7 +1193,7 @@ class Project(BaseModel):
         explainability_method: Optional[list] = ["shap"],
         feature_list: Optional[list] = None,
     ):
-        """Uploads your custom model on Lexsi.ai
+        """Uploads a custom trained model to Lexsi.ai for inference and evaluation.
 
         :param model_path: path of the model
         :param model_architecture: architecture of model ["machine_learning", "deep_learning"]
@@ -1219,7 +1296,7 @@ class Project(BaseModel):
         bucket_name: Optional[str] = None,
         file_path: Optional[str] = None,
     ):
-        """Uploads your custom model on Lexsi.ai
+        """Uploads a custom trained model to Lexsi.ai for inference and evaluation.
 
         :param data_connector_name: name of the data connector
         :param model_architecture: architecture of model ["machine_learning", "deep_learning"]
@@ -1374,7 +1451,7 @@ class Project(BaseModel):
         return res
 
     def data_observations(self, tag: str) -> pd.DataFrame:
-        """Data Observations for the project
+        """Available observations for the specified dataset tag.
 
         :param tag: tag for data ["Training", "Testing", "Validation", "Custom"]
         :return: data observations dataframe
@@ -1434,9 +1511,10 @@ class Project(BaseModel):
         current_tags: Optional[List[str]] = None,
         instance_type: Optional[str] = "",
     ) -> pd.DataFrame:
-        """Data Drift Diagnosis for the project
+        """Generate Data Drift Diagnosis for the project with specified baseline and current tags.
 
-        :param tag: tag for data ["Training", "Testing", "Validation", "Custom"]
+        :param baseline_tags: tag for data ["Training", "Testing", "Validation", "Custom"]
+        :param current_tags: tag for data ["Training", "Testing", "Validation", "Custom"]
         :return: data drift diagnosis dataframe
         """
 
@@ -1484,7 +1562,7 @@ class Project(BaseModel):
         return data_drift_diagnosis
 
     def get_default_dashboard(self, type: str) -> Dashboard:
-        """get default dashboard
+        """Returns the default dashboard for the specified type.
 
         :param type: type of the dashboard
         :return: Dashboard
@@ -1513,7 +1591,7 @@ class Project(BaseModel):
         instance_type: Optional[str] = None,
         run_in_background: bool = False,
     ) -> Dashboard:
-        """get data drift dashboard
+        """Generate Data Drift Dashboard for the project with specified parameters.
 
         :param run_in_background: runs in background without waiting for dashboard generation to complete
         :param instance_type: instance type for running on custom server
@@ -1569,7 +1647,12 @@ class Project(BaseModel):
                         returns p_value
                         default threshold 0.05
                         drift detected when p_value < threshold
-        :return: Dashboard
+        :return: A Dashboard object that provides the following capabilities:
+            - plot(): Re-render the dashboard with custom width/height
+            - get_config(): Retrieve the dashboard configuration (excluding metadata)
+            - get_raw_data(): Access processed metric data underlying the dashboard
+            - print_config(): Pretty-print the dashboard configuration
+        :rtype: Dashboard
         """
         if not payload:
             return self.get_default_dashboard("data_drift")
@@ -1630,7 +1713,7 @@ class Project(BaseModel):
         instance_type: Optional[str] = None,
         run_in_background: bool = False,
     ) -> Dashboard:
-        """get target drift dashboard
+        """Generate Target Drift Diagnosis for the project with specified parameters.
 
         :param run_in_background: runs in background without waiting for dashboard generation to complete
         :param instance_type: instance type for running on custom server
@@ -1677,7 +1760,12 @@ class Project(BaseModel):
                         returns p_value
                         default threshold 0.05
                         drift detected when p_value < threshold
-        :return: Dashboard
+        :return: A Dashboard object that provides the following capabilities:
+            - plot(): Re-render the dashboard with custom width/height
+            - get_config(): Retrieve the dashboard configuration (excluding metadata)
+            - get_raw_data(): Access processed metric data underlying the dashboard
+            - print_config(): Pretty-print the dashboard configuration
+        :rtype: Dashboard
         """
         if not payload:
             return self.get_default_dashboard("target_drift")
@@ -1747,7 +1835,7 @@ class Project(BaseModel):
         instance_type: Optional[str] = None,
         run_in_background: bool = False,
     ) -> Dashboard:
-        """get bias monitoring dashboard
+        """Generate Bias Monitoring Dashboard for the given parameters.
 
         :param run_in_background: runs in background without waiting for dashboard generation to complete
         :param instance_type: instance type for running on custom server
@@ -1763,7 +1851,12 @@ class Project(BaseModel):
                     "features_to_use": []
                 }
                 defaults to None
-        :return: Dashboard
+        :return: A Dashboard object that provides the following capabilities:
+            - plot(): Re-render the dashboard with custom width/height
+            - get_config(): Retrieve the dashboard configuration (excluding metadata)
+            - get_raw_data(): Access processed metric data underlying the dashboard
+            - print_config(): Pretty-print the dashboard configuration
+        :rtype: Dashboard
         """
         if not payload:
             return self.get_default_dashboard("biasmonitoring")
@@ -1837,7 +1930,7 @@ class Project(BaseModel):
         instance_type: Optional[str] = None,
         run_in_background: bool = False,
     ) -> Dashboard:
-        """get model performance dashboard
+        """Generate Model Performance Dashboard for the given parameters.
 
         :param run_in_background: runs in background without waiting for dashboard generation to complete
         :param instance_type: instance type for running on custom server
@@ -1855,7 +1948,12 @@ class Project(BaseModel):
                     "current_pred_label": ""
                 }
                 defaults to None
-        :return: Dashboard
+        :return: A Dashboard object that provides the following capabilities:
+            - plot(): Re-render the dashboard with custom width/height
+            - get_config(): Retrieve the dashboard configuration (excluding metadata)
+            - get_raw_data(): Access processed metric data underlying the dashboard
+            - print_config(): Pretty-print the dashboard configuration
+        :rtype: Dashboard
         """
         if not payload:
             return self.get_default_dashboard("performance")
@@ -1940,13 +2038,22 @@ class Project(BaseModel):
         instance_type: Optional[str] = None,
         run_in_background: bool = False,
     ) -> Dashboard:
-        """Generate an image property drift dashboard for this project.
-        Returns the default dashboard when `payload` is empty; otherwise triggers generation and waits unless `run_in_background`.
+        """Generate an Image Property Drift dashboard for this project with given baseline and current tags.
 
-        :param payload: Dashboard configuration payload (tags/labels and parameters).
+        :param payload: 
+                {
+                    "base_line_tag": List[str]
+                    "current_tag": List[str]
+                }
+                defaults to None
         :param instance_type: Optional compute instance for generation jobs.
         :param run_in_background: If True, trigger generation and return immediately.
-        :return: A `Dashboard` object (or a status string when background mode is enabled).
+        :return: A Dashboard object that provides the following capabilities:
+            - plot(): Re-render the dashboard with custom width/height
+            - get_config(): Retrieve the dashboard configuration (excluding metadata)
+            - get_raw_data(): Access processed metric data underlying the dashboard
+            - print_config(): Pretty-print the dashboard configuration
+        :rtype: Dashboard
         """
         if not payload:
             return self.get_default_dashboard("image_property_drift")
@@ -1993,13 +2100,17 @@ class Project(BaseModel):
         instance_type: Optional[str] = None,
         run_in_background: bool = False,
     ) -> Dashboard:
-        """Generate a label drift dashboard for image workloads.
-        Returns the default dashboard when `payload` is empty; otherwise triggers generation and waits unless `run_in_background`.
+        """Generate an Image Label Drift dashboard for this project with given baseline and current tags.
 
         :param payload: Dashboard configuration payload (tags/labels and parameters).
         :param instance_type: Optional compute instance for generation jobs.
         :param run_in_background: If True, trigger generation and return immediately.
-        :return: A `Dashboard` object (or a status string when background mode is enabled).
+        :return: A Dashboard object that provides the following capabilities:
+            - plot(): Re-render the dashboard with custom width/height
+            - get_config(): Retrieve the dashboard configuration (excluding metadata)
+            - get_raw_data(): Access processed metric data underlying the dashboard
+            - print_config(): Pretty-print the dashboard configuration
+        :rtype: Dashboard
         """
         if not payload:
             return self.get_default_dashboard("label_drift")
@@ -2046,13 +2157,17 @@ class Project(BaseModel):
         instance_type: Optional[str] = None,
         run_in_background: bool = False,
     ) -> Dashboard:
-        """Generate a property-label correlation dashboard for image workloads.
-        Returns the default dashboard when `payload` is empty; otherwise triggers generation and waits unless `run_in_background`.
+        """Generate an Image Property Label Correlation dashboard for this project with given baseline and current tags.
 
         :param payload: Dashboard configuration payload (tags/labels and parameters).
         :param instance_type: Optional compute instance for generation jobs.
         :param run_in_background: If True, trigger generation and return immediately.
-        :return: A `Dashboard` object (or a status string when background mode is enabled).
+        :return: A Dashboard object that provides the following capabilities:
+            - plot(): Re-render the dashboard with custom width/height
+            - get_config(): Retrieve the dashboard configuration (excluding metadata)
+            - get_raw_data(): Access processed metric data underlying the dashboard
+            - print_config(): Pretty-print the dashboard configuration
+        :rtype: Dashboard
         """
         if not payload:
             return self.get_default_dashboard("property_label_correlation")
@@ -2099,13 +2214,17 @@ class Project(BaseModel):
         instance_type: Optional[str] = None,
         run_in_background: bool = False,
     ) -> Dashboard:
-        """Generate an image dataset drift dashboard for this project.
-        Returns the default dashboard when `payload` is empty; otherwise triggers generation and waits unless `run_in_background`.
+        """Generate an Image Dataset Drift dashboard for this project with given baseline and current tags.
 
         :param payload: Dashboard configuration payload (tags/labels and parameters).
         :param instance_type: Optional compute instance for generation jobs.
         :param run_in_background: If True, trigger generation and return immediately.
-        :return: A `Dashboard` object (or a status string when background mode is enabled).
+        :return: A Dashboard object that provides the following capabilities:
+            - plot(): Re-render the dashboard with custom width/height
+            - get_config(): Retrieve the dashboard configuration (excluding metadata)
+            - get_raw_data(): Access processed metric data underlying the dashboard
+            - print_config(): Pretty-print the dashboard configuration
+        :rtype: Dashboard
         """
         if not payload:
             return self.get_default_dashboard("image_dataset_drift")
@@ -2147,10 +2266,11 @@ class Project(BaseModel):
         return "Image Dataset Drift dashboard generation initiated"
 
     def get_all_dashboards(self, type: str, page: Optional[int] = 1):
-        """get all dashboard
+        """Fetch all dashboards in the project
 
         :param type: type of the dashboard
         :page: page number defaults to 1
+        :return: pd.DataFrame
         """
 
         Validate.value_against_list(
@@ -2188,7 +2308,6 @@ class Project(BaseModel):
 
     def get_score(self, dashboard_id, feature_name):
         """Fetch dashboard score/drift details for a single feature.
-        Returns the matching entry from `DatasetColumnDriftResults` for `feature_name`.
 
         :param dashboard_id: Dashboard identifier to query.
         :param feature_name: Feature/column name to match within drift results.
@@ -2227,11 +2346,16 @@ class Project(BaseModel):
         return matched_column_info
 
     def get_dashboard_metadata(self, type: str, dashboard_id: str) -> Dashboard:
-        """get dashboard
+        """Get dashboard generated dashboard with id
 
         :param type: type of the dashboard
         :param dashboard_id: id of dashboard
-        :return: Dashboard
+        :return: A Dashboard object that provides the following capabilities:
+            - plot(): Re-render the dashboard with custom width/height
+            - get_config(): Retrieve the dashboard configuration (excluding metadata)
+            - get_raw_data(): Access processed metric data underlying the dashboard
+            - print_config(): Pretty-print the dashboard configuration
+        :rtype: Dashboard
         """
         Validate.value_against_list(
             "type",
@@ -2252,9 +2376,11 @@ class Project(BaseModel):
         return res
 
     def get_dashboard_log_data(self, type: str):
-        """get all dashboard
+        """List of dashboards of the specified type.
 
         :param type: type of the dashboard
+        :return: DataFrame
+        :rtype: pd.DataFrame
         """
         Validate.value_against_list(
             "type",
@@ -2285,11 +2411,16 @@ class Project(BaseModel):
         return df
 
     def get_dashboard(self, type: str, dashboard_id: str) -> Dashboard:
-        """get dashboard
+        """Get dashboard generated dashboard with id
 
         :param type: type of the dashboard
         :param dashboard_id: id of dashboard
-        :return: Dashboard
+        :return: A Dashboard object that provides the following capabilities:
+            - plot(): Re-render the dashboard with custom width/height
+            - get_config(): Retrieve the dashboard configuration (excluding metadata)
+            - get_raw_data(): Access processed metric data underlying the dashboard
+            - print_config(): Pretty-print the dashboard configuration
+        :rtype: Dashboard
         """
         Validate.value_against_list(
             "type",
@@ -2314,9 +2445,10 @@ class Project(BaseModel):
         )
 
     def monitoring_triggers(self) -> pd.DataFrame:
-        """get monitoring triggers of project
+        """List of monitoring triggers for the project.
 
         :return: DataFrame
+        :rtype: pd.DataFrame
         """
         url = f"{GET_TRIGGERS_URI}?project_name={self.project_name}"
         res = self.api_client.get(url)
@@ -2343,7 +2475,8 @@ class Project(BaseModel):
 
         :param trigger_name: Existing trigger name to duplicate.
         :param new_trigger_name: New name for the duplicated trigger.
-        :return: Backend response message."""
+        :return: Backend response message.
+        :rtype: str"""
         if trigger_name == new_trigger_name:
             return "Duplicate trigger name can't be same"
         url = f"{DUPLICATE_MONITORS_URI}?project_name={self.project_name}&trigger_name={trigger_name}&new_trigger_name={new_trigger_name}"
@@ -2355,7 +2488,7 @@ class Project(BaseModel):
         return res["details"]
 
     def create_monitoring_trigger(self, payload: dict) -> str:
-        """create monitoring trigger for project
+        """Create monitoring trigger for project
 
         :param payload: Data Drift Trigger Payload
                 {
@@ -2436,10 +2569,11 @@ class Project(BaseModel):
         return "Trigger created successfully."
 
     def delete_monitoring_trigger(self, name: str) -> str:
-        """delete monitoring trigger for project
+        """delete a monitoring trigger from project
 
         :param name: trigger name
         :return: str
+        :rtype: str
         """
         payload = {
             "project_name": self.project_name,
@@ -2456,10 +2590,11 @@ class Project(BaseModel):
         return "Monitoring trigger deleted successfully."
 
     def alerts(self, page_num: int = 1) -> pd.DataFrame:
-        """get monitoring alerts of project
+        """Retrieves monitoring alerts for the project. Each page contains 20 alerts.
 
         :param page_num: page num, defaults to 1
         :return: alerts DataFrame
+        :rtype: pd.DataFrame
         """
         payload = {"page_num": page_num, "project_name": self.project_name}
 
@@ -2476,10 +2611,11 @@ class Project(BaseModel):
         return pd.DataFrame(monitoring_alerts)
 
     def get_alert_details(self, id: str) -> Alert:
-        """get alert details by id
+        """Alert details of the provided id
 
         :param id: alert or trigger id
         :return: Alert
+        :rtype: Alert
         """
         payload = {
             "project_name": self.project_name,
@@ -2510,12 +2646,12 @@ class Project(BaseModel):
         )
 
     def get_monitors_alerts(self, monitor_id: str, time: int):
-        """Fetch alerts for a specific monitor over a lookback window.
-        Returns the alerts as a pandas DataFrame from the monitor alerts endpoint.
+        """Returns the list of alerts monitor alerts endpoint.
 
         :param monitor_id: Monitor identifier.
         :param time: Lookback window (as expected by the backend).
-        :return: Alerts as a pandas DataFrame."""
+        :return: Alerts as a pandas DataFrame.
+        :rtype: pd.DataFrame"""
         url = f"{GET_MONITORS_ALERTS}?project_name={self.project_name}&monitor_id={monitor_id}&time={time}"
         res = self.api_client.get(url)
         data = pd.DataFrame(res.get("details"))
@@ -2523,10 +2659,14 @@ class Project(BaseModel):
 
     def get_model_performance(self, model_name: str = None) -> Dashboard:
         """Get model performance dashboard data for this project.
-        Builds dashboard query params and fetches raw data, optionally scoped to a model.
 
         :param model_name: Optional model name to filter dashboard data.
-        :return: A `Dashboard` wrapper with query params and raw data."""
+        :return: A Dashboard object that provides the following capabilities:
+            - plot(): Re-render the dashboard with custom width/height
+            - get_config(): Retrieve the dashboard configuration (excluding metadata)
+            - get_raw_data(): Access processed metric data underlying the dashboard
+            - print_config(): Pretty-print the dashboard configuration
+        :rtype: Dashboard"""
         auth_token = self.api_client.get_auth_token()
         dashboard_query_params = f"?type=model_performance&project_name={self.project_name}&access_token={auth_token}"
         raw_data_query_params = f"?project_name={self.project_name}"
@@ -2677,6 +2817,50 @@ class Project(BaseModel):
             This is used by the computation layer to select the appropriate runtime environment we have CPU/GPU runtime with small medium large with 2x 3x nomeclature with GPU T4 and A10G .
             Example values: ``"small"``, ``"medium"``,``"large"``, ``"2xsmall"``, ``"T4.small"``, ``"A10G.xmedium"``
         :type instance_type: str | None
+
+        Foundational model params example:
+        data_config= {
+            "tags": ['training'],
+            "drop_duplicate_uid": True,
+            "feature_encodings" : feature_encodings,
+            "feature_exclude": feature_exclude,
+            "explainability_method": ["lime"]
+        }
+
+        model_config = {
+            'n_estimators': 16, 
+            'softmax_temperature': 0.9,
+            'fit_mode' : 'batched',
+        }
+        tunning_config = {
+            'device': 'cuda',
+            'epochs': 3,
+            'learning_rate': 1e-5,
+            'batch_size': 512,
+            'show_progress': True
+        }
+        peft_config= {
+            'r':8, 'lora_alpha':16, 'lora_dropout':0.05
+        }
+        processor_config={
+            'imputation_strategy': 'mean',
+            'scaling_strategy': 'standard',
+            'resampling_strategy': 'smote'
+        }
+
+        Classic ML model params example:
+        data_config= {
+            "tags": ['training'],
+            "drop_duplicate_uid": True,
+            "feature_encodings" : feature_encodings,
+            "feature_exclude": feature_exclude,
+            "explainability_method": ["lime"]
+        }
+
+        model_config = {
+            'max_depth': 10,
+            'max_leaves' : 32
+        }
 
         :return: Identifier or reference for the trained model artifact (e.g., model ID / artifact URI).
         :rtype: str
@@ -2935,7 +3119,7 @@ class Project(BaseModel):
         return "Model Trained Successfully"
 
     def models(self) -> pd.DataFrame:
-        """Models trained for the project
+        """List of models trained for the project
 
         :return: Dataframe with details of all models
         """
@@ -2964,7 +3148,7 @@ class Project(BaseModel):
         return active_model
 
     def available_models(self) -> List[str]:
-        """Returns all models which can be trained on platform
+        """Returns all models which can be trained on Lexsi
 
         :return: list of all models
         """
@@ -2988,7 +3172,7 @@ class Project(BaseModel):
         return available_models, res["details"]["foundation_models"]
 
     def activate_model(self, model_name: str) -> str:
-        """Sets the model to active for the project
+        """Sets the provided model to active for the project
 
         :param model_name: name of the model
         :return: response
@@ -3005,7 +3189,7 @@ class Project(BaseModel):
         return res.get("details")
 
     def update_inference_model_status(self, model_name: str, activate: bool) -> str:
-        """Sets the model to active for inferencing
+        """Sets the provided model to active for inferencing
 
         :param model_name: name of the model
         :return: response
@@ -3026,7 +3210,7 @@ class Project(BaseModel):
     def model_inference_settings(
         self, model_name: str, inference_compute: InferenceCompute
     ) -> str:
-        """Model Inference Settings
+        """Update Model Inference Settings
 
         :param model_provider: model of provider
         :param model_name: name of the model to be initialized
@@ -3044,7 +3228,7 @@ class Project(BaseModel):
             raise Exception(res.get("details", "Failed to update inference settings"))
 
     def remove_model(self, model_name: str) -> str:
-        """Removes the trained model for the project
+        """Removes the trained model from the project
 
         :param model_name: name of the model
         :return: response
@@ -3067,11 +3251,14 @@ class Project(BaseModel):
         model_name: Optional[str] = None,
         instance_type: Optional[str] = None
     ) -> pd.DataFrame:
-        """Run model inference on data
+        """Run model inference on tag or file_name data
 
         :param tag: data tag for running inference
+        :param file_name: data file name for running inference
         :param model_name: name of the model, defaults to active model for the project
+        :param instance_type: instance type for running inference
         :return: model inference dataframe
+        :rtype: pd.DataFrame
         """
 
         if not tag and not file_name:
@@ -3161,7 +3348,7 @@ class Project(BaseModel):
         return tag_data_df
 
     def model_inferences(self) -> pd.DataFrame:
-        """All model inferences
+        """returns model inferences for the project
 
         :return: model inferences dataframe
         """
@@ -3178,7 +3365,7 @@ class Project(BaseModel):
         return model_inference_df
 
     def model_summary(self, model_name: Optional[str] = None) -> ModelSummary:
-        """Model Summary
+        """Model Summary for the project
 
         :param model_name: name of the model, defaults to active model for project
         :return: model summary
@@ -3891,7 +4078,7 @@ class Project(BaseModel):
         xai: Optional[list] = [],
         risk_policies: Optional[bool] = False,
     ):
-        """Case Info
+        """Case Exaplainability for given unique identifer
 
         :param unique_identifer: unique identifer of case
         :param case_id: case id, defaults to None
@@ -3965,7 +4152,7 @@ class Project(BaseModel):
         end_date: Optional[str] = None,
         tag: Optional[str] = None,
     ) -> str:
-        """Delete Cases
+        """Delete Case with given filters
 
         :param unique_identifier: unique identifier of case, defaults to None
         :param start_date: start date of case, defaults to None
@@ -4084,7 +4271,7 @@ class Project(BaseModel):
         return res["details"]
 
     def observations(self) -> pd.DataFrame:
-        """Observations
+        """List of Observations
 
         :return: observation details dataframe
         """
@@ -4136,7 +4323,7 @@ class Project(BaseModel):
         return observation_df
 
     def observation_trail(self) -> pd.DataFrame:
-        """Observation Trail
+        """List of Observation Trail
 
         :return: observation trail details dataframe
         """
@@ -4303,7 +4490,7 @@ class Project(BaseModel):
         statement: Optional[str] = None,
         linked_features: Optional[List[str]] = None,
     ) -> str:
-        """Updates Observation
+        """Updates existing Observation with id
 
         :param observation_id: id of observation
         :param observation_name: name of observation
@@ -4398,7 +4585,7 @@ class Project(BaseModel):
         return "Observation Deleted"
 
     def policies(self) -> pd.DataFrame:
-        """Policies
+        """List of Policies
 
         :return: policy details dataframe
         """
@@ -4449,7 +4636,7 @@ class Project(BaseModel):
         return policy_df
 
     def policy_trail(self) -> pd.DataFrame:
-        """Policy Trail
+        """List of Policy Trail
 
         :return: observation details dataframe
         """
@@ -4616,7 +4803,7 @@ class Project(BaseModel):
         decision: Optional[str] = None,
         input: Optional[str] = None,
     ) -> str:
-        """Updates Policy
+        """Updates Existing Policy
 
         :param policy_id: id of policy
         :param policy_name: name of policy
@@ -4694,7 +4881,7 @@ class Project(BaseModel):
         policy_id: str,
         policy_name: str,
     ) -> str:
-        """Deletes Policy
+        """Deletes Policy with given id and name
 
         :param policy_id: id of policy
         :param policy_name: name of policy
@@ -5034,7 +5221,7 @@ class Project(BaseModel):
         return synthetic_data
 
     def remove_synthetic_tag(self, tag: str) -> str:
-        """delete synthetic data tag
+        """Delete synthetic data tag
 
         :param tag: Tag name to delete.
         :raises Exception: _description_
@@ -5061,8 +5248,7 @@ class Project(BaseModel):
         return f"{tag} deleted successfully."
 
     def get_observation_params(self) -> dict:
-        """Fetch observation/policy expression parameters for this project.
-        Used for validating expressions, linked features, and supported operators."""
+        """Fetches observation and policy expression parameters for the project. Used for validating expressions, linked features, and supported operators."""
         url = f"{GET_OBSERVATION_PARAMS_URI}?project_name={self.project_name}"
 
         res = self.api_client.get(url)
@@ -5070,7 +5256,7 @@ class Project(BaseModel):
         return res["details"]
 
     def create_synthetic_prompt(self, name: str, expression: str) -> str:
-        """create synthetic prompt for the project
+        """Creates synthetic prompt for the project
 
         :param name: prompt name
         :param expression: expression of policy
@@ -5111,10 +5297,10 @@ class Project(BaseModel):
         return "Synthetic prompt created successfully."
 
     def update_synthetic_prompt(self, prompt_id: str, status: str) -> str:
-        """update synthetic prompt
+        """Updates the status of a synthetic prompt.
 
         :param prompt_id: prompt id
-        :param activate: True or False
+        :param status: active or inactive
         :raises Exception: _description_
         :raises Exception: _description_
         :return: response message
@@ -5194,36 +5380,35 @@ class Project(BaseModel):
 
         return pd.DataFrame(res["comparison_metrics"])
 
-    def evals_dl_tabular(self, model_name: str):
-        """get evals for ml tabular model
+    # def evals_dl_tabular(self, model_name: str):
+    #     """get evals for ml tabular model
 
-        :param model_name: model name
-        :return: evals
-        """
-        url = f"{TABULAR_DL}?model_name={model_name}&project_name={self.project_name}"
-        res = self.api_client.post(url)
-        if not res["success"]:
-            raise Exception(res["message"])
+    #     :param model_name: model name
+    #     :return: evals
+    #     """
+    #     url = f"{TABULAR_DL}?model_name={model_name}&project_name={self.project_name}"
+    #     res = self.api_client.post(url)
+    #     if not res["success"]:
+    #         raise Exception(res["message"])
 
-        return pd.DataFrame(res["comparison_metrics"])
+    #     return pd.DataFrame(res["comparison_metrics"])
 
-    def evals_dl_image(self, model_name: str, unique_identifier: str):
-        """get evals for ml tabular model
-        :param model_name: model name
-        :return: evals
-        """
-        url = f"{IMAGE_DL}?model_name={model_name}&project_name={self.project_name}&unique_identifier={unique_identifier}"
-        res = self.api_client.post(url)
-        if not res["success"]:
-            raise Exception(res["message"])
+    # def evals_dl_image(self, model_name: str, unique_identifier: str):
+    #     """get evals for ml tabular model
+    #     :param model_name: model name
+    #     :return: evals
+    #     """
+    #     url = f"{IMAGE_DL}?model_name={model_name}&project_name={self.project_name}&unique_identifier={unique_identifier}"
+    #     res = self.api_client.post(url)
+    #     if not res["success"]:
+    #         raise Exception(res["message"])
 
-        return res["attributions"]
+    #     return res["attributions"]
 
     def get_feature_importance(
         self, model_name: str, feature_name: str, xai_method: str
     ):
-        """Fetch feature importance for a model/feature and XAI method.
-        Calls the feature-importance endpoint and returns the backend-provided values.
+        """Fetches feature-importance values for a given model, feature, and XAI method.
 
         :param model_name: Trained model name.
         :param feature_name: Feature/column name.
@@ -5241,7 +5426,7 @@ class Project(BaseModel):
         event_names: Optional[List[str]] = None,
         status: Optional[List[str]] = None,
     ) -> List[Dict]:
-        """get info about events
+        """Fetches event details for the project.
 
         :param event_id: Optional event id to filter by.
         :param event_names: Optional list of event names to filter by.
@@ -5279,7 +5464,7 @@ class Project(BaseModel):
 
 
 def generate_expression(expression):
-    """Render a tokenized expression into a readable string.
+    """Render a provided tokenized expression into a readable string.
     Used to display stored observation/policy expressions from their metadata format.
 
     :param expression: Token list produced by `build_expression`.
@@ -5384,7 +5569,7 @@ def build_expression(expression_string):
 def validate_configuration(
     configuration, params, project_name="", api_client=APIClient(), observations=False
 ):
-    """Validate an expression configuration against allowed features/operators.
+    """Validate an expression provided configuration against allowed features/operators.
     Raises exceptions for invalid columns/operators/values and can validate observation comparisons.
 
     :param configuration: Configuration token list (from `build_expression`).
