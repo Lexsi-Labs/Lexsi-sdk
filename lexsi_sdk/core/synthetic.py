@@ -174,7 +174,7 @@ class SyntheticModel(BaseModel):
         return res['details']
     '''
 
-    def generate_synthetic_datapoints(
+    def generate_synthetic_data(
         self, num_of_datapoints: int, instance_type: Optional[str] = "shared"
     ):
         """Generate a specified number of synthetic data points using the model. Accepts the number of data points and an optional instance_type for compute resources. If instance_type is not shared, checks available servers and raises errors for invalid values.
@@ -219,7 +219,7 @@ class SyntheticModel(BaseModel):
         self,
         aux_columns: List[str],
         control_tag: str,
-        instance_type: Optional[str] = "shared",
+        node: Optional[str] = "shared",
     ):
         """generate anonymity score
 
@@ -231,14 +231,14 @@ class SyntheticModel(BaseModel):
 
         :return: None
         """
-        if instance_type != "shared":
+        if node != "shared":
             available_servers = self.api_client.get(
                 AVAILABLE_SYNTHETIC_CUSTOM_SERVERS_URI
             )["details"]
             servers = list(
                 map(lambda instance: instance["instance_name"], available_servers)
             )
-            Validate.value_against_list("instance_type", instance_type, servers)
+            Validate.value_against_list("instance_type", node, servers)
 
         if len(aux_columns) < 2:
             raise Exception("aux_columns requires minimum 2 columns.")
@@ -258,7 +258,7 @@ class SyntheticModel(BaseModel):
             "control_tag": control_tag,
             "model_name": self.model_name,
             "project_name": self.project_name,
-            "instance_type": instance_type,
+            "instance_type": node,
         }
 
         res = self.api_client.post(GENERATE_ANONYMITY_SCORE_URI, payload)
