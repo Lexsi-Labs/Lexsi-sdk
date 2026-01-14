@@ -1187,10 +1187,10 @@ class Project(BaseModel):
         model_architecture: str,
         model_type: str,
         model_name: str,
-        model_data_tags: list,
-        model_test_tags: Optional[list],
-        instance_type: Optional[str] = None,
-        explainability_method: Optional[list] = ["shap"],
+        model_train: list,
+        model_test: Optional[list],
+        pod: Optional[str] = None,
+        xai_method: Optional[list] = ["shap"],
         feature_list: Optional[list] = None,
     ):
         """Uploads a custom trained model to Lexsi.ai for inference and evaluation.
@@ -1200,9 +1200,9 @@ class Project(BaseModel):
         :param model_type: type of the model based on the architecture ["Xgboost","Lgboost","CatBoost","Random_forest","Linear_Regression","Logistic_Regression","Gaussian_NaiveBayes","SGD"]
                 use upload_model_types() method to get all allowed model_types
         :param model_name: name of the model
-        :param model_data_tags: data tags for model
-        :param model_test_tags: test tags for model (optional)
-        :param instance_type: instance to be used for uploading model (optional)
+        :param model_train: data tags for model
+        :param model_test: test tags for model (optional)
+        :param pod: pod to be used for uploading model (optional)
         :param explainability_method: explainability method to be used while uploading model ["shap", "lime"] (optional)
         :param feature_list: list of features in sequence which are to be passed in the model (optional)
         """
@@ -1211,7 +1211,7 @@ class Project(BaseModel):
             """Upload a local model artifact to Lexsi file storage.
             Returns the stored `filepath` referenced by the model upload request."""
             files = {"in_file": open(model_path, "rb")}
-            model_data_tags_str = ",".join(model_data_tags)
+            model_data_tags_str = ",".join(model_train)
             res = self.api_client.file(
                 f"{UPLOAD_DATA_FILE_URI}?project_name={self.project_name}&data_type=model&tag={model_data_tags_str}",
                 files,
@@ -1233,27 +1233,27 @@ class Project(BaseModel):
         Validate.value_against_list("model_type", model_type, valid_model_types)
 
         tags = self.tags()
-        Validate.value_against_list("model_data_tags", model_data_tags, tags)
+        Validate.value_against_list("model_data_tags", model_train, tags)
 
-        if model_test_tags:
-            Validate.value_against_list("model_test_tags", model_test_tags, tags)
+        if model_test:
+            Validate.value_against_list("model_test_tags", model_test, tags)
 
         uploaded_path = upload_file_and_return_path()
 
-        if instance_type:
+        if pod:
             custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
             Validate.value_against_list(
                 "instance_type",
-                instance_type,
+                pod,
                 [
                     server["instance_name"]
                     for server in custom_batch_servers.get("details", [])
                 ],
             )
 
-        if explainability_method:
+        if xai_method:
             Validate.value_against_list(
-                "explainability_method", explainability_method, ["shap", "lime"]
+                "explainability_method", xai_method, ["shap", "lime"]
             )
 
         payload = {
@@ -1262,14 +1262,14 @@ class Project(BaseModel):
             "model_architecture": model_architecture,
             "model_type": model_type,
             "model_path": uploaded_path,
-            "model_data_tags": model_data_tags,
-            "model_test_tags": model_test_tags,
-            "explainability_method": explainability_method,
+            "model_data_tags": model_train,
+            "model_test_tags": model_test,
+            "explainability_method": xai_method,
             "feature_list": feature_list,
         }
 
-        if instance_type:
-            payload["instance_type"] = instance_type
+        if pod:
+            payload["instance_type"] = pod
 
         res = self.api_client.post(UPLOAD_MODEL_URI, payload)
 
@@ -1289,10 +1289,10 @@ class Project(BaseModel):
         model_architecture: str,
         model_type: str,
         model_name: str,
-        model_data_tags: list,
-        model_test_tags: Optional[list],
-        instance_type: Optional[str] = None,
-        explainability_method: Optional[list] = ["shap"],
+        model_train: list,
+        model_test: Optional[list],
+        pod: Optional[str] = None,
+        xai_method: Optional[list] = ["shap"],
         bucket_name: Optional[str] = None,
         file_path: Optional[str] = None,
     ):
@@ -1303,10 +1303,10 @@ class Project(BaseModel):
         :param model_type: type of the model based on the architecture ["Xgboost","Lgboost","CatBoost","Random_forest","Linear_Regression","Logistic_Regression","Gaussian_NaiveBayes","SGD"]
                 use upload_model_types() method to get all allowed model_types
         :param model_name: name of the model
-        :param model_data_tags: data tags for model
-        :param model_test_tags: test tags for model (optional)
-        :param instance_type: instance to be used for uploading model (optional)
-        :param explainability_method: explainability method to be used while uploading model ["shap", "lime"] (optional)
+        :param model_train: data tags for model
+        :param model_test: test tags for model (optional)
+        :param pod: pod to be used for uploading model (optional)
+        :param xai_method: explainability method to be used while uploading model ["shap", "lime"] (optional)
         :param bucket_name: if data connector has buckets # Example: s3/gcs buckets
         :param file_path: filepath from the bucket for the data to read
         """
@@ -1349,7 +1349,7 @@ class Project(BaseModel):
             Returns the stored `filepath` referenced by the model upload request."""
             if not self.project_name:
                 return "Missing Project Name"
-            model_data_tags_str = ",".join(model_data_tags)
+            model_data_tags_str = ",".join(model_train)
             if self.organization_id:
                 res = self.api_client.post(
                     f"{UPLOAD_FILE_DATA_CONNECTORS}?project_name={self.project_name}&organization_id={self.organization_id}&link_service_name={data_connector_name}&data_type=model&bucket_name={bucket_name}&file_path={file_path}&tag={model_data_tags_str}"
@@ -1375,27 +1375,27 @@ class Project(BaseModel):
         Validate.value_against_list("model_type", model_type, valid_model_types)
 
         tags = self.tags()
-        Validate.value_against_list("model_data_tags", model_data_tags, tags)
+        Validate.value_against_list("model_data_tags", model_train, tags)
 
-        if model_test_tags:
-            Validate.value_against_list("model_test_tags", model_test_tags, tags)
+        if model_test:
+            Validate.value_against_list("model_test_tags", model_test, tags)
 
         uploaded_path = upload_file_and_return_path()
 
-        if instance_type:
+        if pod:
             custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
             Validate.value_against_list(
                 "instance_type",
-                instance_type,
+                pod,
                 [
                     server["instance_name"]
                     for server in custom_batch_servers.get("details", [])
                 ],
             )
 
-        if explainability_method:
+        if xai_method:
             Validate.value_against_list(
-                "explainability_method", explainability_method, ["shap", "lime"]
+                "explainability_method", xai_method, ["shap", "lime"]
             )
 
         payload = {
@@ -1404,13 +1404,13 @@ class Project(BaseModel):
             "model_architecture": model_architecture,
             "model_type": model_type,
             "model_path": uploaded_path,
-            "model_data_tags": model_data_tags,
-            "model_test_tags": model_test_tags,
-            "explainability_method": explainability_method,
+            "model_data_tags": model_train,
+            "model_test_tags": model_test,
+            "explainability_method": xai_method,
         }
 
-        if instance_type:
-            payload["instance_type"] = instance_type
+        if pod:
+            payload["instance_type"] = pod
 
         res = self.api_client.post(UPLOAD_MODEL_URI, payload)
 
@@ -1423,32 +1423,6 @@ class Project(BaseModel):
             res["event_id"],
             lambda: self.delete_file(uploaded_path),
         )
-
-    def upload_docker_compose(
-        self,
-        model_provider: str,
-        model_name: str,
-        model_type: str,
-        model_task_type: str,
-        hf_token: Optional[str] = None,
-        file_path: Optional[str] = None,
-    ):
-        """Upload a docker compose bundle for custom model hosting.
-        Performs a multipart upload to Lexsi storage and returns the raw API response.
-
-        :param model_provider: Provider name (e.g. `openai`, `anthropic`, etc.).
-        :param model_name: Model name to register for hosting.
-        :param model_type: Model type identifier expected by backend.
-        :param model_task_type: Task type (e.g. `text-generation`, `embedding`).
-        :param hf_token: Optional HuggingFace token for private model pulls.
-        :param file_path: Local path to the docker compose bundle archive.
-        :return: Raw API response from the file upload call."""
-        files = {"in_file": open(file_path, "rb")}
-        res = self.api_client.file(
-            f"{UPLOAD_DATA_FILE_URI}?project_name={self.project_name}&model_provider={model_provider}&model_name={model_name}&model_type={model_type}&model_task_type={model_task_type}&hf_token={hf_token}",
-            files=files,
-        )
-        return res
 
     def data_observations(self, tag: str) -> pd.DataFrame:
         """Available observations for the specified dataset tag.
@@ -1509,7 +1483,7 @@ class Project(BaseModel):
         self,
         baseline_tags: Optional[List[str]] = None,
         current_tags: Optional[List[str]] = None,
-        instance_type: Optional[str] = "",
+        pod: Optional[str] = "",
     ) -> pd.DataFrame:
         """Generate Data Drift Diagnosis for the project with specified baseline and current tags.
 
@@ -1519,7 +1493,7 @@ class Project(BaseModel):
         """
 
         if baseline_tags and current_tags:
-            if instance_type not in [
+            if pod not in [
                 "small",
                 "xsmall",
                 "2xsmall",
@@ -1539,7 +1513,7 @@ class Project(BaseModel):
                 "project_name": self.project_name,
                 "baseline_tags": baseline_tags,
                 "current_tags": current_tags,
-                "instance_type": instance_type,
+                "instance_type": pod,
             }
             res = self.api_client.post(RUN_DATA_DRIFT_DIAGNOSIS_URI, payload)
 
@@ -1588,13 +1562,13 @@ class Project(BaseModel):
     def get_data_drift_dashboard(
         self,
         payload: DataDriftPayload = {},
-        instance_type: Optional[str] = None,
+        pod: Optional[str] = None,
         run_in_background: bool = False,
     ) -> Dashboard:
         """Generate Data Drift Dashboard for the project with specified parameters.
 
         :param run_in_background: runs in background without waiting for dashboard generation to complete
-        :param instance_type: instance type for running on custom server
+        :param pod: pod for running on custom server
         :param payload: data drift payload
             {
                 "base_line_tag": "",
@@ -1685,15 +1659,17 @@ class Project(BaseModel):
         custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
         Validate.value_against_list(
             "instance_type",
-            instance_type,
+            pod,
             [
                 server["instance_name"]
                 for server in custom_batch_servers.get("details", [])
             ],
         )
 
-        if instance_type:
-            payload["instance_type"] = instance_type
+        if payload["pod"]:
+            payload["instance_type"] = payload["pod"]
+        if pod:
+            payload["instance_type"] = pod
 
         res = self.api_client.post(f"{GENERATE_DASHBOARD_URI}?type=data_drift", payload)
 
@@ -1710,13 +1686,13 @@ class Project(BaseModel):
     def get_target_drift_dashboard(
         self,
         payload: TargetDriftPayload = {},
-        instance_type: Optional[str] = None,
+        pod: Optional[str] = None,
         run_in_background: bool = False,
     ) -> Dashboard:
         """Generate Target Drift Diagnosis for the project with specified parameters.
 
         :param run_in_background: runs in background without waiting for dashboard generation to complete
-        :param instance_type: instance type for running on custom server
+        :param pod: pod for running on custom server
         :param payload: target drift payload
                 {
                     "base_line_tag": "",
@@ -1805,15 +1781,17 @@ class Project(BaseModel):
         custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
         Validate.value_against_list(
             "instance_type",
-            instance_type,
+            pod,
             [
                 server["instance_name"]
                 for server in custom_batch_servers.get("details", [])
             ],
         )
 
-        if instance_type:
-            payload["instance_type"] = instance_type
+        if payload["pod"]:
+            payload["instance_type"] = payload["pod"]
+        if pod:
+            payload["instance_type"] = pod
 
         res = self.api_client.post(
             f"{GENERATE_DASHBOARD_URI}?type=target_drift", payload
@@ -1832,7 +1810,7 @@ class Project(BaseModel):
     def get_bias_monitoring_dashboard(
         self,
         payload: BiasMonitoringPayload = {},
-        instance_type: Optional[str] = None,
+        pod: Optional[str] = None,
         run_in_background: bool = False,
     ) -> Dashboard:
         """Generate Bias Monitoring Dashboard for the given parameters.
@@ -1900,15 +1878,17 @@ class Project(BaseModel):
         custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
         Validate.value_against_list(
             "instance_type",
-            instance_type,
+            pod,
             [
                 server["instance_name"]
                 for server in custom_batch_servers.get("details", [])
             ],
         )
 
-        if instance_type:
-            payload["instance_type"] = instance_type
+        if payload["pod"]:
+            payload["instance_type"] = payload["pod"]
+        if pod:
+            payload["instance_type"] = pod
 
         res = self.api_client.post(
             f"{GENERATE_DASHBOARD_URI}?type=biasmonitoring", payload
@@ -1927,13 +1907,13 @@ class Project(BaseModel):
     def get_model_performance_dashboard(
         self,
         payload: ModelPerformancePayload = {},
-        instance_type: Optional[str] = None,
+        pod: Optional[str] = None,
         run_in_background: bool = False,
     ) -> Dashboard:
         """Generate Model Performance Dashboard for the given parameters.
 
         :param run_in_background: runs in background without waiting for dashboard generation to complete
-        :param instance_type: instance type for running on custom server
+        :param pod: pod for running on custom server
         :param payload: model performance payload
                 {
                     "base_line_tag": "",
@@ -2008,15 +1988,17 @@ class Project(BaseModel):
         custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
         Validate.value_against_list(
             "instance_type",
-            instance_type,
+            pod,
             [
                 server["instance_name"]
                 for server in custom_batch_servers.get("details", [])
             ],
         )
 
-        if instance_type:
-            payload["instance_type"] = instance_type
+        if payload["pod"]:
+            payload["instance_type"] = payload["pod"]
+        if pod:
+            payload["instance_type"] = pod
 
         res = self.api_client.post(
             f"{GENERATE_DASHBOARD_URI}?type=performance", payload
@@ -2035,7 +2017,7 @@ class Project(BaseModel):
     def get_image_property_drift_dashboard(
         self,
         payload: ImageDashboardPayload = {},
-        instance_type: Optional[str] = None,
+        pod: Optional[str] = None,
         run_in_background: bool = False,
     ) -> Dashboard:
         """Generate an Image Property Drift dashboard for this project with given baseline and current tags.
@@ -2046,7 +2028,7 @@ class Project(BaseModel):
                     "current_tag": List[str]
                 }
                 defaults to None
-        :param instance_type: Optional compute instance for generation jobs.
+        :param pod: Optional compute instance for generation jobs.
         :param run_in_background: If True, trigger generation and return immediately.
         :return: A Dashboard object that provides the following capabilities:
             - plot(): Re-render the dashboard with custom width/height
@@ -2070,15 +2052,17 @@ class Project(BaseModel):
         custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
         Validate.value_against_list(
             "instance_type",
-            instance_type,
+            pod,
             [
                 server["instance_name"]
                 for server in custom_batch_servers.get("details", [])
             ],
         )
 
-        if instance_type:
-            payload["instance_type"] = instance_type
+        if payload["pod"]:
+            payload["instance_type"] = payload["pod"]
+        if pod:
+            payload["instance_type"] = pod
 
         res = self.api_client.post(
             f"{GENERATE_DASHBOARD_URI}?type=image_property_drift", payload
@@ -2097,7 +2081,7 @@ class Project(BaseModel):
     def get_label_drift_dashboard(
         self,
         payload: ImageDashboardPayload = {},
-        instance_type: Optional[str] = None,
+        pod: Optional[str] = None,
         run_in_background: bool = False,
     ) -> Dashboard:
         """Generate an Image Label Drift dashboard for this project with given baseline and current tags.
@@ -2127,15 +2111,17 @@ class Project(BaseModel):
         custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
         Validate.value_against_list(
             "instance_type",
-            instance_type,
+            pod,
             [
                 server["instance_name"]
                 for server in custom_batch_servers.get("details", [])
             ],
         )
 
-        if instance_type:
-            payload["instance_type"] = instance_type
+        if payload["pod"]:
+            payload["instance_type"] = payload["pod"]
+        if pod:
+            payload["instance_type"] = pod
 
         res = self.api_client.post(
             f"{GENERATE_DASHBOARD_URI}?type=label_drift", payload
@@ -2154,13 +2140,13 @@ class Project(BaseModel):
     def get_property_label_correlation_dashboard(
         self,
         payload: ImageDashboardPayload = {},
-        instance_type: Optional[str] = None,
+        pod: Optional[str] = None,
         run_in_background: bool = False,
     ) -> Dashboard:
         """Generate an Image Property Label Correlation dashboard for this project with given baseline and current tags.
 
         :param payload: Dashboard configuration payload (tags/labels and parameters).
-        :param instance_type: Optional compute instance for generation jobs.
+        :param pod: Optional compute instance for generation jobs.
         :param run_in_background: If True, trigger generation and return immediately.
         :return: A Dashboard object that provides the following capabilities:
             - plot(): Re-render the dashboard with custom width/height
@@ -2184,15 +2170,17 @@ class Project(BaseModel):
         custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
         Validate.value_against_list(
             "instance_type",
-            instance_type,
+            pod,
             [
                 server["instance_name"]
                 for server in custom_batch_servers.get("details", [])
             ],
         )
 
-        if instance_type:
-            payload["instance_type"] = instance_type
+        if payload["pod"]:
+            payload["instance_type"] = payload["pod"]
+        if pod:
+            payload["instance_type"] = pod
 
         res = self.api_client.post(
             f"{GENERATE_DASHBOARD_URI}?type=property_label_correlation", payload
@@ -2211,13 +2199,13 @@ class Project(BaseModel):
     def get_image_dataset_drift_dashboard(
         self,
         payload: ImageDashboardPayload = {},
-        instance_type: Optional[str] = None,
+        pod: Optional[str] = None,
         run_in_background: bool = False,
     ) -> Dashboard:
         """Generate an Image Dataset Drift dashboard for this project with given baseline and current tags.
 
         :param payload: Dashboard configuration payload (tags/labels and parameters).
-        :param instance_type: Optional compute instance for generation jobs.
+        :param pod: Optional compute instance for generation jobs.
         :param run_in_background: If True, trigger generation and return immediately.
         :return: A Dashboard object that provides the following capabilities:
             - plot(): Re-render the dashboard with custom width/height
@@ -2241,15 +2229,17 @@ class Project(BaseModel):
         custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
         Validate.value_against_list(
             "instance_type",
-            instance_type,
+            pod,
             [
                 server["instance_name"]
                 for server in custom_batch_servers.get("details", [])
             ],
         )
 
-        if instance_type:
-            payload["instance_type"] = instance_type
+        if payload["pod"]:
+            payload["instance_type"] = payload["pod"]
+        if pod:
+            payload["instance_type"] = pod
 
         res = self.api_client.post(
             f"{GENERATE_DASHBOARD_URI}?type=image_dataset_drift", payload
@@ -2487,7 +2477,7 @@ class Project(BaseModel):
 
         return res["details"]
 
-    def create_monitoring_trigger(self, payload: dict) -> str:
+    def create_monitor(self, payload: dict) -> str:
         """Create monitoring trigger for project
 
         :param payload: Data Drift Trigger Payload
@@ -2506,7 +2496,7 @@ class Project(BaseModel):
                     "current_date": { "start_date": "", "end_date": ""},
                     "base_line_tag": "",
                     "current_tag": "",
-                    "instance_type": ""  #Instance type to used for running trigger
+                    "pod": ""  #Pod type to used for running trigger
                 } OR Target Drift Trigger Payload
                 {
                     "trigger_type": ""  #["Data Drift", "Target Drift", "Model Performance"]
@@ -2523,7 +2513,7 @@ class Project(BaseModel):
                     "current_tag": "",
                     "baseline_true_label": "",
                     "current_true_label": "",
-                    "instance_type": ""  #Instance type to used for running trigger
+                    "pod": ""  #Pod type to used for running trigger
                 } OR Model Performance Trigger Payload
                 {
                     "trigger_type": ""  #["Data Drift", "Target Drift", "Model Performance"]
@@ -2539,7 +2529,7 @@ class Project(BaseModel):
                     "base_line_tag": "",
                     "baseline_true_label": "",
                     "baseline_pred_label": "",
-                    "instance_type": ""  #Instance type to used for running trigger
+                    "pod": ""  #Pod type to used for running trigger
                 }
         :return: response
         """
@@ -2554,7 +2544,8 @@ class Project(BaseModel):
         ]
 
         Validate.check_for_missing_keys(payload, required_payload_keys)
-
+        if payload["pod"]:
+            payload["instance_type"] = payload["pod"]
         payload = {
             "project_name": self.project_name,
             "modify_req": {
@@ -2705,7 +2696,7 @@ class Project(BaseModel):
         processor_config: Optional[ProcessorParams] = None,
         finetune_mode: Optional[str] = None,
         tunning_strategy: Optional[str] = None,
-        instance_type: Optional[str] = None
+        compute_type: Optional[str] = None
     ) -> str:
 
         """
@@ -2813,10 +2804,10 @@ class Project(BaseModel):
             See :class:`lexsi_sdk.common.types.PEFTParams`.
         :type peft_config: PEFTParams | None
 
-        :param instance_type: Compute instance used for training (CPU/GPU).
+        :param compute_type: Compute instance used for training (CPU/GPU).
             This is used by the computation layer to select the appropriate runtime environment we have CPU/GPU runtime with small medium large with 2x 3x nomeclature with GPU T4 and A10G .
             Example values: ``"small"``, ``"medium"``,``"large"``, ``"2xsmall"``, ``"T4.small"``, ``"A10G.xmedium"``
-        :type instance_type: str | None
+        :type compute_type: str | None
 
         Foundational model params example:
         data_config= {
@@ -2881,12 +2872,12 @@ class Project(BaseModel):
             *project_config["metadata"]["feature_include"],
         ]
 
-        if tunning_strategy != "inference" and instance_type:
+        if tunning_strategy != "inference" and compute_type:
             custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
             available_custom_batch_servers = custom_batch_servers.get("details", []) + custom_batch_servers.get("available_gpu_custom_servers", [])
             Validate.value_against_list(
                 "instance_type",
-                instance_type,
+                compute_type,
                 [
                     server["instance_name"]
                     for server in available_custom_batch_servers
@@ -3102,8 +3093,8 @@ class Project(BaseModel):
         if tunning_strategy:
             payload["metadata"]["tunning_strategy"] = tunning_strategy
 
-        if instance_type:
-            payload["instance_type"] = instance_type
+        if compute_type:
+            payload["instance_type"] = compute_type
 
         print("Config :-")
         print(json.dumps(payload["metadata"], indent=1))
@@ -3249,7 +3240,7 @@ class Project(BaseModel):
         tag: Optional[str] = None,
         file_name: Optional[str] = None,
         model_name: Optional[str] = None,
-        instance_type: Optional[str] = None
+        pod: Optional[str] = None
     ) -> pd.DataFrame:
         """Run model inference on tag or file_name data
 
@@ -3302,12 +3293,12 @@ class Project(BaseModel):
             or models.loc[models["status"] == "active"]["model_name"].values[0]
         )
 
-        if instance_type:
+        if pod:
             custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
             available_custom_batch_servers = custom_batch_servers.get("details", []) + custom_batch_servers.get("available_gpu_custom_servers", [])
             Validate.value_against_list(
                 "instance_type",
-                instance_type,
+                pod,
                 [
                     server["instance_name"]
                     for server in available_custom_batch_servers
@@ -3318,7 +3309,7 @@ class Project(BaseModel):
             "project_name": self.project_name,
             "model_name": model,
             "tags": tag,
-            "instance_type": instance_type
+            "instance_type": pod
         }
         if filepath:
             run_model_payload["filepath"] = filepath
@@ -4068,23 +4059,23 @@ class Project(BaseModel):
 
         return cases_df
 
-    def case_info(
+    def case_predict(
         self,
         unique_identifer: str,
         case_id: Optional[str] = None,
         tag: Optional[str] = None,
         model_name: Optional[str] = None,
-        instance_type: Optional[str] = None,
+        serverless_type: Optional[str] = None,
         xai: Optional[list] = [],
         risk_policies: Optional[bool] = False,
     ):
-        """Case Exaplainability for given unique identifer
+        """Case Predict for given unique identifer
 
         :param unique_identifer: unique identifer of case
         :param case_id: case id, defaults to None
         :param tag: case tag, defaults to None
         :param model_name: trained model name, defaults to None
-        :param instance_type: instance to be used for case
+        :param serverless_type: instance to be used for case
                 Eg:- nova-0.5, nova-1, nova-1.5
         :param components: various components to be generated with predictions
                 Eg:- ['feature_importance', 'similar_cases', 'policies']
@@ -4096,7 +4087,7 @@ class Project(BaseModel):
             "unique_identifier": unique_identifer,
             "tag": tag,
             "model_name": model_name,
-            "instance_type": instance_type,
+            "instance_type": serverless_type,
             "risk_policies": risk_policies,
             "xai": xai,
         }
@@ -4115,7 +4106,7 @@ class Project(BaseModel):
                 "case_id": case_id,
                 "model_name": res["details"]["model_name"],
                 "data_id": res["details"]["data_id"],
-                "instance_type": instance_type,
+                "instance_type": serverless_type,
             }
 
             dtree_res = self.api_client.post(CASE_DTREE_URI, prediction_path_payload)
@@ -4210,7 +4201,7 @@ class Project(BaseModel):
 
         return case_logs_df
 
-    def get_viewed_case(self, case_id: str) -> Case:
+    def case_record(self, case_id: str):
         """Get already viewed case
 
         :param case_id: case id
@@ -4223,12 +4214,13 @@ class Project(BaseModel):
 
         if not res["success"]:
             raise Exception(res.get("details", "Failed to get viewed case"))
-
         data = {**res["details"], **res["details"].get("result", {})}
         data["api_client"] = self.api_client
-        if self.metadata.get("modality") != "text":
-            case = Case(**data)
-        if self.metadata.get("modality") == "text":
+        if self.metadata.get("modality") == "tabular":
+            case = CaseTabular(**data)
+        elif self.metadata.get("modality") == "image":
+            case = CaseImage(**data)
+        elif self.metadata.get("modality") == "text":
             case = CaseText(**data)
         return case
 
@@ -4914,7 +4906,7 @@ class Project(BaseModel):
         model_name: str,
         data_config: Optional[SyntheticDataConfig] = {},
         hyper_params: Optional[SyntheticModelHyperParams] = {},
-        instance_type: Optional[str] = "shared",
+        node: Optional[str] = "shared",
     ):
         """Train synthetic model
 
@@ -4945,8 +4937,8 @@ class Project(BaseModel):
                 "test_ratio": float [0, 1] defaults to 0.2
             }
             defaults to {}
-        :param instance_type: type of instance to run training
-            for all available instances check xai.available_synthetic_custom_servers()
+        :param node: type of node to run training
+            for all available nodes check xai.available_custom_servers()
             defaults to shared
 
         :return: response
@@ -4959,14 +4951,14 @@ class Project(BaseModel):
 
         project_config = project_config["metadata"]
 
-        if instance_type != "shared":
+        if node != "shared":
             available_servers = self.api_client.get(
                 AVAILABLE_SYNTHETIC_CUSTOM_SERVERS_URI
             )["details"]
             servers = list(
                 map(lambda instance: instance["instance_name"], available_servers)
             )
-            Validate.value_against_list("instance_type", instance_type, servers)
+            Validate.value_against_list("instance_type", node, servers)
 
         all_models_param = self.get_synthetic_model_params()
 
@@ -5037,7 +5029,7 @@ class Project(BaseModel):
         payload = {
             "project_name": self.project_name,
             "model_name": model_name,
-            "instance_type": instance_type,
+            "instance_type": node,
             "metadata": {
                 "model_name": model_name,
                 "tags": tags,

@@ -49,7 +49,7 @@ class CaseTabular(BaseModel):
         super().__init__(**kwargs)
         self.api_client = kwargs.get("api_client")
 
-    def explainability_shap_feature_importance(self):
+    def xai_shap(self):
         """Plot a horizontal bar chart showing SHAP-based feature importance for the case. Uses stored Shapley values for features."""
         fig = go.Figure()
 
@@ -86,7 +86,7 @@ class CaseTabular(BaseModel):
         )
         fig.show(config={"displaylogo": False})
 
-    def explainability_ig_feature_importance(self):
+    def xai_ig(self):
         """Plot a horizontal bar chart showing Integrated Gradients-based feature importance for the case."""
         fig = go.Figure()
 
@@ -123,7 +123,7 @@ class CaseTabular(BaseModel):
         )
         fig.show(config={"displaylogo": False})
 
-    def explainability_lime_feature_importance(self):
+    def xai_lime(self):
         """Plot a horizontal bar chart showing LIME-based feature importance for the case."""
         fig = go.Figure()
 
@@ -160,7 +160,7 @@ class CaseTabular(BaseModel):
         )
         fig.show(config={"displaylogo": False})
 
-    def explainability_dlb_feature_importance(self):
+    def xai_dlb(self):
         """Plot a horizontal bar chart showing Deep Lift Bayesian (DLB)-based feature importance for the case."""
         fig = go.Figure()
         if len(list(self.dlb_feature_importance.values())) < 1:
@@ -196,12 +196,12 @@ class CaseTabular(BaseModel):
         )
         fig.show(config={"displaylogo": False})
 
-    def explainability_prediction_path(self):
+    def xai_prediction_path(self):
         """Display the model’s prediction path as a sequence of decision nodes for the case, typically visualized as an SVG or plot."""
         svg = SVG(self.case_prediction_svg)
         display(svg)
 
-    def explainability_raw_data(self) -> pd.DataFrame:
+    def xai_raw_data(self) -> pd.DataFrame:
         """Return the raw data used for the case as a DataFrame, with feature names and values.
 
         :return: raw data dataframe
@@ -214,7 +214,7 @@ class CaseTabular(BaseModel):
         )
         return raw_data_df
 
-    def explainability_observations(self) -> pd.DataFrame:
+    def xai_observations(self) -> pd.DataFrame:
         """Return a DataFrame listing the checklist of observations (e.g., heuristics or warnings) associated with the case.
 
         :return: observations dataframe
@@ -223,7 +223,7 @@ class CaseTabular(BaseModel):
 
         return observations_df
 
-    def explainability_policies(self) -> pd.DataFrame:
+    def xai_policies(self) -> pd.DataFrame:
         """Return a DataFrame listing policies or rules applied during the model’s decision for the case.
 
         :return: policies dataframe
@@ -232,7 +232,7 @@ class CaseTabular(BaseModel):
 
         return policy_df
 
-    def explainability_decision(self) -> pd.DataFrame:
+    def inference_output(self) -> pd.DataFrame:
         """Return a DataFrame summarizing the final decision for the case, including the true value, predicted value, predicted category, and final decision.
 
         :return: decision dataframe
@@ -247,7 +247,7 @@ class CaseTabular(BaseModel):
 
         return decision_df
 
-    def explainability_similar_cases(self) -> pd.DataFrame | str:
+    def xai_similar_cases(self) -> pd.DataFrame | str:
         """Return a DataFrame of cases similar to the current case (if similar cases are available). If no similar cases are found, returns a message.
 
         :return: similar cases dataframe
@@ -333,7 +333,7 @@ class CaseImage(BaseModel):
         super().__init__(**kwargs)
         self.api_client = kwargs.get("api_client")
 
-    def explainability_decision(self) -> pd.DataFrame:
+    def inference_output(self) -> pd.DataFrame:
         """Return a DataFrame summarizing the final decision for the case, including the true value, predicted value, predicted category, and final decision.
 
         :return: decision dataframe
@@ -348,7 +348,7 @@ class CaseImage(BaseModel):
 
         return decision_df
 
-    def explainability_gradcam(self):
+    def xai_gradcam(self):
         """Visualize Grad-CAM results for image data, showing heatmaps and superimposed regions that contributed to the prediction."""
         if not self.image_data.get("gradcam", None):
             return "No Gradcam method found for this case"
@@ -410,7 +410,7 @@ class CaseImage(BaseModel):
 
         fig.show(config={"displaylogo": False})
 
-    def explainability_shap(self):
+    def xai_shap(self):
         """Render a SHAP attribution plot for image cases, displaying attributions as an overlay on the original image."""
         if not self.image_data.get("shap", None):
             return "No Shap method found for this case"
@@ -439,7 +439,7 @@ class CaseImage(BaseModel):
 
         fig.show(config={"displaylogo": False})
 
-    def explainability_lime(self):
+    def xai_lime(self):
         """Render a LIME attribution plot for image cases, displaying attributions as an overlay on the original image."""
         if not self.image_data.get("lime", None):
             return "No Lime method found for this case"
@@ -468,7 +468,7 @@ class CaseImage(BaseModel):
 
         fig.show(config={"displaylogo": False})
 
-    def explainability_integrated_gradients(self):
+    def xai_ig(self):
         """Render an integrated gradients attribution plot for image cases, showing positive and negative attributions side-by-side."""
         if not self.image_data.get("integrated_gradients", None):
             return "No Integrated Gradients method found for this case"

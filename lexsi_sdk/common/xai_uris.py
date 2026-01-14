@@ -18,6 +18,7 @@ CREATE_WORKSPACE_URI = f"{API_VERSION_V2}/users/create_workspace"
 
 # Custom Server
 AVAILABLE_CUSTOM_SERVERS_URI = f"{API_VERSION_V2}/project/server_types"
+AVAILABLE_SERVERLESS_URI = f"{API_VERSION_V2}/project/available_serverless_types"
 START_CUSTOM_SERVER_URI = f"{API_VERSION_V2}/project/start_server"
 STOP_CUSTOM_SERVER_URI = f"{API_VERSION_V2}/project/stop_server"
 
