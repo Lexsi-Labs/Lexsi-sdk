@@ -1683,6 +1683,15 @@ class Project(BaseModel):
         )
 
         custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
+        if payload.get("instance_type", None):
+            Validate.value_against_list(
+                "instance_type",
+                payload.get("instance_type"),
+                [
+                    server["instance_name"]
+                    for server in custom_batch_servers.get("details", [])
+                ],
+            )
         Validate.value_against_list(
             "instance_type",
             instance_type,
@@ -1803,6 +1812,17 @@ class Project(BaseModel):
         )
 
         custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
+
+        if payload.get("instance_type", None):
+            Validate.value_against_list(
+                "instance_type",
+                payload.get("instance_type"),
+                [
+                    server["instance_name"]
+                    for server in custom_batch_servers.get("details", [])
+                ],
+            )
+
         Validate.value_against_list(
             "instance_type",
             instance_type,
@@ -1898,6 +1918,15 @@ class Project(BaseModel):
             )
 
         custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
+        if payload.get("instance_type", None):
+            Validate.value_against_list(
+                "instance_type",
+                payload.get("instance_type"),
+                [
+                    server["instance_name"]
+                    for server in custom_batch_servers.get("details", [])
+                ],
+            )
         Validate.value_against_list(
             "instance_type",
             instance_type,
@@ -2006,6 +2035,15 @@ class Project(BaseModel):
             )
 
         custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
+        if payload.get("instance_type", None):
+            Validate.value_against_list(
+                "instance_type",
+                payload.get("instance_type"),
+                [
+                    server["instance_name"]
+                    for server in custom_batch_servers.get("details", [])
+                ],
+            )
         Validate.value_against_list(
             "instance_type",
             instance_type,
@@ -2068,6 +2106,15 @@ class Project(BaseModel):
         Validate.value_against_list("current_tag", payload["current_tag"], all_tags)
 
         custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
+        if payload.get("instance_type", None):
+            Validate.value_against_list(
+                "instance_type",
+                payload.get("instance_type"),
+                [
+                    server["instance_name"]
+                    for server in custom_batch_servers.get("details", [])
+                ],
+            )
         Validate.value_against_list(
             "instance_type",
             instance_type,
@@ -2125,6 +2172,15 @@ class Project(BaseModel):
         Validate.value_against_list("current_tag", payload["current_tag"], all_tags)
 
         custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
+        if payload.get("instance_type", None):
+            Validate.value_against_list(
+                "instance_type",
+                payload.get("instance_type"),
+                [
+                    server["instance_name"]
+                    for server in custom_batch_servers.get("details", [])
+                ],
+            )
         Validate.value_against_list(
             "instance_type",
             instance_type,
@@ -2182,6 +2238,15 @@ class Project(BaseModel):
         Validate.value_against_list("current_tag", payload["current_tag"], all_tags)
 
         custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
+        if payload.get("instance_type", None):
+            Validate.value_against_list(
+                "instance_type",
+                payload.get("instance_type"),
+                [
+                    server["instance_name"]
+                    for server in custom_batch_servers.get("details", [])
+                ],
+            )
         Validate.value_against_list(
             "instance_type",
             instance_type,
@@ -2239,6 +2304,15 @@ class Project(BaseModel):
         Validate.value_against_list("current_tag", payload["current_tag"], all_tags)
 
         custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
+        if payload.get("instance_type", None):
+            Validate.value_against_list(
+                "instance_type",
+                payload.get("instance_type"),
+                [
+                    server["instance_name"]
+                    for server in custom_batch_servers.get("details", [])
+                ],
+            )
         Validate.value_against_list(
             "instance_type",
             instance_type,
@@ -2554,6 +2628,17 @@ class Project(BaseModel):
         ]
 
         Validate.check_for_missing_keys(payload, required_payload_keys)
+
+        if payload.get("instance_type", None):
+            custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
+            Validate.value_against_list(
+                "instance_type",
+                payload.get("instance_type"),
+                [
+                    server["instance_name"]
+                    for server in custom_batch_servers.get("details", [])
+                ],
+            )
 
         payload = {
             "project_name": self.project_name,
@@ -2872,7 +2957,7 @@ class Project(BaseModel):
         if project_config == "Not Found":
             raise Exception("Upload files first")
 
-        available_models, foundational_models = self.available_models()
+        available_models = self.available_models()
 
         Validate.value_against_list("model_type", model_type, available_models)
 
@@ -2997,7 +3082,7 @@ class Project(BaseModel):
                                         f"{param_name} value cannot be less than {model_param['min']}"
                                     )
 
-                if model_type in foundational_models:
+                if model_type in ["TabPFN","TabICL","TabDPT","OrionMSP", "OrionBix","Mitra", "ContextTab"]:
                     validate_params(
                         model_parameters.get("model_params", {}), model_config
                     )
@@ -3169,7 +3254,7 @@ class Project(BaseModel):
             )
         )
 
-        return available_models, res["details"]["foundation_models"]
+        return available_models
 
     def activate_model(self, model_name: str) -> str:
         """Sets the provided model to active for the project
@@ -3304,15 +3389,25 @@ class Project(BaseModel):
 
         if instance_type:
             custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
-            available_custom_batch_servers = custom_batch_servers.get("details", []) + custom_batch_servers.get("available_gpu_custom_servers", [])
-            Validate.value_against_list(
-                "instance_type",
-                instance_type,
-                [
-                    server["instance_name"]
-                    for server in available_custom_batch_servers
-                ],
-            )
+            if self.metadata.get("modality") == "tabular":
+                available_custom_batch_servers = custom_batch_servers.get("details", []) + custom_batch_servers.get("available_gpu_custom_servers", [])
+                Validate.value_against_list(
+                    "instance_type",
+                    instance_type,
+                    [
+                        server["instance_name"]
+                        for server in available_custom_batch_servers
+                    ],
+                )
+            else:
+                Validate.value_against_list(
+                    "instance_type",
+                    instance_type,
+                    [
+                        server["instance_name"]
+                        for server in custom_batch_servers.get("details", [])
+                    ],
+                )
 
         run_model_payload = {
             "project_name": self.project_name,
