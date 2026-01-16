@@ -937,13 +937,13 @@ class InferenceCompute(TypedDict):
     """
     Inference compute selection payload.
 
-    :param instance_type: Instance type identifier.
+    :param compute_type: Instance type identifier.
         Use str values from supported instance types defined in classes:
         - ``DedicatedCPUInstanceTypeValues``
         - ``DedicatedGPUInstanceTypeValues``
         - ``ServerlessInstanceTypeValues``
 
-    :type instance_type: Union[
+    :type compute_type: Union[
         DedicatedCPUInstanceTypeValues,
         DedicatedGPUInstanceTypeValues,
         ServerlessInstanceTypeValues
@@ -953,7 +953,7 @@ class InferenceCompute(TypedDict):
     :type custom_server_config: CustomServerConfig | None
     """
 
-    instance_type: Union[DedicatedCPUInstanceTypeValues, DedicatedGPUInstanceTypeValues, ServerlessInstanceTypeValues]
+    compute_type: Union[DedicatedCPUInstanceTypeValues, DedicatedGPUInstanceTypeValues, ServerlessInstanceTypeValues]
     custom_server_config: Optional[CustomServerConfig] = CustomServerConfig()
 
 

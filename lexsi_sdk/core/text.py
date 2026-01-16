@@ -193,7 +193,7 @@ class TextProject(Project):
         model_provider: str, 
         model_name: str, 
         model_task_type:str, 
-        model_type: str,  
+        model_architecture: str,  
         inference_compute: Optional[InferenceCompute] = None,
         inference_settings: Optional[InferenceSettings] = None,
         assets: Optional[dict] = None,
@@ -228,8 +228,8 @@ class TextProject(Project):
             - ``text2text-generation``
             - ``token-classification``
 
-        :param model_type: architecture of the model to be initialized
-            **Model Types**
+        :param model_architecture: architecture of the model to be initialized
+            **Model Architecture**
             - ``bert``
             - ``llm``
 
@@ -274,11 +274,13 @@ class TextProject(Project):
             "model_name": model_name,
             "model_task_type": model_task_type,
             "project_name": self.project_name,
-            "model_type": model_type,
+            "model_type": model_architecture,
             "inference_compute": inference_compute,
             "inference_settings": inference_settings,
             "assets": assets
         }
+        if inference_compute:
+            data["inference_compute"] = {**inference_compute, "instance_type": inference_compute.get("compute_type")}
 
         payload ={
             "data": (None,json.dumps(data)),
@@ -318,7 +320,7 @@ class TextProject(Project):
         data = {
             "model_name": model_name,
             "project_name": self.project_name,
-            "inference_compute": inference_compute,
+            "inference_compute": {**inference_compute, "instance_type": inference_compute.get("compute_type")},
             "inference_settings": inference_settings,
         }
         payload ={
