@@ -175,29 +175,29 @@ class SyntheticModel(BaseModel):
     '''
 
     def generate_synthetic_data(
-        self, num_of_datapoints: int, instance_type: Optional[str] = "shared"
+        self, num_of_datapoints: int, node: Optional[str] = "shared"
     ):
         """Generate a specified number of synthetic data points using the model. Accepts the number of data points and an optional instance_type for compute resources. If instance_type is not shared, checks available servers and raises errors for invalid values.
 
         :param num_of_datapoints: total datapoints to generate
-        :param instance_type: type of instance to run training
-            for all available instances check xai.available_synthetic_custom_servers()
+        :param node: type of node to run training
+            for all available nodes check xai.available_custom_servers()
             defaults to shared
         :return: None
         """
-        if instance_type != "shared":
+        if node != "shared":
             available_servers = self.api_client.get(
                 AVAILABLE_SYNTHETIC_CUSTOM_SERVERS_URI
             )["details"]
             servers = list(
                 map(lambda instance: instance["instance_name"], available_servers)
             )
-            Validate.value_against_list("instance_type", instance_type, servers)
+            Validate.value_against_list("instance_type", node, servers)
 
         payload = {
             "project_name": self.project_name,
             "model_name": self.model_name,
-            "instance_type": instance_type,
+            "instance_type": node,
             "num_of_datapoints": num_of_datapoints,
         }
 

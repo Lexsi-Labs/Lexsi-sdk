@@ -288,7 +288,7 @@ class CaseTabular(BaseModel):
         else:
             return "No Feature Importance found for the case"
 
-    def explainability_summary(self):
+    def xai_summary(self):
         """Request or return cached explainability summary text.
         Encapsulates a small unit of SDK logic and returns the computed result."""
         if self.data_id and not self.summary:

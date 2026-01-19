@@ -196,7 +196,7 @@ class LEXSI(BaseModel):
         elif type=="CPU":
             return res["details"]
         else:
-            return {"GPU pods": res["available_gpu_custom_servers"], "CPU pods": res["details"]}
+            return {"CPU pods": res["details"], "GPU pods": res["available_gpu_custom_servers"]}
 
     def available_node_servers(self, type: Optional[Literal["GPU", "CPU"]]= None) -> dict:
         """Retrieve a dictionary or list of available custom servers that can be used for deploying models or running compute-heavy workloads.
@@ -212,7 +212,7 @@ class LEXSI(BaseModel):
         elif type=="CPU":
             return cpu_gpu_dict["cpu_servers"]
         else:
-            return {"GPU nods": cpu_gpu_dict["gpu_servers"], "CPU nods": cpu_gpu_dict["cpu_servers"]}
+            return {"CPU nods": cpu_gpu_dict["cpu_servers"], "GPU nods": cpu_gpu_dict["gpu_servers"]}
 
     def available_serverless_types(self, type: Optional[Literal["GPU", "CPU"]]= None) -> List[str]:
         """Retrieve a list of available serverless types that can be used for deploying models or running workloads.
@@ -227,7 +227,7 @@ class LEXSI(BaseModel):
         elif type=="CPU":
             return cpu_gpu_dict["cpu_servers"]
         else:
-            return {"GPU nods": cpu_gpu_dict["gpu_servers"], "CPU nods": cpu_gpu_dict["cpu_servers"]}
+            return {"CPU serverless": cpu_gpu_dict["cpu_servers"], "GPU serverless": cpu_gpu_dict["gpu_servers"]}
 
     def register_case(
         self,

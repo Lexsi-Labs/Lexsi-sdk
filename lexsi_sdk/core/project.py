@@ -573,7 +573,7 @@ class Project(BaseModel):
         processor_config: Optional[ProcessorParams] = None,
         finetune_mode: Optional[str] = None,
         tunning_strategy: Optional[str] = None,
-        instance_type: Optional[str] = "shared"
+        compute_type: Optional[str] = "shared"
     ) -> str:
         """
         Upload dataset(s) to the project and triggers model training.
@@ -662,10 +662,10 @@ class Project(BaseModel):
             ``tunning_strategy="peft"``.
         :type peft_config: PEFTParams | None
 
-        :param instance_type: Compute instance used for training.
+        :param compute_type: Compute instance used for training.
             Examples: ``"shared"``, ``"small"``, ``"medium"``, ``"large"``,
             ``"T4.small"``, ``"A10G.xmedium"``.
-        :type instance_type: str | None
+        :type compute_type: str | None
 
         :return: Identifier or reference to the trained model artifact.
         :rtype: str
@@ -834,15 +834,15 @@ class Project(BaseModel):
                         ),
                     },
                     # "gpu": gpu,
-                    "instance_type": instance_type,
+                    "instance_type": compute_type,
                     "sample_percentage": config.get("sample_percentage", None),
                 }
                 if config.get("model_name"):
                     payload["metadata"]["model_name"] = config.get("model_name")
 
-            if config.get("explainability_method"):
+            if config.get("xai_method"):
                 payload["metadata"]["explainability_method"] = config.get(
-                    "explainability_method"
+                    "xai_method"
                 )
             if model_config:
                 payload["metadata"]["model_parameters"] = model_config
@@ -1233,10 +1233,10 @@ class Project(BaseModel):
         Validate.value_against_list("model_type", model_type, valid_model_types)
 
         tags = self.tags()
-        Validate.value_against_list("model_data_tags", model_train, tags)
+        Validate.value_against_list("model_train", model_train, tags)
 
         if model_test:
-            Validate.value_against_list("model_test_tags", model_test, tags)
+            Validate.value_against_list("model_test", model_test, tags)
 
         uploaded_path = upload_file_and_return_path()
 
@@ -1375,10 +1375,10 @@ class Project(BaseModel):
         Validate.value_against_list("model_type", model_type, valid_model_types)
 
         tags = self.tags()
-        Validate.value_against_list("model_data_tags", model_train, tags)
+        Validate.value_against_list("model_train", model_train, tags)
 
         if model_test:
-            Validate.value_against_list("model_test_tags", model_test, tags)
+            Validate.value_against_list("model_test", model_test, tags)
 
         uploaded_path = upload_file_and_return_path()
 
@@ -1666,7 +1666,7 @@ class Project(BaseModel):
             ],
         )
 
-        if payload["pod"]:
+        if payload.get("pod", None):
             payload["instance_type"] = payload["pod"]
         if pod:
             payload["instance_type"] = pod
@@ -1788,7 +1788,7 @@ class Project(BaseModel):
             ],
         )
 
-        if payload["pod"]:
+        if payload.get("pod", None):
             payload["instance_type"] = payload["pod"]
         if pod:
             payload["instance_type"] = pod
@@ -1885,7 +1885,7 @@ class Project(BaseModel):
             ],
         )
 
-        if payload["pod"]:
+        if payload.get("pod", None):
             payload["instance_type"] = payload["pod"]
         if pod:
             payload["instance_type"] = pod
@@ -1995,7 +1995,7 @@ class Project(BaseModel):
             ],
         )
 
-        if payload["pod"]:
+        if payload.get("pod", None):
             payload["instance_type"] = payload["pod"]
         if pod:
             payload["instance_type"] = pod
@@ -2059,7 +2059,7 @@ class Project(BaseModel):
             ],
         )
 
-        if payload["pod"]:
+        if payload.get("pod", None):
             payload["instance_type"] = payload["pod"]
         if pod:
             payload["instance_type"] = pod
@@ -2118,7 +2118,7 @@ class Project(BaseModel):
             ],
         )
 
-        if payload["pod"]:
+        if payload.get("pod", None):
             payload["instance_type"] = payload["pod"]
         if pod:
             payload["instance_type"] = pod
@@ -2177,7 +2177,7 @@ class Project(BaseModel):
             ],
         )
 
-        if payload["pod"]:
+        if payload.get("pod", None):
             payload["instance_type"] = payload["pod"]
         if pod:
             payload["instance_type"] = pod
@@ -2236,7 +2236,7 @@ class Project(BaseModel):
             ],
         )
 
-        if payload["pod"]:
+        if payload.get("pod", None):
             payload["instance_type"] = payload["pod"]
         if pod:
             payload["instance_type"] = pod
@@ -2544,7 +2544,7 @@ class Project(BaseModel):
         ]
 
         Validate.check_for_missing_keys(payload, required_payload_keys)
-        if payload["pod"]:
+        if payload.get("pod", None):
             payload["instance_type"] = payload["pod"]
         payload = {
             "project_name": self.project_name,
@@ -4061,7 +4061,7 @@ class Project(BaseModel):
 
     def case_predict(
         self,
-        unique_identifer: str,
+        unique_identifier: str,
         case_id: Optional[str] = None,
         tag: Optional[str] = None,
         model_name: Optional[str] = None,
@@ -4069,9 +4069,9 @@ class Project(BaseModel):
         xai: Optional[list] = [],
         risk_policies: Optional[bool] = False,
     ):
-        """Case Predict for given unique identifer
+        """Case Predict for given unique identifier
 
-        :param unique_identifer: unique identifer of case
+        :param unique_identifier: unique identifier of case
         :param case_id: case id, defaults to None
         :param tag: case tag, defaults to None
         :param model_name: trained model name, defaults to None
@@ -4084,7 +4084,7 @@ class Project(BaseModel):
         payload = {
             "project_name": self.project_name,
             "case_id": case_id,
-            "unique_identifier": unique_identifer,
+            "unique_identifier": unique_identifier,
             "tag": tag,
             "model_name": model_name,
             "instance_type": serverless_type,
@@ -4102,7 +4102,7 @@ class Project(BaseModel):
         if self.metadata.get("modality") == "tabular" and "dtree" in xai:
             prediction_path_payload = {
                 "project_name": self.project_name,
-                "unique_identifier": unique_identifer,
+                "unique_identifier": unique_identifier,
                 "case_id": case_id,
                 "model_name": res["details"]["model_name"],
                 "data_id": res["details"]["data_id"],
