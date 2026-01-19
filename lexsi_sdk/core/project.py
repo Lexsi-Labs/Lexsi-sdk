@@ -4019,7 +4019,7 @@ class Project(BaseModel):
 
         return case_logs_df
 
-    def get_viewed_case(self, case_id: str) -> Case:
+    def case_record(self, case_id: str) -> Case:
         """Get already viewed case
 
         :param case_id: case id
