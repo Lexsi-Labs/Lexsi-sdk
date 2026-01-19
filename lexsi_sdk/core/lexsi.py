@@ -212,7 +212,7 @@ class LEXSI(BaseModel):
         elif type=="CPU":
             return cpu_gpu_dict["cpu_servers"]
         else:
-            return {"CPU nods": cpu_gpu_dict["cpu_servers"], "GPU nods": cpu_gpu_dict["gpu_servers"]}
+            return {"CPU nodes": cpu_gpu_dict["cpu_servers"], "GPU nodes": cpu_gpu_dict["gpu_servers"]}
 
     def available_serverless_types(self, type: Optional[Literal["GPU", "CPU"]]= None) -> List[str]:
         """Retrieve a list of available serverless types that can be used for deploying models or running workloads.
