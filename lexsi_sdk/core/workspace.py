@@ -173,7 +173,6 @@ class Workspace(BaseModel):
         project_name: str,
         modality: str,
         project_type: str,
-        project_sub_type: Optional[str] = None,
         server_type: Optional[str] = None,
     ) -> Project:
         """Create a new project within the workspace. Requires project_name, modality (e.g., tabular, text, image), project_type (e.g., classification), and optional project_sub_type and server_type. Returns the created Project object.
@@ -181,7 +180,7 @@ class Workspace(BaseModel):
         :param project_name: name for the project
         :param modality: modality for the project
             Eg:- tabular, image, text
-        :project_type: type for the project
+        :param project_type: type for the project
             Eg:- classification, regression
         :return: response
         """
@@ -189,7 +188,6 @@ class Workspace(BaseModel):
             "project_name": project_name,
             "modality": modality,
             "project_type": project_type,
-            "project_sub_type": project_sub_type,
             "workspace_name": self.workspace_name,
         }
 

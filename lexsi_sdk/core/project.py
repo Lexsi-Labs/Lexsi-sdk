@@ -343,7 +343,7 @@ class Project(BaseModel):
         if not res["success"]:
             error_details = res.get("details", "Failed to get available tags.")
             raise Exception(error_details)
-
+        res["details"]["lexsi_tags"] = res["details"].pop("arya_tags", [])
         return res["details"]
 
     def get_labels(self, feature_name: str) -> List[str]:
@@ -459,9 +459,9 @@ class Project(BaseModel):
         res = self.api_client.post(DELETE_DATA_FILE_URI, payload)
         return res.get("details")
 
-    def update_config(self, config: DataConfig):
+    def update_config(self, compute_type: str, config: DataConfig) -> str:
         """Update the project configurations. Accepts a config dictionary.
-
+        :param compute_type: compute type to run model training
         :param config: updated config
                     {
                         "tags": List[str]
@@ -538,6 +538,7 @@ class Project(BaseModel):
             "unique_identifier": project_config["unique_identifier"],
             "true_label": project_config["true_label"],
             "pred_label": project_config.get("pred_label"),
+            "instance_type": compute_type,
             "config_update": True,
             "metadata": {
                 "feature_include": feature_include,
@@ -1489,6 +1490,8 @@ class Project(BaseModel):
 
         :param baseline_tags: tag for data ["Training", "Testing", "Validation", "Custom"]
         :param current_tags: tag for data ["Training", "Testing", "Validation", "Custom"]
+        If baseline_tags and current_tags are not provided, the previously executed data drift diagnosis will be fetched.
+        :param pod: pod to be used for generating data drift diagnosis (optional)
         :return: data drift diagnosis dataframe
         """
 
@@ -1568,11 +1571,11 @@ class Project(BaseModel):
         """Generate Data Drift Dashboard for the project with specified parameters.
 
         :param run_in_background: runs in background without waiting for dashboard generation to complete
-        :param pod: pod for running on custom server
+        :param pod: pod to be used for generating data drift (optional)
         :param payload: data drift payload
             {
-                "base_line_tag": "",
-                "current_tag": "",
+                "base_line_tag": [""],
+                "current_tag": [""],
                 "stat_test_name": "",
                 "stat_test_threshold": "",
                 "features_to_use": []
@@ -1692,11 +1695,11 @@ class Project(BaseModel):
         """Generate Target Drift Diagnosis for the project with specified parameters.
 
         :param run_in_background: runs in background without waiting for dashboard generation to complete
-        :param pod: pod for running on custom server
+        :param pod: pod to be used for generating target drift diagnosis (optional)
         :param payload: target drift payload
                 {
-                    "base_line_tag": "",
-                    "current_tag": "",
+                    "base_line_tag": [""],
+                    "current_tag": [""],
                     "stat_test_name": "",
                     "stat_test_threshold": "",
                     "date_feature": "",
@@ -1816,10 +1819,10 @@ class Project(BaseModel):
         """Generate Bias Monitoring Dashboard for the given parameters.
 
         :param run_in_background: runs in background without waiting for dashboard generation to complete
-        :param pod: pod for running on custom server
+        :param pod: pod to be used for generating bias monitoring diagnosis (optional)
         :param payload: bias monitoring payload
                 {
-                    "base_line_tag": "",
+                    "base_line_tag": [""],
                     "date_feature": "",
                     "baseline_date": { "start_date": "", "end_date": ""},
                     "current_date": { "start_date": "", "end_date": ""},
@@ -1913,11 +1916,11 @@ class Project(BaseModel):
         """Generate Model Performance Dashboard for the given parameters.
 
         :param run_in_background: runs in background without waiting for dashboard generation to complete
-        :param pod: pod for running on custom server
+        :param pod: pod to be used for generating model performance diagnosis (optional)
         :param payload: model performance payload
                 {
-                    "base_line_tag": "",
-                    "current_tag": "",
+                    "base_line_tag": [""],
+                    "current_tag": [""],
                     "date_feature": "",
                     "baseline_date": { "start_date": "", "end_date": ""},
                     "current_date": { "start_date": "", "end_date": ""},
@@ -2027,7 +2030,6 @@ class Project(BaseModel):
                     "base_line_tag": List[str]
                     "current_tag": List[str]
                 }
-                defaults to None
         :param pod: Optional compute instance for generation jobs.
         :param run_in_background: If True, trigger generation and return immediately.
         :return: A Dashboard object that provides the following capabilities:
@@ -2087,6 +2089,10 @@ class Project(BaseModel):
         """Generate an Image Label Drift dashboard for this project with given baseline and current tags.
 
         :param payload: Dashboard configuration payload (tags/labels and parameters).
+                {
+                    "base_line_tag": List[str]
+                    "current_tag": List[str]
+                }
         :param instance_type: Optional compute instance for generation jobs.
         :param run_in_background: If True, trigger generation and return immediately.
         :return: A Dashboard object that provides the following capabilities:
@@ -2146,6 +2152,10 @@ class Project(BaseModel):
         """Generate an Image Property Label Correlation dashboard for this project with given baseline and current tags.
 
         :param payload: Dashboard configuration payload (tags/labels and parameters).
+                {
+                    "base_line_tag": List[str]
+                    "current_tag": List[str]
+                }
         :param pod: Optional compute instance for generation jobs.
         :param run_in_background: If True, trigger generation and return immediately.
         :return: A Dashboard object that provides the following capabilities:
@@ -2205,6 +2215,10 @@ class Project(BaseModel):
         """Generate an Image Dataset Drift dashboard for this project with given baseline and current tags.
 
         :param payload: Dashboard configuration payload (tags/labels and parameters).
+                {
+                    "base_line_tag": List[str]
+                    "current_tag": List[str]
+                }
         :param pod: Optional compute instance for generation jobs.
         :param run_in_background: If True, trigger generation and return immediately.
         :return: A Dashboard object that provides the following capabilities:
@@ -2255,12 +2269,12 @@ class Project(BaseModel):
 
         return "Image Dataset Drift dashboard generation initiated"
 
-    def get_all_dashboards(self, type: str, page: Optional[int] = 1):
+    def get_all_dashboards(self, type: str, page: Optional[int] = 1) -> pd.DataFrame:
         """Fetch all dashboards in the project
 
         :param type: type of the dashboard
-        :page: page number defaults to 1
-        :return: pd.DataFrame
+        :param page: page number defaults to 1
+        :return: Result DataFrame
         """
 
         Validate.value_against_list(
@@ -2459,7 +2473,7 @@ class Project(BaseModel):
 
         return monitoring_triggers
 
-    def duplicate_monitoring_triggers(self, trigger_name, new_trigger_name) -> str:
+    def duplicate_monitoring_triggers(self, trigger_name: str, new_trigger_name: str) -> str:
         """Duplicate an existing monitoring trigger under a new name.
         Calls the backend duplication endpoint and returns the server response message.
 
@@ -2494,8 +2508,9 @@ class Project(BaseModel):
                     "date_feature": "",
                     "baseline_date": { "start_date": "", "end_date": ""},
                     "current_date": { "start_date": "", "end_date": ""},
-                    "base_line_tag": "",
-                    "current_tag": "",
+                    "base_line_tag": [""],
+                    "current_tag": [""],
+                    "priority": 2, # between 1-5 
                     "pod": ""  #Pod type to used for running trigger
                 } OR Target Drift Trigger Payload
                 {
@@ -2509,10 +2524,11 @@ class Project(BaseModel):
                     "date_feature": "",
                     "baseline_date": { "start_date": "", "end_date": ""},
                     "current_date": { "start_date": "", "end_date": ""},
-                    "base_line_tag": "",
-                    "current_tag": "",
+                    "base_line_tag": [""],
+                    "current_tag": [""],
                     "baseline_true_label": "",
                     "current_true_label": "",
+                    "priority": 2, # between 1-5 
                     "pod": ""  #Pod type to used for running trigger
                 } OR Model Performance Trigger Payload
                 {
@@ -2526,9 +2542,10 @@ class Project(BaseModel):
                     "date_feature": "",
                     "baseline_date": { "start_date": "", "end_date": ""},
                     "current_date": { "start_date": "", "end_date": ""},
-                    "base_line_tag": "",
+                    "base_line_tag": [""],
                     "baseline_true_label": "",
                     "baseline_pred_label": "",
+                    "priority": 2, # between 1-5 
                     "pod": ""  #Pod type to used for running trigger
                 }
         :return: response
@@ -2637,10 +2654,10 @@ class Project(BaseModel):
         )
 
     def get_monitors_alerts(self, monitor_id: str, time: int):
-        """Returns the list of alerts monitor alerts endpoint.
+        """Retrieves alerts for a specific monitor within a given time window.
 
         :param monitor_id: Monitor identifier.
-        :param time: Lookback window (as expected by the backend).
+        :param time: Time range (in hours) from the current time used to fetch alerts.
         :return: Alerts as a pandas DataFrame.
         :rtype: pd.DataFrame"""
         url = f"{GET_MONITORS_ALERTS}?project_name={self.project_name}&monitor_id={monitor_id}&time={time}"
@@ -2689,6 +2706,7 @@ class Project(BaseModel):
     def train_model(
         self,
         model_type: str,
+        compute_type: str,
         data_config: Optional[DataConfig] = None,
         model_config: Optional[Union[XGBoostParams, LightGBMParams, CatBoostParams, RandomForestParams, FoundationalModelParams]] = None,
         tunning_config: Optional[TuningParams] = None,
@@ -2696,7 +2714,6 @@ class Project(BaseModel):
         processor_config: Optional[ProcessorParams] = None,
         finetune_mode: Optional[str] = None,
         tunning_strategy: Optional[str] = None,
-        compute_type: Optional[str] = None
     ) -> str:
 
         """
@@ -2732,6 +2749,11 @@ class Project(BaseModel):
             - ``Mitra``
             - ``ContextTab``
         :type model_type: str
+
+        :param compute_type: Compute instance used for training (CPU/GPU).
+            This is used by the computation layer to select the appropriate runtime environment we have CPU/GPU runtime with small medium large with 2x 3x nomeclature with GPU T4 and A10G .
+            Example values: ``"small"``, ``"medium"``,``"large"``, ``"2xsmall"``, ``"T4.small"``, ``"A10G.xmedium"``
+        :type compute_type: str | None
 
         :param data_config: Dataset selection + training-time data behavior such as:
             tag-based filtering, train/test tags, feature exclusion/encodings, optional Optuna usage,
@@ -2803,11 +2825,6 @@ class Project(BaseModel):
             Used only when ``finetune_mode="peft"`` and the selected foundation model supports PEFT.
             See :class:`lexsi_sdk.common.types.PEFTParams`.
         :type peft_config: PEFTParams | None
-
-        :param compute_type: Compute instance used for training (CPU/GPU).
-            This is used by the computation layer to select the appropriate runtime environment we have CPU/GPU runtime with small medium large with 2x 3x nomeclature with GPU T4 and A10G .
-            Example values: ``"small"``, ``"medium"``,``"large"``, ``"2xsmall"``, ``"T4.small"``, ``"A10G.xmedium"``
-        :type compute_type: str | None
 
         Foundational model params example:
         data_config= {
@@ -3203,11 +3220,23 @@ class Project(BaseModel):
     ) -> str:
         """Update Model Inference Settings
 
-        :param model_provider: model of provider
-        :param model_name: name of the model to be initialized
+        :param model_name: name of the model to update inference settings
+        :param inference_compute: inference compute settings
+        {
+            "compute_type": "2xlargeA10G",  # compute_type for running inference
+            "custom_server_config": {
+                "start": datetime_object,  # Start time for custom server
+                "stop": datetime_object,    # Stop time for custom server
+                "shutdown_after": 5,  # Operation hours for custom server
+                "op_hours": True / False  # Whether to restrict to business hours
+                "auto_start": True / False  # Automatically start the server when requested.
+            }
+        }
         :param model_task_type: task type of model
         :return: response
         """
+        if inference_compute.get("compute_type", None):
+            inference_compute["instance_type"] = inference_compute["compute_type"]
         payload = {
             "model_name": model_name,
             "project_name": self.project_name,
@@ -3242,7 +3271,7 @@ class Project(BaseModel):
         model_name: Optional[str] = None,
         pod: Optional[str] = None
     ) -> pd.DataFrame:
-        """Run model inference on tag or file_name data
+        """Run model inference on tag or file_name data. Either tag or file_name is required for running inference
 
         :param tag: data tag for running inference
         :param file_name: data file name for running inference
@@ -3457,14 +3486,15 @@ class Project(BaseModel):
         sftp_config: Optional[SFTPConfig] = None,
         hf_token: Optional[str] = None,
     ) -> str:
-        """Create Data Connectors for project
+        """Create a data connector for a project, allowing external data (e.g., S3, GCS, Google Drive, SFTP, Dropbox, HuggingFace) to be linked. Requires the connector name and type, plus the corresponding credential dictionary depending on the connector type. 
+        For Dropbox, an authentication link will be generated during execution, and user authorization code is required to complete setup.
 
-        :param data_connector_name: str # name for data connector
-        :param data_connector_type: str # type of data connector (s3 | gcs | gdrive)
-        :param gcs_config: dict # credentials from service account json
-        :param s3_config: dict # credentials of s3 storage
-        :param gdrive_config: dict # credentials from service account json
-        :param sftp_config: dict # hostname, port, username and password for sftp connection
+        :param data_connector_name: name for data connector
+        :param data_connector_type: type of data connector (s3 | gcs | gdrive | dropbox | sftp | HuggingFace)
+        :param gcs_config: credentials from service account json
+        :param s3_config: credentials of s3 storage
+        :param gdrive_config: credentials from service account json
+        :param sftp_config: hostname, port, username and password for sftp connection
         :return: response
         """
         if not self.organization_id and not self.project_name:
@@ -3626,10 +3656,10 @@ class Project(BaseModel):
         res = self.api_client.post(url, payload)
         return res["details"]
 
-    def test_data_connectors(self, data_connector_name) -> str:
-        """Test connection for the data connectors
+    def test_data_connectors(self, data_connector_name: str) -> str:
+        """Test the connection of an existing data connector to ensure credentials and connectivity are valid. Takes the connector name as input and returns the status of the connection test.
 
-        :param data_connector_name: str
+        :param data_connector_name: name of the data connector to be tested.
         """
         if not data_connector_name:
             return "Missing argument data_connector_name"
@@ -3644,10 +3674,11 @@ class Project(BaseModel):
         res = self.api_client.post(url)
         return res["details"]
 
-    def delete_data_connectors(self, data_connector_name) -> str:
-        """Delete the data connectors
+    def delete_data_connectors(self, data_connector_name: str) -> str:
+        """Delete a data connector from the organization using its name. This removes the external data link and returns a confirmation message.
 
-        :param data_connector_name: str
+        :param data_connector_name: name of the data connector to be deleted.
+        :return: str
         """
         if not data_connector_name:
             return "Missing argument data_connector_name"
@@ -3664,8 +3695,7 @@ class Project(BaseModel):
         return res["details"]
 
     def list_data_connectors(self) -> str | pd.DataFrame:
-        """List data connectors available for this project/org.
-        Returns a cleaned pandas DataFrame on success, otherwise an error message."""
+        """List all data connectors configured in the project and organization. If successful, returns a DataFrame with details about each connector; otherwise returns an error message."""
         url = build_list_data_connector_url(
             LIST_DATA_CONNECTORS, self.project_name, self.organization_id
         )
@@ -3688,10 +3718,11 @@ class Project(BaseModel):
 
         return res["details"]
 
-    def list_data_connectors_buckets(self, data_connector_name) -> str | List:
-        """List the buckets in data connectors
+    def list_data_connectors_buckets(self, data_connector_name: str) -> str | List:
+        """Retrieve the list of buckets (for S3 or GCS connectors) or similar container names for the specified data connector.
 
-        :param data_connector_name: str
+        :param data_connector_name: name of the data connector
+        :return: str | List
         """
         if not data_connector_name:
             return "Missing argument data_connector_name"
@@ -3709,15 +3740,15 @@ class Project(BaseModel):
 
     def list_data_connectors_filepath(
         self,
-        data_connector_name,
+        data_connector_name: str,
         bucket_name: Optional[str] = None,
         root_folder: Optional[str] = None,
     ) -> str | Dict:
-        """List the filepaths in data connectors
+        """List file paths within the specified data connector. For S3/GCS connectors you may need to provide a bucket_name; for SFTP connectors you may need to provide a root_folder.
 
-        :param data_connector_name: str
-        :param bucket_name: str | Required for S3 & GCS
-        :param root_folder: str | Root folder of SFTP
+        :param data_connector_name: name of the data connector
+        :param bucket_name: Required for S3 & GCS
+        :param root_folder: Root folder of SFTP
         """
         if not data_connector_name:
             return "Missing argument data_connector_name"
@@ -4014,7 +4045,7 @@ class Project(BaseModel):
     ) -> pd.DataFrame:
         """Cases for the Project
 
-        :param unique_identifier: unique identifer of the case for filtering, defaults to None
+        :param unique_identifier: unique identifier of the case for filtering, defaults to None
         :param tag: data tag for filtering, defaults to None
         :param start_date: start date for filtering, defaults to None
         :param end_date: end data for filtering, defaults to None
@@ -4077,8 +4108,9 @@ class Project(BaseModel):
         :param model_name: trained model name, defaults to None
         :param serverless_type: instance to be used for case
                 Eg:- nova-0.5, nova-1, nova-1.5
-        :param components: various components to be generated with predictions
-                Eg:- ['feature_importance', 'similar_cases', 'policies']
+        :param xai: xai methods for explainability you want to run
+                Eg:- ['shap', 'lime', 'dtree', 'ig', 'gradcam', 'dlb']
+        :param risk_policies: Whether to run policies during prediction. Set to True to run policies. Defaults to False.
         :return: Case object with details
         """
         payload = {
@@ -4143,7 +4175,7 @@ class Project(BaseModel):
         end_date: Optional[str] = None,
         tag: Optional[str] = None,
     ) -> str:
-        """Delete Case with given filters
+        """Delete Case with given filters. Atleast one filter is required to delete cases.
 
         :param unique_identifier: unique identifier of case, defaults to None
         :param start_date: start date of case, defaults to None
@@ -4391,7 +4423,7 @@ class Project(BaseModel):
         observation_df.reset_index(inplace=True, drop=True)
         return observation_df
 
-    def duplicate_observation(self, observation_name, new_observation_name) -> str:
+    def duplicate_observation(self, observation_name: str, new_observation_name: str) -> str:
         """Duplicate an existing observation under a new name.
         Calls the backend duplication endpoint and returns the server response message.
 
@@ -4414,7 +4446,6 @@ class Project(BaseModel):
         expression: str,
         statement: str,
         linked_features: List[str],
-        priority: Optional[int] = 5,
     ) -> str:
         """Creates New Observation
 
@@ -4464,7 +4495,6 @@ class Project(BaseModel):
             "metadata": {"expression": expression},
             "statement": [statement],
             "linked_features": linked_features,
-            "priority": priority,
         }
 
         res = self.api_client.post(CREATE_OBSERVATION_URI, payload)
@@ -4794,6 +4824,8 @@ class Project(BaseModel):
         statement: Optional[str] = None,
         decision: Optional[str] = None,
         input: Optional[str] = None,
+        models: Optional[list] = None,
+        priority: Optional[int] = None,
     ) -> str:
         """Updates Existing Policy
 
@@ -4813,6 +4845,8 @@ class Project(BaseModel):
                 the content inside the curly brackets represents the feature name
         :param decision: new decision for policy, defaults to None
         :param input: custom input for the decision if input selected for decision of policy
+        :param models: List of trained model names - The policy will only execute for the selected model. In case of empty list will execute for all models
+        :param priority: Priority of the policy. Lower number indicates higher priority. Defaults to 5
         :return: response
         """
         if not status and not expression and not statement and not decision:
@@ -4861,6 +4895,12 @@ class Project(BaseModel):
                 input if decision == "input" else decision
             )
 
+        if models:
+            payload["update_keys"]["models"] = models
+
+        if priority:
+            payload["update_keys"]["priority"] = priority
+
         res = self.api_client.post(UPDATE_POLICY_URI, payload)
 
         if not res["success"]:
@@ -4904,9 +4944,9 @@ class Project(BaseModel):
     def train_synthetic_model(
         self,
         model_name: str,
+        node: str,
         data_config: Optional[SyntheticDataConfig] = {},
         hyper_params: Optional[SyntheticModelHyperParams] = {},
-        node: Optional[str] = "shared",
     ):
         """Train synthetic model
 
@@ -4938,7 +4978,7 @@ class Project(BaseModel):
             }
             defaults to {}
         :param node: type of node to run training
-            for all available nodes check xai.available_custom_servers()
+            for all available GPU nodes check lexsi.available_node_servers(type="GPU")
             defaults to shared
 
         :return: response
@@ -5359,7 +5399,7 @@ class Project(BaseModel):
 
         return SyntheticPrompt(**curr_prompt, api_client=self.api_client, project=self)
 
-    def evals_tabular(self, model_name: str, tag: Optional[str] = ""):
+    def evals_tabular(self, model_name: str, tag: Optional[str] = "") -> pd.DataFrame:
         """get evals for ml tabular model
 
         :param model_name: model name

@@ -781,14 +781,14 @@ class InferenceCompute(TypedDict):
     """
     Inference compute selection payload.
 
-    :param instance_type: Instance type identifier.
-    :type instance_type: str
+    :param compute_type: Compute type for inference.
+    :type compute_type: str
 
     :param custom_server_config: Optional scheduling configuration.
     :type custom_server_config: CustomServerConfig | None
     """
 
-    instance_type: str
+    compute_type: str
     custom_server_config: Optional[CustomServerConfig] = CustomServerConfig()
 
 

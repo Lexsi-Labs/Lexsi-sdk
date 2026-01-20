@@ -175,15 +175,15 @@ class SyntheticModel(BaseModel):
     '''
 
     def generate_synthetic_data(
-        self, num_of_datapoints: int, node: Optional[str] = "shared"
-    ):
+        self, num_of_datapoints: int, node: str
+    ) -> str:
         """Generate a specified number of synthetic data points using the model. Accepts the number of data points and an optional instance_type for compute resources. If instance_type is not shared, checks available servers and raises errors for invalid values.
 
         :param num_of_datapoints: total datapoints to generate
         :param node: type of node to run training
-            for all available nodes check xai.available_custom_servers()
+            for all available nodes check lexsi.available_node_servers()
             defaults to shared
-        :return: None
+        :return: Response message
         """
         if node != "shared":
             available_servers = self.api_client.get(
@@ -219,8 +219,8 @@ class SyntheticModel(BaseModel):
         self,
         aux_columns: List[str],
         control_tag: str,
-        node: Optional[str] = "shared",
-    ):
+        node: str,
+    ) -> str:
         """generate anonymity score
 
         :param aux_columns: list of features
@@ -229,7 +229,7 @@ class SyntheticModel(BaseModel):
             for all available instances check xai.available_synthetic_custom_servers()
             defaults to shared
 
-        :return: None
+        :return: Response message
         """
         if node != "shared":
             available_servers = self.api_client.get(
@@ -270,11 +270,10 @@ class SyntheticModel(BaseModel):
         poll_events(self.api_client, self.project_name, res["event_id"])
         print("Anonymity score calculated successfully.\n")
 
-    def anonymity_score(self):
+    def anonymity_score(self) -> pd.DataFrame:
         """get anonymity score
-
+        :return: anonymity score dataframe
         :raises Exception: _description_
-        :return: _description_
         """
         payload = {
             "project_name": self.project_name,
