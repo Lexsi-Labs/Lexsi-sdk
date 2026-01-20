@@ -4100,7 +4100,7 @@ class Project(BaseModel):
         xai: Optional[list] = [],
         risk_policies: Optional[bool] = False,
     ):
-        """Case Predict for given unique identifier
+        """Case Prediction for given unique identifier
 
         :param unique_identifier: unique identifier of case
         :param case_id: case id, defaults to None
