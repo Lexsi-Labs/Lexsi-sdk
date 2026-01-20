@@ -182,6 +182,8 @@ class Workspace(BaseModel):
             Eg:- tabular, image, text
         :param project_type: type for the project
             Eg:- classification, regression
+        :param server_type: dedicated node to run workloads
+            for all available nodes check lexsi.available_node_servers()
         :return: response
         """
         payload = {

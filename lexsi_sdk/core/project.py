@@ -1244,7 +1244,7 @@ class Project(BaseModel):
         if pod:
             custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
             Validate.value_against_list(
-                "instance_type",
+                "pod",
                 pod,
                 [
                     server["instance_name"]
@@ -1386,7 +1386,7 @@ class Project(BaseModel):
         if pod:
             custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
             Validate.value_against_list(
-                "instance_type",
+                "pod",
                 pod,
                 [
                     server["instance_name"]
@@ -1510,7 +1510,7 @@ class Project(BaseModel):
                 "2xlarge",
                 "3xlarge",
             ]:
-                return "instance_type is not valid. Valid types are small, xsmall, 2xsmall, 3xsmall, medium, xmedium, 2xmedium, 3xmedium, large, xlarge, 2xlarge, 3xlarge"
+                return "pod is not valid. Valid types are small, xsmall, 2xsmall, 3xsmall, medium, xmedium, 2xmedium, 3xmedium, large, xlarge, 2xlarge, 3xlarge"
 
             payload = {
                 "project_name": self.project_name,
@@ -1661,7 +1661,7 @@ class Project(BaseModel):
 
         custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
         Validate.value_against_list(
-            "instance_type",
+            "pod",
             pod,
             [
                 server["instance_name"]
@@ -1783,7 +1783,7 @@ class Project(BaseModel):
 
         custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
         Validate.value_against_list(
-            "instance_type",
+            "pod",
             pod,
             [
                 server["instance_name"]
@@ -1880,7 +1880,7 @@ class Project(BaseModel):
 
         custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
         Validate.value_against_list(
-            "instance_type",
+            "pod",
             pod,
             [
                 server["instance_name"]
@@ -1990,7 +1990,7 @@ class Project(BaseModel):
 
         custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
         Validate.value_against_list(
-            "instance_type",
+            "pod",
             pod,
             [
                 server["instance_name"]
@@ -2053,7 +2053,7 @@ class Project(BaseModel):
 
         custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
         Validate.value_against_list(
-            "instance_type",
+            "pod",
             pod,
             [
                 server["instance_name"]
@@ -2116,7 +2116,7 @@ class Project(BaseModel):
 
         custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
         Validate.value_against_list(
-            "instance_type",
+            "pod",
             pod,
             [
                 server["instance_name"]
@@ -2179,7 +2179,7 @@ class Project(BaseModel):
 
         custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
         Validate.value_against_list(
-            "instance_type",
+            "pod",
             pod,
             [
                 server["instance_name"]
@@ -2242,7 +2242,7 @@ class Project(BaseModel):
 
         custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
         Validate.value_against_list(
-            "instance_type",
+            "pod",
             pod,
             [
                 server["instance_name"]
@@ -2893,7 +2893,7 @@ class Project(BaseModel):
             custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
             available_custom_batch_servers = custom_batch_servers.get("details", []) + custom_batch_servers.get("available_gpu_custom_servers", [])
             Validate.value_against_list(
-                "instance_type",
+                "pod",
                 compute_type,
                 [
                     server["instance_name"]
@@ -3326,7 +3326,7 @@ class Project(BaseModel):
             custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
             available_custom_batch_servers = custom_batch_servers.get("details", []) + custom_batch_servers.get("available_gpu_custom_servers", [])
             Validate.value_against_list(
-                "instance_type",
+                "pod",
                 pod,
                 [
                     server["instance_name"]

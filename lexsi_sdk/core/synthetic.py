@@ -225,8 +225,8 @@ class SyntheticModel(BaseModel):
 
         :param aux_columns: list of features
         :param control_tag: tag
-        :param instance_type: type of instance to run training
-            for all available instances check xai.available_synthetic_custom_servers()
+        :param node: type of node to run training
+            for all available node check lexsi.available_node_servers(type="GPU")
             defaults to shared
 
         :return: Response message
