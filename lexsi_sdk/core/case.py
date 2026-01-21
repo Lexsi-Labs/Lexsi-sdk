@@ -599,7 +599,7 @@ class CaseText(BaseModel):
         Encapsulates a small unit of SDK logic and returns the computed result."""
         return self.output
 
-    def explainability_raw_data(self) -> pd.DataFrame:
+    def xai_raw_data(self) -> pd.DataFrame:
         """Return the raw data used for the case as a DataFrame, with feature names and values.
 
         :return: raw data dataframe
@@ -613,7 +613,7 @@ class CaseText(BaseModel):
         )
         return raw_data_df
 
-    def explainability_feature_importance(self):
+    def xai_feature_importance(self):
         """Plots Feature Importance chart
         Encapsulates a small unit of SDK logic and returns the computed result."""
         fig = go.Figure()

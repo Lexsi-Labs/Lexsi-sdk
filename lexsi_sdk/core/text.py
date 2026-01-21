@@ -27,12 +27,12 @@ from lexsi_sdk.common.xai_uris import (
     RUN_IMAGE_GENERATION,
     RUN_CREATE_EMBEDDING,
     RUN_COMPLETION,
+    GENERATE_TEXT_CASE_URI
 )
 from lexsi_sdk.core.project import Project
 import pandas as pd
 
 from lexsi_sdk.core.utils import build_list_data_connector_url
-from lexsi_sdk.core.wrapper import LexsiModels, monitor
 import json
 import aiohttp
 from typing import AsyncIterator, Iterator
@@ -42,15 +42,6 @@ from uuid import UUID
 
 class TextProject(Project):
     """Specialized project abstraction for text and LLM-based workloads. Supports sessions, messages, traces, guardrails, and token-level explainability."""
-
-    def llm_monitor(self, client, session_id=None):
-        """Monitor a custom large language model (LLM) client for inference. Accepts a client object (e.g., an OpenAI API wrapper) and an optional session_id to monitor a specific conversation.
-
-        :param client: client to monitor like OpenAI
-        :param session_id: id of the session
-        :return: response
-        """
-        return monitor(project=self, client=client, session_id=session_id)
 
     def sessions(self) -> pd.DataFrame:
         """Return a DataFrame listing all conversation sessions for this text project.
@@ -338,57 +329,17 @@ class TextProject(Project):
         
         return res.get("details", "Inference Settings Updated")
 
-    def generate_text_case(
-        self,
-        model_name: str,
-        prompt: str,
-        serverless_instance_type: ServerlessInstanceTypeValues,
-        instance_type: Optional[Union[BatchCPUInstanceTypeValues, BatchGPUInstanceTypeValues]] = None,
-        explainability_method: Optional[list] = ["DLB"],
-        explain_model: Optional[bool] = False,
-        session_id: Optional[str] = None,
-        max_tokens: Optional[int] = None,
-        min_tokens: Optional[int] = None,
-        stream: Optional[bool] = False,
-    ) -> dict:
-        """Generate a text inference case using the specified model and prompt.
+    def available_text_models(self) -> pd.DataFrame:
+        """Get available text models
 
-        :param model_name: Name of the model to use for text generation
-        :param prompt: Input prompt to be provided to the model
-        :param serverless_instance_type: Serverless instance type used for case inference
-            Use str values from supported instance types defined in classes:
-            - ``ServerlessInstanceTypeValues``
-        :param instance_type: Instance type used for explainability processing, defaults to None
-            Use str values from supported instance types defined in classes:
-            - ``BatchCPUInstanceTypeValues``
-            - ``BatchGPUInstanceTypeValues``
-        :param explainability_method: Explainability method(s) for the case, defaults to ["DLB"]
-        :param explain_model: Boolean flag indicating whether to run explainability for the case, defaults to False
-        :param session_id: Session ID associated with this case, if applicable
-        :param max_tokens: Maximum number of tokens to generate
-        :param min_tokens: Minimum number of tokens to generate
-        :param stream: Whether to stream the response
-        :return: a dictionary containing the generated text and related metadata
+        :return: list of available text models
         """
-        if explain_model and not instance_type:
-            raise Exception("instance_type required for explainability.")
-        llm = monitor(
-            project=self,
-            client=LexsiModels(project=self, api_client=self.api_client),
-            session_id=session_id,
-        )
-        res = llm.generate_text_case(
-            model_name=model_name,
-            prompt=prompt,
-            instance_type=instance_type,
-            serverless_instance_type=serverless_instance_type,
-            explainability_method=explainability_method,
-            explain_model=explain_model,
-            max_tokens=max_tokens,
-            min_tokens=min_tokens,
-            stream=stream,
-        )
-        return res
+        res = self.api_client.get(f"{GET_AVAILABLE_TEXT_MODELS_URI}")
+        if not res["success"]:
+            raise Exception(
+                res.get("details", " Failed to fetch available text models")
+            )
+        return pd.DataFrame(res.get("details"))
 
     def upload_data(
         self,
@@ -746,22 +697,47 @@ class TextProject(Project):
         res = self.api_client.post(RUN_IMAGE_GENERATION, payload=payload)
 
         return res
+    
+    def text_generation(
+        self,
+        model: str,
+        prompt: str,
+        XAI_pods: Optional[str] = "xlarge",
+        explainability_method: list = ["DLB"],
+        XAI: bool = False,
+        session_id: str = None,
+        min_tokens: int = 100,
+        max_tokens: int = 1024,
+    ):
+        """Generate an explainable text case using a hosted Lexsi model.
 
-    def update_inference_model_status(self, model_name: str, activate: bool) -> str:
-        """Sets the provided model to active for inferencing
-
-        :param model_name: name of the model
-        :return: response
+        :param model_name: Name of the deployed text model.
+        :param prompt: Input prompt for generation.
+        :param instance_type: Dedicated instance type (if applicable).
+        :param serverless_instance_type: Serverless instance flavor.
+        :param explainability_method: Methods to compute explanations with.
+        :param explain_model: Whether to explain the model behavior.
+        :param trace_id: Optional existing trace id.
+        :param session_id: Optional existing session id.
+        :param min_tokens: Minimum tokens to generate.
+        :param max_tokens: Maximum tokens to generate.
+        :param stream: Whether to stream responses.
+        :return: API response with generation details.
         """
         payload = {
+            "session_id": session_id,
             "project_name": self.project_name,
-            "model_name": model_name,
-            "activate": activate,
+            "model": model,
+            "prompt": prompt,
+            "XAI_pods": XAI_pods,
+            "provider" : "Lexsi",
+            "explainability_method": explainability_method,
+            "XAI": XAI,
+            "max_tokens": max_tokens,
+            "min_tokens": min_tokens,
         }
-
-        res = self.api_client.post(UPDATE_ACTIVE_INFERENCE_MODEL_URI, payload)
-
-        if not res["success"]:
-            raise Exception(res["details"])
-
-        return res.get("details")
+    
+        res = self.api_client.post(GENERATE_TEXT_CASE_URI, payload)
+        if not res.get("success"):
+            raise Exception(res.get("details"))
+        return res
