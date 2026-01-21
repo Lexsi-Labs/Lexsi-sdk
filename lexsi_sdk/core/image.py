@@ -1,8 +1,7 @@
 from datetime import datetime
 import io
 import json
-from typing import Union
-from mistralai import Optional
+from typing import Union, Optional
 import pandas as pd
 from lexsi_sdk.common.constants import MODEL_PERF_DASHBOARD_REQUIRED_FIELDS, MODEL_TYPES
 from lexsi_sdk.common.monitoring import ImageDashboardPayload, ModelPerformancePayload
