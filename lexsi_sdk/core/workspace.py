@@ -14,7 +14,9 @@ from lexsi_sdk.common.xai_uris import (
     GET_NOTIFICATIONS_URI,
     CLEAR_NOTIFICATIONS_URI,
 )
+from lexsi_sdk.core.image import ImageProject
 from lexsi_sdk.core.project import Project
+from lexsi_sdk.core.tabular import TabularProject
 from lexsi_sdk.core.text import TextProject
 from lexsi_sdk.core.agent import AgentProject
 
@@ -160,8 +162,11 @@ class Workspace(BaseModel):
 
         if project is None:
             raise Exception("Project Not Found")
-
-        if project.get("metadata", {}).get("modality") == "text":
+        if project.get("metadata", {}).get("modality") == "tabular":
+            return TabularProject(api_client=self.api_client, **project)
+        elif project.get("metadata", {}).get("modality") == "image":
+            return ImageProject(api_client=self.api_client, **project)
+        elif project.get("metadata", {}).get("modality") == "text":
             return TextProject(api_client=self.api_client, **project)
         elif project.get("metadata", {}).get("modality") == "agent":
             return AgentProject(api_client=self.api_client, **project)
@@ -173,7 +178,6 @@ class Workspace(BaseModel):
         project_name: str,
         modality: str,
         project_type: str,
-        project_sub_type: Optional[str] = None,
         server_type: Optional[str] = None,
     ) -> Project:
         """Create a new project within the workspace. Requires project_name, modality (e.g., tabular, text, image), project_type (e.g., classification), and optional project_sub_type and server_type. Returns the created Project object.
@@ -181,15 +185,16 @@ class Workspace(BaseModel):
         :param project_name: name for the project
         :param modality: modality for the project
             Eg:- tabular, image, text
-        :project_type: type for the project
+        :param project_type: type for the project
             Eg:- classification, regression
+        :param server_type: dedicated node to run workloads
+            for all available nodes check lexsi.available_node_servers()
         :return: response
         """
         payload = {
             "project_name": project_name,
             "modality": modality,
             "project_type": project_type,
-            "project_sub_type": project_sub_type,
             "workspace_name": self.workspace_name,
         }
 

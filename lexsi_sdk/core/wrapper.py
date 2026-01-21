@@ -8,7 +8,7 @@ import botocore.client
 from openai import OpenAI
 from anthropic import Anthropic
 from google import genai
-from mistralai import Mistral
+# from mistralai import Mistral
 from pydantic import BaseModel
 
 import requests
@@ -762,19 +762,19 @@ def monitor(project, client, session_id=None):
             session_id=session_id,
             provider="Replicate",
         )
-    elif isinstance(client, Mistral):
-        client.chat.complete = wrapper._get_wrapper(
-            original_method=client.chat.complete,
-            method_name="client.chat.complete",
-            session_id=session_id,
-            provider="Mistral",
-        )
-        client.chat.complete_async = wrapper._get_wrapper(
-            original_method=client.chat.complete_async,
-            method_name="client.chat.complete_async",
-            session_id=session_id,
-            provider="Mistral",
-        )
+    # elif isinstance(client, Mistral):
+    #     client.chat.complete = wrapper._get_wrapper(
+    #         original_method=client.chat.complete,
+    #         method_name="client.chat.complete",
+    #         session_id=session_id,
+    #         provider="Mistral",
+    #     )
+    #     client.chat.complete_async = wrapper._get_wrapper(
+    #         original_method=client.chat.complete_async,
+    #         method_name="client.chat.complete_async",
+    #         session_id=session_id,
+    #         provider="Mistral",
+    #     )
     elif isinstance(client, botocore.client.BaseClient):
         client.converse = wrapper._get_wrapper(
             original_method=client.converse,

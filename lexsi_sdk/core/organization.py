@@ -1,6 +1,6 @@
 import pandas as pd
 from pydantic import BaseModel
-from typing import Dict, List, Optional
+from typing import Dict, List, Literal, Optional
 from lexsi_sdk.client.client import APIClient
 from lexsi_sdk.common.validation import Validate
 from lexsi_sdk.common.xai_uris import (
@@ -169,7 +169,7 @@ class Organization(BaseModel):
 
         :param workspace_name: name for the workspace
         :param server_type: dedicated instance to run workloads
-            for all available instances check xai.available_custom_servers()
+            for all available instances check lexsi.available_node_servers()
             defaults to shared
         :return: response
         """
@@ -223,14 +223,15 @@ class Organization(BaseModel):
         sftp_config: Optional[SFTPConfig] = None,
         hf_token: Optional[str] = None,
     ) -> str:
-        """Create a data connector for a project, allowing external data (e.g., S3, GCS, Google Drive, SFTP, Dropbox, HuggingFace) to be linked. Requires the connector name and type, plus the corresponding credential dictionary depending on the connector type.
+        """Create a data connector for a organization, allowing external data (e.g., S3, GCS, Google Drive, SFTP, Dropbox, HuggingFace) to be linked. Requires the connector name and type, plus the corresponding credential dictionary depending on the connector type.
+        For Dropbox, an authentication link will be generated during execution, and user authorization code is required to complete setup.
 
-        :param data_connector_name: str # name for data connector
-        :param data_connector_type: str # type of data connector (s3 | gcs | gdrive)
-        :param gcs_config: dict # credentials from service account json
-        :param s3_config: dict # credentials of s3 storage
-        :param gdrive_config: dict # credentials from service account json
-        :param sftp_config: dict # hostname, port, username and password for sftp connection
+        :param data_connector_name: name for data connector
+        :param data_connector_type: type of data connector (s3 | gcs | gdrive | dropbox | sftp | HuggingFace)
+        :param gcs_config: credentials from service account json
+        :param s3_config: credentials of s3 storage
+        :param gdrive_config: credentials from service account json
+        :param sftp_config: hostname, port, username and password for sftp connection
         :return: response
         """
         if not self.organization_id:
@@ -389,10 +390,10 @@ class Organization(BaseModel):
         res = self.api_client.post(url, payload)
         return res["details"]
 
-    def test_data_connectors(self, data_connector_name) -> str:
+    def test_data_connectors(self, data_connector_name: str) -> str:
         """Test the connection of an existing data connector to ensure credentials and connectivity are valid. Takes the connector name as input and returns the status of the connection test.
 
-        :param data_connector_name: str
+        :param data_connector_name: name of the data connector to be tested.
         """
         if not data_connector_name:
             return "Missing argument data_connector_name"
@@ -404,10 +405,10 @@ class Organization(BaseModel):
         res = self.api_client.post(url)
         return res["details"]
 
-    def delete_data_connectors(self, data_connector_name) -> str:
+    def delete_data_connectors(self, data_connector_name: str) -> str:
         """Delete a data connector from the organization using its name. This removes the external data link and returns a confirmation message.
 
-        :param data_connector_name: str
+        :param data_connector_name: name of the data connector to be deleted.
         """
         if not data_connector_name:
             return "Missing argument data_connector_name"
@@ -445,10 +446,10 @@ class Organization(BaseModel):
 
         return res["details"]
 
-    def list_data_connectors_buckets(self, data_connector_name) -> str | List:
+    def list_data_connectors_buckets(self, data_connector_name: str) -> str | List:
         """Retrieve the list of buckets (for S3 or GCS connectors) or similar container names for the specified data connector.
 
-        :param data_connector_name: str
+        :param data_connector_name: name of the data connector
         """
         if not data_connector_name:
             return "Missing argument data_connector_name"
@@ -464,15 +465,15 @@ class Organization(BaseModel):
 
     def list_data_connectors_filepath(
         self,
-        data_connector_name,
+        data_connector_name: str,
         bucket_name: Optional[str] = None,
         root_folder: Optional[str] = None,
     ) -> str | Dict:
         """List file paths within the specified data connector. For S3/GCS connectors you may need to provide a bucket_name; for SFTP connectors you may need to provide a root_folder.
 
-        :param data_connector_name: str
-        :param bucket_name: str | Required for S3 & GCS
-        :param root_folder: str | Root folder of SFTP
+        :param data_connector_name: name of the data connector
+        :param bucket_name: Required for S3 & GCS
+        :param root_folder: Root folder of SFTP
         """
         if not data_connector_name:
             return "Missing argument data_connector_name"
@@ -531,12 +532,12 @@ class Organization(BaseModel):
     def update_user_access_for_organization(
         self,
         user_email: str,
-        access_type: str = ["admin", "user"],
+        access_type: Literal["admin", "user"],
     ) -> str:
         """Change the role of a user within the organization. Accepts the user’s email and the new access type (admin or user) and returns a confirmation message.
 
         :param user_email: Email of user to be added to project.
-        :param access_type: access type to be given to user (admin | write | read)
+        :param access_type: access type to be given to user (admin | user)
         :return: response
         """
         if access_type not in ["admin", "user"]:

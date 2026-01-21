@@ -36,7 +36,7 @@ curl --http2 -X POST "https://apiv1.lexsi.ai/v2/project/case-register" \
 
 | Placeholder | Description |
 |------------|-------------|
-| `$X_API_TOKEN` | Your Lexsi API token from the SDK or portal |
+| `$X_API_TOKEN` | Your Lexsi API token |
 | `$USERNAME` | Your Lexsi username / client ID |
 | `$PROJECTNAME` | Target project name |
 | `$UNIQUE_IDENTIFIER` | Unique row ID for the registered case |

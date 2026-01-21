@@ -94,7 +94,7 @@ class ModelSummary(BaseModel):
         svg = SVG(res.get("details"))
         display(svg)
 
-    def data_config(self):
+    def data_config(self) -> dict:
         """Return the data configuration used for the project (e.g., feature exclusions and encodings) by calling the API.
 
         :return: response

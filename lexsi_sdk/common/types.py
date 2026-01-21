@@ -214,7 +214,7 @@ class ProjectConfig(TypedDict):
     feature_encodings: Optional[dict]
     handle_data_imbalance: Optional[bool]
     sample_percentage: Optional[float] = None
-    explainability_method: Optional[List[str]] = None
+    xai_method: Optional[List[str]] = None
 
 
 class DataConfig(TypedDict):
@@ -267,7 +267,7 @@ class DataConfig(TypedDict):
     sample_percentage: float
     explainability_sample_percentage: float
     lime_explainability_iterations: int
-    explainability_method: List[str]
+    xai_method: List[str]
     handle_data_imbalance: Optional[bool]
 
 
