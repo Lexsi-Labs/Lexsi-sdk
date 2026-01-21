@@ -14,7 +14,9 @@ from lexsi_sdk.common.xai_uris import (
     GET_NOTIFICATIONS_URI,
     CLEAR_NOTIFICATIONS_URI,
 )
+from lexsi_sdk.core.image import ImageProject
 from lexsi_sdk.core.project import Project
+from lexsi_sdk.core.tabular import TabularProject
 from lexsi_sdk.core.text import TextProject
 from lexsi_sdk.core.agent import AgentProject
 
@@ -160,8 +162,11 @@ class Workspace(BaseModel):
 
         if project is None:
             raise Exception("Project Not Found")
-
-        if project.get("metadata", {}).get("modality") == "text":
+        if project.get("metadata", {}).get("modality") == "tabular":
+            return TabularProject(api_client=self.api_client, **project)
+        elif project.get("metadata", {}).get("modality") == "image":
+            return ImageProject(api_client=self.api_client, **project)
+        elif project.get("metadata", {}).get("modality") == "text":
             return TextProject(api_client=self.api_client, **project)
         elif project.get("metadata", {}).get("modality") == "agent":
             return AgentProject(api_client=self.api_client, **project)

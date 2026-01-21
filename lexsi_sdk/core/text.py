@@ -18,6 +18,7 @@ from lexsi_sdk.common.xai_uris import (
     SESSIONS_URI,
     TEXT_MODEL_INFERENCE_SETTINGS_URI,
     TRACES_URI,
+    UPDATE_ACTIVE_INFERENCE_MODEL_URI,
     UPDATE_GUARDRAILS_STATUS_URI,
     UPLOAD_DATA_FILE_URI,
     UPLOAD_DATA_URI,
@@ -605,3 +606,22 @@ class TextProject(Project):
         res = self.api_client.post(RUN_IMAGE_GENERATION, payload=payload)
 
         return res
+
+    def update_inference_model_status(self, model_name: str, activate: bool) -> str:
+        """Sets the provided model to active for inferencing
+
+        :param model_name: name of the model
+        :return: response
+        """
+        payload = {
+            "project_name": self.project_name,
+            "model_name": model_name,
+            "activate": activate,
+        }
+
+        res = self.api_client.post(UPDATE_ACTIVE_INFERENCE_MODEL_URI, payload)
+
+        if not res["success"]:
+            raise Exception(res["details"])
+
+        return res.get("details")

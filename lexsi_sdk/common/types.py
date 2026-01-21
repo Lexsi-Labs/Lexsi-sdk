@@ -111,7 +111,7 @@ class DataConfig(TypedDict):
     sample_percentage: float
     explainability_sample_percentage: float
     lime_explainability_iterations: int
-    explainability_method: List[str]
+    xai_method: List[str]
     handle_data_imbalance: Optional[bool]
 
 class XGBoostParams(TypedDict, total=False):
