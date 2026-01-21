@@ -75,6 +75,20 @@ project = workspace.project("Your Project name")
         - "!__repr__"
         - "!__str__"
 
+::: lexsi_sdk.core.tabular
+    options:
+      show_root_heading: false
+      show_root_full_path: false
+      show_root_toc_entry: false
+      show_source: true
+
+::: lexsi_sdk.core.image
+    options:
+      show_root_heading: false
+      show_root_full_path: false
+      show_root_toc_entry: false
+      show_source: true
+
 ::: lexsi_sdk.core.case
     options:
       show_root_heading: false

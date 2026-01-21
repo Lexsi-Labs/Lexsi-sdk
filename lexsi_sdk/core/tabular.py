@@ -2360,7 +2360,7 @@ class TabularProject(Project):
             *project_config["metadata"]["feature_include"],
         ]
 
-        if tunning_strategy != "inference" and compute_type:
+        if tunning_strategy != "inference" and compute_type and "gova" not in compute_type:
             custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
             available_custom_batch_servers = custom_batch_servers.get("details", []) + custom_batch_servers.get("available_gpu_custom_servers", [])
             Validate.value_against_list(
@@ -2526,7 +2526,7 @@ class TabularProject(Project):
         explainability_method = (
             data_conf.get("explainability_method") 
             or data_conf.get("xai_method")
-            or project_config["metadata"]["xai_method"]
+            or project_config.get("metadata", {}).get("xai_method")
         )
 
         tags = data_conf.get("tags") or project_config["metadata"]["tags"]
