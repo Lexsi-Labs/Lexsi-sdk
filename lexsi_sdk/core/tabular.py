@@ -2303,7 +2303,7 @@ class TabularProject(Project):
             "drop_duplicate_uid": True,
             "feature_encodings" : feature_encodings,
             "feature_exclude": feature_exclude,
-            "explainability_method": ["lime"]
+            "xai_method": ["lime"]
         }
 
         model_config = {
@@ -2333,7 +2333,7 @@ class TabularProject(Project):
             "drop_duplicate_uid": True,
             "feature_encodings" : feature_encodings,
             "feature_exclude": feature_exclude,
-            "explainability_method": ["lime"]
+            "xai_method": ["lime"]
         }
 
         model_config = {
@@ -2429,10 +2429,10 @@ class TabularProject(Project):
                         "Lime explainability iterations is invalid, select between 1 and 10000"
                     )
 
-            if data_config.get("explainability_method"):
+            if data_config.get("xai_method"):
                 Validate.value_against_list(
-                    "explainability_method",
-                    data_config["explainability_method"],
+                    "xai_method",
+                    data_config["xai_method"],
                     ["shap", "lime"],
                 )
 
@@ -2524,8 +2524,9 @@ class TabularProject(Project):
         )
 
         explainability_method = (
-            data_conf.get("explainability_method")
-            or project_config["metadata"]["explainability_method"]
+            data_conf.get("explainability_method") 
+            or data_conf.get("xai_method")
+            or project_config["metadata"]["xai_method"]
         )
 
         tags = data_conf.get("tags") or project_config["metadata"]["tags"]
