@@ -39940,8 +39940,7 @@ Stores configuration and prepares the object for use.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/model_summary.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">100</span>
-<span class="normal">101</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">101</span>
 <span class="normal">102</span>
 <span class="normal">103</span>
 <span class="normal">104</span>
@@ -39954,7 +39953,8 @@ Stores configuration and prepares the object for use.</p>
 <span class="normal">111</span>
 <span class="normal">112</span>
 <span class="normal">113</span>
-<span class="normal">114</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">data_config</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="normal">114</span>
+<span class="normal">115</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">data_config</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the data configuration used for the project (e.g., feature exclusions and encodings) by calling the API.</span>
 
 <span class="sd">    :return: response</span>
@@ -39988,7 +39988,7 @@ Stores configuration and prepares the object for use.</p>
 
     <div class="doc doc-contents ">
 
-        <p>Plot global feature importance for the model using the specified explainability method (SHAP or LIME).</p>
+        <p>Plot global feature importance for the model using the specified explainability method. Supported explainability methods include SHAP and LIME.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -40004,13 +40004,14 @@ Stores configuration and prepares the object for use.</p>
       <tbody>
           <tr class="doc-section-item">
             <td>
-                <code>feature_name</code>
+                <code>xai_method</code>
             </td>
             <td>
+                  <code><span title="str">str</span></code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>feature name</p>
+                <p>xai method for which precomputed feature importance is returned (e.g., "shap", "lime").</p>
               </div>
             </td>
             <td>
@@ -40082,9 +40083,11 @@ Stores configuration and prepares the object for use.</p>
 <span class="normal">82</span>
 <span class="normal">83</span>
 <span class="normal">84</span>
-<span class="normal">85</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">feature_importance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xai_method</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Plot global feature importance for the model using the specified explainability method (SHAP or LIME).</span>
-<span class="sd">    :param feature_name: feature name</span>
+<span class="normal">85</span>
+<span class="normal">86</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">feature_importance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xai_method</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Plot global feature importance for the model using the specified explainability method. Supported explainability methods include SHAP and LIME.</span>
+<span class="sd">    :param xai_method: xai method for which precomputed feature importance is returned (e.g., &quot;shap&quot;, &quot;lime&quot;).</span>
+<span class="sd">    :type xai_method: str</span>
 <span class="sd">    :return: feature importance value</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">global_features</span> <span class="o">=</span> <span class="kc">None</span>
@@ -40220,8 +40223,7 @@ Stores configuration and prepares the object for use.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/model_summary.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">87</span>
-<span class="normal">88</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">88</span>
 <span class="normal">89</span>
 <span class="normal">90</span>
 <span class="normal">91</span>
@@ -40231,7 +40233,8 @@ Stores configuration and prepares the object for use.</p>
 <span class="normal">95</span>
 <span class="normal">96</span>
 <span class="normal">97</span>
-<span class="normal">98</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">prediction_path</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="normal">98</span>
+<span class="normal">99</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">prediction_path</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Display the model’s prediction path as an SVG for the current case, retrieving it from the API.&quot;&quot;&quot;</span>
     <span class="n">model_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_results</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;model_name&quot;</span><span class="p">)</span>
     <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">api_client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
