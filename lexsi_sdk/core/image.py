@@ -1370,7 +1370,7 @@ class ImageProject(Project):
                     "base_line_tag": List[str]
                     "current_tag": List[str]
                 }
-        :param instance_type: Optional compute instance for generation jobs.
+        :param pod: Optional pod for generation jobs.
         :param run_in_background: If True, trigger generation and return immediately.
         :return: A Dashboard object that provides the following capabilities:
             - plot(): Re-render the dashboard with custom width/height
