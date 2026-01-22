@@ -4468,7 +4468,7 @@ class CaseTabular(BaseModel):
     def feature_importance(self, feature: str):
         """Return feature importance values for a specific feature.
         Encapsulates a small unit of SDK logic and returns the computed result.
-        :param feature_name: feature name
+        :param feature: name of the feature for which the importance score is to be fetched.
         :return: feature importance value
         """
         if self.shap_feature_importance:
