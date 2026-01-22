@@ -11002,13 +11002,14 @@ Encapsulates a small unit of SDK logic and returns the computed result.</p>
       <tbody>
           <tr class="doc-section-item">
             <td>
-                <code>feature_name</code>
+                <code>feature</code>
             </td>
             <td>
+                  <code><span title="str">str</span></code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>feature name</p>
+                <p>name of the feature for which the importance score is to be fetched.</p>
               </div>
             </td>
             <td>
@@ -11059,7 +11060,7 @@ Encapsulates a small unit of SDK logic and returns the computed result.</p>
 <span class="normal">4481</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">feature_importance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">feature</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return feature importance values for a specific feature.</span>
 <span class="sd">    Encapsulates a small unit of SDK logic and returns the computed result.</span>
-<span class="sd">    :param feature_name: feature name</span>
+<span class="sd">    :param feature: name of the feature for which the importance score is to be fetched.</span>
 <span class="sd">    :return: feature importance value</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">shap_feature_importance</span><span class="p">:</span>
