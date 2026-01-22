@@ -170,7 +170,7 @@ class Organization(BaseModel):
         :param workspace_name: name for the workspace
         :param server_type: dedicated instance to run workloads
             for all available instances check lexsi.available_node_servers()
-            defaults to shared
+            defaults to local
         :return: response
         """
         payload = {"workspace_name": workspace_name}

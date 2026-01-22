@@ -1,9 +1,17 @@
+from __future__ import annotations
 from datetime import datetime
 import io
+from io import BytesIO
 from typing import Optional, List, Dict, Any, Union
 
 import httpx
 from lexsi_sdk.common.types import BatchCPUInstanceTypeValues, BatchGPUInstanceTypeValues, InferenceCompute, InferenceSettings, ServerlessInstanceTypeValues
+from pydantic import BaseModel
+from pydantic import BaseModel
+import plotly.graph_objects as go
+import base64
+from PIL import Image
+from lexsi_sdk.common.types import InferenceCompute, InferenceSettings
 from lexsi_sdk.common.utils import poll_events
 from lexsi_sdk.common.xai_uris import (
     AVAILABLE_GUARDRAILS_URI,
@@ -36,7 +44,6 @@ from lexsi_sdk.core.utils import build_list_data_connector_url
 import json
 import aiohttp
 from typing import AsyncIterator, Iterator
-import requests
 from uuid import UUID
 
 
@@ -741,3 +748,112 @@ class TextProject(Project):
         if not res.get("success"):
             raise Exception(res.get("details"))
         return res
+    
+
+class CaseText(BaseModel):
+    """Explainability view for text-based cases. Supports token-level importance, attention visualization, and LLM output analysis."""
+
+    model_name: str
+    status: str
+    prompt: str
+    output: str
+    explainability: Optional[Dict] = {}
+    audit_trail: Optional[Dict] = {}
+
+    def prompt(self):
+        """Get prompt
+        Encapsulates a small unit of SDK logic and returns the computed result."""
+        return self.prompt
+
+    def output(self):
+        """Get output
+        Encapsulates a small unit of SDK logic and returns the computed result."""
+        return self.output
+
+    def xai_raw_data(self) -> pd.DataFrame:
+        """Return the raw data used for the case as a DataFrame, with feature names and values.
+
+        :return: raw data dataframe
+        """
+        raw_data_df = (
+            pd.DataFrame([self.explainability.get("feature_importance", {})])
+            .transpose()
+            .reset_index()
+            .rename(columns={"index": "Feature", 0: "Value"})
+            .sort_values(by="Value", ascending=False)
+        )
+        return raw_data_df
+
+    def xai_feature_importance(self):
+        """Plots Feature Importance chart
+        Encapsulates a small unit of SDK logic and returns the computed result."""
+        fig = go.Figure()
+        feature_importance = self.explainability.get("feature_importance", {})
+
+        if not feature_importance:
+            return "No Feature Importance for the case"
+        raw_data_df = (
+            pd.DataFrame([feature_importance])
+            .transpose()
+            .reset_index()
+            .rename(columns={"index": "Feature", 0: "Value"})
+            .sort_values(by="Value", ascending=False)
+        )
+        fig.add_trace(
+            go.Bar(x=raw_data_df["Value"], y=raw_data_df["Feature"], orientation="h")
+        )
+        fig.update_layout(
+            barmode="relative",
+            height=max(400, len(raw_data_df) * 20),
+            width=800,
+            yaxis=dict(
+                autorange="reversed",
+                tickmode="array",
+                tickvals=list(raw_data_df["Feature"]),
+                ticktext=list(raw_data_df["Feature"]),
+                tickfont=dict(size=10),
+            ),
+            bargap=0.01,
+            margin=dict(l=150, r=20, t=30, b=30),
+            legend_orientation="h",
+            legend_x=0.1,
+            legend_y=0.5,
+        )
+
+        fig.show(config={"displaylogo": False})
+
+    def network_graph(self):
+        """Decode and return a base64-encoded network graph image.
+        Encapsulates a small unit of SDK logic and returns the computed result."""
+        network_graph_data = self.explainability.get("network_graph", {})
+        if not network_graph_data:
+            return "No Network graph found for this case"
+        base64_str = network_graph_data
+        try:
+            img_bytes = base64.b64decode(base64_str)
+            image = Image.open(BytesIO(img_bytes))
+            return image
+        except Exception as e:
+            print(f"Error decoding base64 image: {e}")
+            return None
+
+    def token_attribution_graph(self):
+        """Decode and return a base64-encoded token attribution graph.
+        Encapsulates a small unit of SDK logic and returns the computed result."""
+        relevance_data = self.explainability.get("relevance", {})
+        if not relevance_data:
+            return "No Token Attribution graph found for this case"
+        base64_str = relevance_data
+        try:
+            img_bytes = base64.b64decode(base64_str)
+            image = Image.open(BytesIO(img_bytes))
+            return image
+        except Exception as e:
+            print(f"Error decoding base64 image: {e}")
+            return None
+
+    def audit(self):
+        """Return audit details for the text case.
+        Encapsulates a small unit of SDK logic and returns the computed result."""
+        return self.audit_trail
+

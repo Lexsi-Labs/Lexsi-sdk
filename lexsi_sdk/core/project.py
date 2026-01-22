@@ -49,7 +49,6 @@ from lexsi_sdk.common.xai_uris import (
 )
 import io
 from lexsi_sdk.core.alert import Alert
-from lexsi_sdk.core.case import CaseImage, CaseTabular, CaseText
 from lexsi_sdk.core.dashboard import DASHBOARD_TYPES, Dashboard
 from datetime import datetime
 from lexsi_sdk.core.model_summary import ModelSummary
@@ -73,10 +72,10 @@ class Project(BaseModel):
         modality = kwargs.get("metadata", {}).get("modality")
 
         if cls is Project and modality == "tabular":
-            from lexsi_sdk.core.tabular import TabularProject
+            from lexsi_sdk.core.tabular import TabularProject, CaseTabular
             return super().__new__(TabularProject)
         elif cls is Project and modality == "image":
-            from lexsi_sdk.core.image import ImageProject
+            from lexsi_sdk.core.image import ImageProject, CaseImage
             return super().__new__(ImageProject)
 
         return super().__new__(cls)
@@ -245,7 +244,13 @@ class Project(BaseModel):
         if not res["success"]:
             error_details = res.get("details", "Failed to get available tags.")
             raise Exception(error_details)
-        res["details"]["lexsi_tags"] = res["details"].pop("arya_tags", [])
+        details = res["details"]
+        items = list(details.items())
+        idx = list(details.keys()).index("arya_tags")
+        value = details.pop("arya_tags")
+        items.pop(idx)
+        items.insert(idx, ("lexsi_tags", value))
+        res["details"] = dict(items)
         return res["details"]
 
     def files(self) -> pd.DataFrame:
@@ -1052,7 +1057,7 @@ class Project(BaseModel):
 
         return case_logs_df
 
-    def case_record(self, case_id: str) -> Case:
+    def case_record(self, case_id: str):
         """Get already viewed case
 
         :param case_id: case id
@@ -1068,10 +1073,13 @@ class Project(BaseModel):
         data = {**res["details"], **res["details"].get("result", {})}
         data["api_client"] = self.api_client
         if self.metadata.get("modality") == "tabular":
+            from lexsi_sdk.core.text import CaseTabular
             case = CaseTabular(**data)
         elif self.metadata.get("modality") == "image":
+            from lexsi_sdk.core.image import CaseImage
             case = CaseImage(**data)
         elif self.metadata.get("modality") == "text":
+            from lexsi_sdk.core.text import CaseText
             case = CaseText(**data)
         return case
 

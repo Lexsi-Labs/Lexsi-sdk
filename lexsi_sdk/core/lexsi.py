@@ -229,69 +229,6 @@ class LEXSI(BaseModel):
         else:
             return {"CPU serverless": cpu_gpu_dict["cpu_servers"], "GPU serverless": cpu_gpu_dict["gpu_servers"]}
 
-    def register_case(
-        self,
-        token: str,
-        client_id: str,
-        unique_identifier: Optional[str] = None,
-        project_name: str = None,
-        tag: Optional[str] = None,
-        data: Optional[str] = None,
-        processed_data: Optional[bool] = False,
-        merge: Optional[bool] = False,
-        image_class: Optional[str] = None,
-        prompt: Optional[str] = None,
-        serverless_type: Optional[str] = None,
-        explainability_method: Optional[str] = None,
-        explain_model: Optional[bool] = False,
-        session_id: Optional[str] = None,
-        xai: Optional[str] = None,
-        file_path: Optional[str] = None,
-    ):
-        """Register a new case entry with raw or processed payloads.
-        Encapsulates a small unit of SDK logic and returns the computed result."""
-        form_data = {
-            "client_id": client_id,
-            "project_name": project_name,
-            "unique_identifier": unique_identifier,
-            "tag": tag,
-            "data": json.dumps(data) if isinstance(data, list) else data,
-            "processed_data": str(processed_data).lower(),
-            "merge": str(merge).lower(),
-            "image_class": image_class,
-            "prompt": prompt,
-            "serverless_type": serverless_type,
-            "explainability_method": explainability_method,
-            "explain_model": str(explain_model).lower(),
-            "session_id": str(session_id).lower(),
-            "xai": xai,
-        }
-        headers = {"x-api-token": token}
-        form_data = {k: v for k, v in form_data.items() if v is not None}
-        files = {}
-        if file_path:
-            files["in_file"] = open(file_path, "rb")
-        # response = requests.post(
-        #     self.env.get_base_url() + "/" + UPLOAD_DATA_PROJECT_URI,
-        #     data=form_data,
-        #     files=files if files else None,
-        #     headers=headers
-        # ).json()
-
-        with httpx.Client(http2=True, timeout=None) as client:
-            response = client.post(
-                self.env.get_base_url() + "/" + UPLOAD_DATA_PROJECT_URI,
-                data=form_data,
-                files=files or None,
-                headers=headers,
-            )
-            response.raise_for_status()
-            response = response.json()
-
-        if files:
-            files["in_file"].close()
-        return response
-
     def case_profile(
         self,
         token: str,

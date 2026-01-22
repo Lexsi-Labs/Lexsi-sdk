@@ -163,10 +163,10 @@ class ProjectConfig(TypedDict):
     Configuration keys required to describe a project.
 
     :param project_type: Project type identifier.
-    :type project_type: str | None
+    :type project_type: Optional[str]
 
     :param model_name: Model name associated with the project.
-    :type model_name: str | None
+    :type model_name: Optional[str]
 
     :param unique_identifier: Column name used as the unique identifier.
     :type unique_identifier: str
@@ -178,10 +178,10 @@ class ProjectConfig(TypedDict):
     :type tag: str
 
     :param pred_label: Column name containing predicted labels (if present).
-    :type pred_label: str | None
+    :type pred_label: Optional[str]
 
     :param feature_exclude: Features to exclude from training/inference.
-    :type feature_exclude: list[str] | None
+    :type feature_exclude: Optional[str]
 
     :param drop_duplicate_uid: Drop duplicate records based on the unique identifier.
     :type drop_duplicate_uid: bool | None
@@ -196,10 +196,10 @@ class ProjectConfig(TypedDict):
     :type handle_data_imbalance: bool | None
 
     :param sample_percentage: Fraction of data used for training (0.0–1.0).
-    :type sample_percentage: float | None
+    :type sample_percentage: Optional[float]
 
-    :param explainability_method: Explainability methods to apply.
-    :type explainability_method: list[str] | None
+    :param xai_method: Explainability methods to apply.
+    :type xai_method: Optional[list[str]]
     """
 
     project_type: Optional[str] = None

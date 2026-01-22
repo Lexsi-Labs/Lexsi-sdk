@@ -78,7 +78,7 @@ class SyntheticDataTag(BaseModel):
 
 
 class SyntheticModel(BaseModel):
-    """Represents a synthetic model configuration used for data generation. Exposes model parameters and generation statistics."""
+    """Represents a synthetic model configuration used for data generation. Encapsulates model metadata, configuration parameters, and generation statistics. Provides utilities for generating synthetic data and evaluating data quality."""
 
     api_client: APIClient
     project_name: str
@@ -182,7 +182,6 @@ class SyntheticModel(BaseModel):
         :param num_of_datapoints: total datapoints to generate
         :param node: type of node to run training
             for all available nodes check lexsi.available_node_servers()
-            defaults to shared
         :return: Response message
         """
         if node != "shared":
@@ -227,7 +226,6 @@ class SyntheticModel(BaseModel):
         :param control_tag: tag
         :param node: type of node to run training
             for all available node check lexsi.available_node_servers(type="GPU")
-            defaults to shared
 
         :return: Response message
         """
