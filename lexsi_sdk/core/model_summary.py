@@ -46,8 +46,9 @@ class ModelSummary(BaseModel):
         return info
 
     def feature_importance(self, xai_method: str):
-        """Plot global feature importance for the model using the specified explainability method (SHAP or LIME).
-        :param feature_name: feature name
+        """Plot global feature importance for the model using the specified explainability method. Supported explainability methods include SHAP and LIME.
+        :param xai_method: xai method for which precomputed feature importance is returned (e.g., "shap", "lime").
+        :type xai_method: str
         :return: feature importance value
         """
         global_features = None
