@@ -358,17 +358,6 @@ class TextProject(Project):
         
         return res.get("details", "Inference Settings Updated")
 
-    def available_text_models(self) -> pd.DataFrame:
-        """Get available text models
-
-        :return: list of available text models
-        """
-        res = self.api_client.get(f"{GET_AVAILABLE_TEXT_MODELS_URI}")
-        if not res["success"]:
-            raise Exception(
-                res.get("details", " Failed to fetch available text models")
-            )
-        return pd.DataFrame(res.get("details"))
 
     def upload_data(
         self,
