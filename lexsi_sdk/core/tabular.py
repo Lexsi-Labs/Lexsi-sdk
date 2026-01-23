@@ -4465,7 +4465,7 @@ class CaseTabular(BaseModel):
         Encapsulates a small unit of SDK logic and returns the computed result."""
         return self.audit_trail
 
-    def feature_importance(self, feature: str):
+    def feature_importance(self, feature: str) -> float:
         """Return feature importance values for a specific feature.
         Encapsulates a small unit of SDK logic and returns the computed result.
         :param feature: name of the feature for which the importance score is to be fetched.

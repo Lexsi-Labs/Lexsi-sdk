@@ -1073,7 +1073,7 @@ class Project(BaseModel):
         data = {**res["details"], **res["details"].get("result", {})}
         data["api_client"] = self.api_client
         if self.metadata.get("modality") == "tabular":
-            from lexsi_sdk.core.text import CaseTabular
+            from lexsi_sdk.core.tabular import CaseTabular
             case = CaseTabular(**data)
         elif self.metadata.get("modality") == "image":
             from lexsi_sdk.core.image import CaseImage

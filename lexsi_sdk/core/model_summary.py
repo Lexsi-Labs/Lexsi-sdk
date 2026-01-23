@@ -49,7 +49,8 @@ class ModelSummary(BaseModel):
         """Plot global feature importance for the model using the specified explainability method. Supported explainability methods include SHAP and LIME.
         :param xai_method: xai method for which precomputed feature importance is returned (e.g., "shap", "lime").
         :type xai_method: str
-        :return: feature importance value
+        :return: feature importance graph
+        :rtype: graph
         """
         global_features = None
         if xai_method == "shap":
