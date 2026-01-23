@@ -721,25 +721,22 @@ class TextProject(Project):
         model: str,
         prompt: str,
         XAI_pods: Optional[str] = "xlarge",
-        explainability_method: list = ["DLB"],
+        explainability_method: List[str] = ["DLB"],
         XAI: bool = False,
-        session_id: str = None,
+        session_id: Optional[UUID] = None,
         min_tokens: int = 100,
         max_tokens: int = 1024,
     ):
         """Generate an explainable text case using a hosted Lexsi model.
 
-        :param model_name: Name of the deployed text model.
+        :param model: Name of the deployed text model.
         :param prompt: Input prompt for generation.
-        :param instance_type: Dedicated instance type (if applicable).
-        :param serverless_instance_type: Serverless instance flavor.
+        :param XAI_pods: Dedicated instance type (if applicable).
         :param explainability_method: Methods to compute explanations with.
-        :param explain_model: Whether to explain the model behavior.
-        :param trace_id: Optional existing trace id.
+        :param XAI: Whether to explain the model behavior.
         :param session_id: Optional existing session id.
         :param min_tokens: Minimum tokens to generate.
         :param max_tokens: Maximum tokens to generate.
-        :param stream: Whether to stream responses.
         :return: API response with generation details.
         """
         payload = {
