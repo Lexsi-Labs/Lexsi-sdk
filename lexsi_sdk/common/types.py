@@ -6,7 +6,7 @@ ServerlessInstanceType = Literal[
     "gova-0.5", "gova-1", "gova-1.5", "gova-2", "gova-4", "gova-6", "gova-8", "gova-10", "gova-12", "gova-14", "gova-16", "gova-18", "gova-20", "gova-22", "gova-24"
 ]
 
-class ServerlessInstanceTypeValues(TypedDict):
+class ServerlessTypeValues(TypedDict):
     """
     Allowed values for serverless instance types.
 
@@ -52,7 +52,7 @@ DedicatedGPUInstanceType = Literal[
     "4xlargeH100", 
 ]
 
-class DedicatedGPUInstanceTypeValues(TypedDict):
+class DedicatedGPUNodeValues(TypedDict):
     """
     Allowed values for dedicated GPU instance types.
 
@@ -81,7 +81,7 @@ BatchCPUInstanceType = Literal[
     "large", "xlarge", "2xlarge", "3xlarge"
 ]
 
-class BatchCPUInstanceTypeValues(TypedDict):
+class CPUPodValues(TypedDict):
     """
     Allowed values for batch CPU instance types.
 
@@ -110,7 +110,7 @@ BatchGPUInstanceType = Literal[
     "A10G.medium", "A10G.xmedium", "A10G.2xmedium", "A10G.3xmedium"
 ]
 
-class BatchGPUInstanceTypeValues(TypedDict):
+class GPUPodValues(TypedDict):
     """
     Allowed values for batch GPU instance types.
 
@@ -128,7 +128,7 @@ class BatchGPUInstanceTypeValues(TypedDict):
     """
     #instance_type: BatchGPUInstanceType
     pass
-class DedicatedCPUInstanceTypeValues(TypedDict):
+class DedicatedCPUNodeValues(TypedDict):
     """
     Allowed values for dedicated CPU instance types.
 
@@ -939,21 +939,21 @@ class InferenceCompute(TypedDict):
 
     :param compute_type: Instance type identifier.
         Use str values from supported instance types defined in classes:
-        - ``DedicatedCPUInstanceTypeValues``
-        - ``DedicatedGPUInstanceTypeValues``
-        - ``ServerlessInstanceTypeValues``
+        - ``DedicatedCPUNodeValues``
+        - ``DedicatedGPUNodeValues``
+        - ``ServerlessTypeValues``
 
     :type compute_type: Union[
-        DedicatedCPUInstanceTypeValues,
-        DedicatedGPUInstanceTypeValues,
-        ServerlessInstanceTypeValues
+        DedicatedCPUNodeValues,
+        DedicatedGPUNodeValues,
+        ServerlessTypeValues
     ]
     
     :param custom_server_config: Optional scheduling configuration.
     :type custom_server_config: CustomServerConfig | None
     """
 
-    compute_type: Union[DedicatedCPUInstanceTypeValues, DedicatedGPUInstanceTypeValues, ServerlessInstanceTypeValues]
+    compute_type: Union[DedicatedCPUNodeValues, DedicatedGPUNodeValues, ServerlessTypeValues]
     custom_server_config: Optional[CustomServerConfig] = CustomServerConfig()
 
 
