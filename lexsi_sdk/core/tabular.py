@@ -463,8 +463,15 @@ class TabularProject(Project):
         data_connector_name: str,
         tag: str,
         bucket_name: Optional[str] = None,
-        file_path: Optional[str] = None,
+        file_path: str = None,
         config: Optional[ProjectConfig] = None,
+        model_config: Optional[Union[XGBoostParams, LightGBMParams, CatBoostParams, RandomForestParams, FoundationalModelParams]] = None,
+        tunning_config: Optional[TuningParams] = None,
+        peft_config: Optional[PEFTParams] = None,
+        processor_config: Optional[ProcessorParams] = None,
+        finetune_mode: Optional[str] = None,
+        tunning_strategy: Optional[str] = None,
+        compute_type: Optional[str] = None
     ) -> str:
         """Uploads data for the current project with data connectors
         :param data_connector_name: name of the data connector
@@ -483,6 +490,40 @@ class TabularProject(Project):
                     "feature_encodings": Dict[str, str]   # {"feature_name":"labelencode | countencode | onehotencode"}
                 },
                 defaults to None
+        
+        :param processor_config: Optional preprocessing and feature engineering
+            configuration (e.g., imputation, scaling, resampling).
+        :type processor_config: ProcessorParams | None
+
+        :param model_config: Hyperparameters for the selected ``model_type``.
+            Must match the chosen model family.
+        :type model_config: XGBoostParams | LightGBMParams | CatBoostParams |
+            RandomForestParams | FoundationalModelParams | None
+
+        :param tunning_config: Optional tuning or adaptation configuration.
+        :type tunning_config: TuningParams | None
+
+        :param tunning_strategy: Training or fine-tuning strategy.
+
+            - ``"inference"``: Zero-shot inference only
+            - ``"base-ft"`` / ``"finetune"``: Full fine-tuning
+            - ``"peft"``: Parameter-efficient fine-tuning (requires ``peft_config``)
+        :type tunning_strategy: str | None
+
+        :param finetune_mode: Fine-tuning mode for foundation models.
+
+            - ``"meta-learning"``: Episodic meta-learning
+            - ``"sft"``: Standard supervised fine-tuning
+        :type finetune_mode: str | None
+
+        :param peft_config: PEFT (e.g., LoRA) configuration, used when
+            ``tunning_strategy="peft"``.
+        :type peft_config: PEFTParams | None
+
+        :param compute_type: Compute instance used for training.
+            Examples: ``"shared"``, ``"small"``, ``"medium"``, ``"large"``,
+            ``"T4.small"``, ``"A10G.xmedium"``.
+        :type compute_type: str | None
         :return: response
         """
         print("Preparing Data Upload")
@@ -632,7 +673,20 @@ class TabularProject(Project):
                     "feature_encodings": feature_encodings,
                     "feature_actual_used": [],
                 },
+                "instance_type": compute_type
             }
+            if model_config:
+                payload["metadata"]["model_parameters"] = model_config
+            if tunning_config:
+                payload["metadata"]["tunning_parameters"] = tunning_config
+            if peft_config:
+                payload["metadata"]["peft_parameters"] = peft_config
+            if processor_config:
+                payload["metadata"]["processor_parameters"] = processor_config
+            if finetune_mode:
+                payload["metadata"]["finetune_mode"] = finetune_mode
+            if tunning_strategy:
+                payload["metadata"]["tunning_strategy"] = tunning_strategy
 
             res = self.api_client.post(UPLOAD_DATA_WITH_CHECK_URI, payload)
 
@@ -2811,7 +2865,7 @@ class TabularProject(Project):
         serverless_type: Optional[str] = None,
         xai: Optional[list] = [],
         risk_policies: Optional[bool] = False,
-    ):
+    ) -> CaseTabular:
         """Case Prediction for given unique identifier
 
         :param unique_identifier: unique identifier of case
@@ -4155,10 +4209,10 @@ class TabularProject(Project):
         self,
         token: str,
         client_id: str,
-        unique_identifier: Optional[str] = None,
-        project_name: str = None,
-        tag: Optional[str] = None,
-        data: Optional[str] = None,
+        unique_identifier: str,
+        project_name: str,
+        tag: str,
+        data: str,
         serverless_type: Optional[str] = None,
         xai: Optional[List[str]] = None
     ) -> dict:
@@ -4171,8 +4225,8 @@ class TabularProject(Project):
         :param project_name: Target project name for this tabular case
         :param tag: Dataset tag to associate with this upload or prediction
         :param data: List of JSON objects containing feature key–value pairs
-        :param serverless_type: Serverless instance type (e.g., NOVA, GOVA, or local)
-        :param xai: Explainability technique to run (e.g., SHAP, LIME, IG, DLB)
+        :param serverless_type: Serverless type (e.g., nova-2, gova-2, or local)
+        :param xai: Explainability technique to run (e.g., shap, lime, ig, dlb)
 
         :return: Response containing the prediction results for the registered case
         """

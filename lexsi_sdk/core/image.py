@@ -189,7 +189,7 @@ class ImageProject(Project):
         model_architecture: Optional[str] = None,
         model_type: Optional[str] = None,
         bucket_name: Optional[str] = None,
-        file_path: Optional[str] = None,
+        file_path: str = None,
     ) -> str:
         """Uploads data for the current project with data connectors
         :param data_connector_name: name of the data connector
@@ -333,7 +333,6 @@ class ImageProject(Project):
         :param model_path: path of the model
         :param model_architecture: architecture of model ["deep_learning"]
         :param model_type: type of the model based on the architecture ["tensorflow"]
-                use upload_model_types() method to get all allowed model_types
         :param model_name: name of the model
         :param model_train: data tags for model
         :param model_test: test tags for model (optional)
@@ -426,7 +425,6 @@ class ImageProject(Project):
         :param data_connector_name: name of the data connector
         :param model_architecture: architecture of model ["deep_learning"]
         :param model_type: type of the model based on the architecture ["tensorflow"]
-                use upload_model_types() method to get all allowed model_types
         :param model_name: name of the model
         :param model_train: data tags for model
         :param model_test: test tags for model (optional)
@@ -725,7 +723,7 @@ class ImageProject(Project):
         model_name: Optional[str] = None,
         serverless_type: Optional[str] = None,
         xai: Optional[list] = []
-    ):
+    ) -> CaseImage:
         """Case Prediction for given unique identifier
 
         :param unique_identifier: unique identifier of case
@@ -1546,25 +1544,25 @@ class ImageProject(Project):
         self,
         token: str,
         client_id: str,
-        unique_identifier: Optional[str] = None,
-        project_name: str = None,
-        tag: Optional[str] = None,
+        unique_identifier: str,
+        project_name: str,
+        tag: str,
         image_class: Optional[str] = None,
-        serverless_instance_type: Optional[str] = None,
+        serverless_type: Optional[str] = None,
         xai: Optional[str] = None,
-        file_path: Optional[str] = None,
+        file_path: str = None,
     ) -> dict:
         """
         Register a new case entry using an image file path for the project and return the computed result.
 
         :param token: Lexsi API authentication token
         :param client_id: Lexsi username or client ID
-        :param unique_identifier: Filename or unique identifier for the image case
+        :param unique_identifier: Filename for the image case
         :param project_name: Target project name for this image case
         :param tag: Dataset tag to associate with this upload or prediction
         :param image_class: Ground-truth class label, if available
-        :param serverless_type: Serverless instance type (e.g., NOVA, GOVA, or local)
-        :param xai: Explainability technique to run (e.g., SHAP, LIME, IG, Grad-CAM)
+        :param serverless_type: Serverless type (e.g., nova-2, gova-2, or local)
+        :param xai: Explainability technique to run (e.g., shap, lime, ig, gradcam)
         :param file_path: Path to the image file to register (file name must be unique and not previously uploaded)
 
         :return: Response containing the prediction results for the registered case
@@ -1576,7 +1574,7 @@ class ImageProject(Project):
             "unique_identifier": unique_identifier,
             "tag": tag,
             "image_class": image_class,
-            "serverless_instance_type": serverless_instance_type,
+            "serverless_instance_type": serverless_type,
             "xai": xai,
         }
         headers = {"x-api-token": token}
