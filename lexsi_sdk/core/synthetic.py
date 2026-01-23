@@ -78,7 +78,7 @@ class SyntheticDataTag(BaseModel):
 
 
 class SyntheticModel(BaseModel):
-    """Represents a synthetic model configuration used for data generation. Exposes model parameters and generation statistics."""
+    """Represents a synthetic model configuration used for data generation. Encapsulates model metadata, configuration parameters, and generation statistics. Provides utilities for generating synthetic data and evaluating data quality."""
 
     api_client: APIClient
     project_name: str
@@ -174,30 +174,29 @@ class SyntheticModel(BaseModel):
         return res['details']
     '''
 
-    def generate_synthetic_datapoints(
-        self, num_of_datapoints: int, instance_type: Optional[str] = "shared"
-    ):
+    def generate_synthetic_data(
+        self, num_of_datapoints: int, node: str
+    ) -> str:
         """Generate a specified number of synthetic data points using the model. Accepts the number of data points and an optional instance_type for compute resources. If instance_type is not shared, checks available servers and raises errors for invalid values.
 
         :param num_of_datapoints: total datapoints to generate
-        :param instance_type: type of instance to run training
-            for all available instances check xai.available_synthetic_custom_servers()
-            defaults to shared
-        :return: None
+        :param node: type of node to run training
+            for all available nodes check lexsi.available_node_servers()
+        :return: Response message
         """
-        if instance_type != "shared":
+        if node != "shared":
             available_servers = self.api_client.get(
                 AVAILABLE_SYNTHETIC_CUSTOM_SERVERS_URI
             )["details"]
             servers = list(
                 map(lambda instance: instance["instance_name"], available_servers)
             )
-            Validate.value_against_list("instance_type", instance_type, servers)
+            Validate.value_against_list("instance_type", node, servers)
 
         payload = {
             "project_name": self.project_name,
             "model_name": self.model_name,
-            "instance_type": instance_type,
+            "instance_type": node,
             "num_of_datapoints": num_of_datapoints,
         }
 
@@ -219,26 +218,25 @@ class SyntheticModel(BaseModel):
         self,
         aux_columns: List[str],
         control_tag: str,
-        instance_type: Optional[str] = "shared",
-    ):
+        node: str,
+    ) -> str:
         """generate anonymity score
 
         :param aux_columns: list of features
         :param control_tag: tag
-        :param instance_type: type of instance to run training
-            for all available instances check xai.available_synthetic_custom_servers()
-            defaults to shared
+        :param node: type of node to run training
+            for all available node check lexsi.available_node_servers(type="GPU")
 
-        :return: None
+        :return: Response message
         """
-        if instance_type != "shared":
+        if node != "shared":
             available_servers = self.api_client.get(
                 AVAILABLE_SYNTHETIC_CUSTOM_SERVERS_URI
             )["details"]
             servers = list(
                 map(lambda instance: instance["instance_name"], available_servers)
             )
-            Validate.value_against_list("instance_type", instance_type, servers)
+            Validate.value_against_list("instance_type", node, servers)
 
         if len(aux_columns) < 2:
             raise Exception("aux_columns requires minimum 2 columns.")
@@ -258,7 +256,7 @@ class SyntheticModel(BaseModel):
             "control_tag": control_tag,
             "model_name": self.model_name,
             "project_name": self.project_name,
-            "instance_type": instance_type,
+            "instance_type": node,
         }
 
         res = self.api_client.post(GENERATE_ANONYMITY_SCORE_URI, payload)
@@ -270,11 +268,10 @@ class SyntheticModel(BaseModel):
         poll_events(self.api_client, self.project_name, res["event_id"])
         print("Anonymity score calculated successfully.\n")
 
-    def anonymity_score(self):
+    def anonymity_score(self) -> pd.DataFrame:
         """get anonymity score
-
+        :return: anonymity score dataframe
         :raises Exception: _description_
-        :return: _description_
         """
         payload = {
             "project_name": self.project_name,

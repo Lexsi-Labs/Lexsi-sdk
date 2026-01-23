@@ -46,7 +46,12 @@ class ModelSummary(BaseModel):
         return info
 
     def feature_importance(self, xai_method: str):
-        """Plot global feature importance for the model using the specified explainability method (SHAP or LIME)."""
+        """Plot global feature importance for the model using the specified explainability method. Supported explainability methods include SHAP and LIME.
+        :param xai_method: xai method for which precomputed feature importance is returned (e.g., "shap", "lime").
+        :type xai_method: str
+        :return: feature importance graph
+        :rtype: graph
+        """
         global_features = None
         if xai_method == "shap":
             global_features = self.model_results.get("GFI", {}).get("shap_gfi", None)
@@ -94,7 +99,7 @@ class ModelSummary(BaseModel):
         svg = SVG(res.get("details"))
         display(svg)
 
-    def data_config(self):
+    def data_config(self) -> dict:
         """Return the data configuration used for the project (e.g., feature exclusions and encodings) by calling the API.
 
         :return: response

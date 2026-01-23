@@ -38,3 +38,19 @@ def build_list_data_connector_url(base_url, project_name, organization_id):
     else:
         url = base_url
     return url
+
+def split_cpu_gpu_servers(servers: list) -> dict:
+    cpu_servers = []
+    gpu_servers = []
+
+    for server in servers:
+        if "gpu" in server:
+            gpu_servers.append(server)
+        else:
+            cpu_servers.append(server)
+
+    return {
+        "cpu_servers": cpu_servers,
+        "gpu_servers": gpu_servers
+    }
+

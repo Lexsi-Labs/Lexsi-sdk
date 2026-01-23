@@ -18,6 +18,7 @@ CREATE_WORKSPACE_URI = f"{API_VERSION_V2}/users/create_workspace"
 
 # Custom Server
 AVAILABLE_CUSTOM_SERVERS_URI = f"{API_VERSION_V2}/project/server_types"
+AVAILABLE_SERVERLESS_URI = f"{API_VERSION_V2}/project/available_serverless_types"
 START_CUSTOM_SERVER_URI = f"{API_VERSION_V2}/project/start_server"
 STOP_CUSTOM_SERVER_URI = f"{API_VERSION_V2}/project/stop_server"
 
@@ -190,7 +191,7 @@ GET_AVAILABLE_TEXT_MODELS_URI = f"{API_VERSION_V2}/users/get_available_text_mode
 QUANTIZE_MODELS_URI = f"{API_VERSION_V2}/ai-models/run_quantization_on_model"
 INITIALIZE_TEXT_MODEL_URI = f"{API_VERSION_V2}/users/initalize_text_model"
 TEXT_MODEL_INFERENCE_SETTINGS_URI = (
-    f"{API_VERSION_V2}/ai-models/update_inference_settings"
+    f"{API_VERSION_V2}/ai-models/update_text_inference_settings"
 )
 RUN_GUARDRAILS_PARALLEL_URI = f"guardrails/run_guardrail_parallel"
 RUN_CHAT_COMPLETION = f"gateway/v1/chat/completions"

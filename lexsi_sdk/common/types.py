@@ -1,16 +1,172 @@
 from datetime import datetime
 from typing import Any, List, Literal, Optional, TypedDict, Dict, Union
 
+ServerlessInstanceType = Literal[
+    "nova-0.5", "nova-1", "nova-1.5", "nova-2", "nova-4", "nova-6", "nova-8", "nova-10", 
+    "gova-0.5", "gova-1", "gova-1.5", "gova-2", "gova-4", "gova-6", "gova-8", "gova-10", "gova-12", "gova-14", "gova-16", "gova-18", "gova-20", "gova-22", "gova-24"
+]
+
+class ServerlessTypeValues(TypedDict):
+    """
+    Allowed values for serverless instance types.
+
+    Values::
+
+        "nova-0.5"
+        "nova-1"
+        "nova-1.5"
+        "nova-2"
+        "nova-4"
+        "nova-6"
+        "nova-8"
+        "nova-10"
+
+        "gova-0.5"
+        "gova-1"
+        "gova-1.5"
+        "gova-2"
+        "gova-4"
+        "gova-6"
+        "gova-8"
+        "gova-10"
+        "gova-12"
+        "gova-14"
+        "gova-16"
+        "gova-18"
+        "gova-20"
+        "gova-22"
+        "gova-24"
+    """
+    pass
+
+DedicatedCPUInstanceType = Literal[
+    "t3.xlarge", "t3.2xlarge", 
+    "m4.large", "m4.xlarge", "m4.2xlarge", "m4.4xlarge", "m4.10xlarge", "m4.16xlarge",
+    "c4.large", "c4.xlarge", "c4.2xlarge", "c4.4xlarge", "c4.8xlarge",
+    "c5.9xlarge", "c5.12xlarge", "c5.18xlarge", "c5.24xlarge"
+]
+
+DedicatedGPUInstanceType = Literal[
+    "xlargeT4", "2xlargeT4", "4xlargeT4", "8xlargeT4", "12xlargeT4", "16xlargeT4", "32xlargeT4",
+    "xlargeA10G", "2xlargeA10G", "4xlargeA10G", "8xlargeA10G", 
+    "4xlargeH100", 
+]
+
+class DedicatedGPUNodeValues(TypedDict):
+    """
+    Allowed values for dedicated GPU instance types.
+
+    Values::
+
+        "xlargeT4"
+        "2xlargeT4"
+        "4xlargeT4"
+        "8xlargeT4"
+        "12xlargeT4"
+        "16xlargeT4"
+        "32xlargeT4"
+
+        "xlargeA10G"
+        "2xlargeA10G"
+        "4xlargeA10G"
+        "8xlargeA10G"
+
+        "4xlargeH100"
+    """
+    pass
+
+BatchCPUInstanceType = Literal[
+    "small", "xsmall", "2xsmall", "3xsmall",
+    "medium", "xmedium", "2xmedium", "3xmedium",
+    "large", "xlarge", "2xlarge", "3xlarge"
+]
+
+class CPUPodValues(TypedDict):
+    """
+    Allowed values for batch CPU instance types.
+
+    Values::
+
+        "small"
+        "xsmall"
+        "2xsmall"
+        "3xsmall"
+
+        "medium"
+        "xmedium"
+        "2xmedium"
+        "3xmedium"
+
+        "large"
+        "xlarge"
+        "2xlarge"
+        "3xlarge"
+    """
+    #instance_type: BatchCPUInstanceType
+    pass
+
+BatchGPUInstanceType = Literal[
+    "T4.small", "T4.xsmall", "T4.2xsmall", "T4.3xsmall",
+    "A10G.medium", "A10G.xmedium", "A10G.2xmedium", "A10G.3xmedium"
+]
+
+class GPUPodValues(TypedDict):
+    """
+    Allowed values for batch GPU instance types.
+
+    Values::
+
+        "T4.small"
+        "T4.xsmall"
+        "T4.2xsmall"
+        "T4.3xsmall"
+
+        "A10G.medium"
+        "A10G.xmedium"
+        "A10G.2xmedium"
+        "A10G.3xmedium"
+    """
+    #instance_type: BatchGPUInstanceType
+    pass
+class DedicatedCPUNodeValues(TypedDict):
+    """
+    Allowed values for dedicated CPU instance types.
+
+    Values::
+
+        "t3.xlarge"
+        "t3.2xlarge"
+
+        "m4.large"
+        "m4.xlarge"
+        "m4.2xlarge"
+        "m4.4xlarge"
+        "m4.10xlarge"
+        "m4.16xlarge"
+
+        "c4.large"
+        "c4.xlarge"
+        "c4.2xlarge"
+        "c4.4xlarge"
+        "c4.8xlarge"
+
+        "c5.9xlarge"
+        "c5.12xlarge"
+        "c5.18xlarge"
+        "c5.24xlarge"
+    """
+    pass
+
 
 class ProjectConfig(TypedDict):
     """
     Configuration keys required to describe a project.
 
     :param project_type: Project type identifier.
-    :type project_type: str | None
+    :type project_type: Optional[str]
 
     :param model_name: Model name associated with the project.
-    :type model_name: str | None
+    :type model_name: Optional[str]
 
     :param unique_identifier: Column name used as the unique identifier.
     :type unique_identifier: str
@@ -22,10 +178,10 @@ class ProjectConfig(TypedDict):
     :type tag: str
 
     :param pred_label: Column name containing predicted labels (if present).
-    :type pred_label: str | None
+    :type pred_label: Optional[str]
 
     :param feature_exclude: Features to exclude from training/inference.
-    :type feature_exclude: list[str] | None
+    :type feature_exclude: Optional[str]
 
     :param drop_duplicate_uid: Drop duplicate records based on the unique identifier.
     :type drop_duplicate_uid: bool | None
@@ -40,10 +196,10 @@ class ProjectConfig(TypedDict):
     :type handle_data_imbalance: bool | None
 
     :param sample_percentage: Fraction of data used for training (0.0–1.0).
-    :type sample_percentage: float | None
+    :type sample_percentage: Optional[float]
 
-    :param explainability_method: Explainability methods to apply.
-    :type explainability_method: list[str] | None
+    :param xai_method: Explainability methods to apply.
+    :type xai_method: Optional[list[str]]
     """
 
     project_type: Optional[str] = None
@@ -58,7 +214,7 @@ class ProjectConfig(TypedDict):
     feature_encodings: Optional[dict]
     handle_data_imbalance: Optional[bool]
     sample_percentage: Optional[float] = None
-    explainability_method: Optional[List[str]] = None
+    xai_method: Optional[List[str]] = None
 
 
 class DataConfig(TypedDict):
@@ -111,8 +267,9 @@ class DataConfig(TypedDict):
     sample_percentage: float
     explainability_sample_percentage: float
     lime_explainability_iterations: int
-    explainability_method: List[str]
+    xai_method: List[str]
     handle_data_imbalance: Optional[bool]
+
 
 class XGBoostParams(TypedDict, total=False):
     """
@@ -776,28 +933,50 @@ class CustomServerConfig(TypedDict):
     op_hours: Optional[bool] = None
     auto_start: bool = False
 
-
 class InferenceCompute(TypedDict):
     """
     Inference compute selection payload.
 
-    :param instance_type: Instance type identifier.
-    :type instance_type: str
+    :param compute_type: Instance type identifier.
+        Use str values from supported instance types defined in classes:
+        - ``DedicatedCPUNodeValues``
+        - ``DedicatedGPUNodeValues``
+        - ``ServerlessTypeValues``
 
+    :type compute_type: Union[
+        DedicatedCPUNodeValues,
+        DedicatedGPUNodeValues,
+        ServerlessTypeValues
+    ]
+    
     :param custom_server_config: Optional scheduling configuration.
     :type custom_server_config: CustomServerConfig | None
     """
 
-    instance_type: str
+    compute_type: Union[DedicatedCPUNodeValues, DedicatedGPUNodeValues, ServerlessTypeValues]
     custom_server_config: Optional[CustomServerConfig] = CustomServerConfig()
 
 
 class InferenceSettings(TypedDict):
     """
-    Inference settings that can be applied to text models.
+    Inference settings that can be applied to models.
 
-    :param inference_engine: Inference engine identifier (e.g., provider/runtime name).
+    :param inference_engine: Inference engine for the models
+        **Inference Engine**
+        - ``vLLM-AUTO``
+        - ``vLLM-FLASH_ATTN``
+        - ``vLLM-FLASHINFER``
+        - ``vLLM-XFORMERS``
+        - ``SGLang-AUTO``
+        - ``SGLang-TORCH_NATIVE``
+        - ``SGLang-FLASHINFER``
+        - ``SGLang-FA3``
+        - ``Transformers``
+        - ``Transformers-Serverless``
     :type inference_engine: str
     """
 
     inference_engine: str
+
+
+

@@ -66,9 +66,23 @@ project = workspace.project("Your Project name")
       show_root_heading: false
       show_root_full_path: false
       show_root_toc_entry: false
+      show_source: false
+      filters:
+        - "!generate_expression"
+        - "!build_expression"
+        - "!validate_configuration"
+        - "!__print__"
+        - "!__repr__"
+        - "!__str__"
+
+::: lexsi_sdk.core.tabular
+    options:
+      show_root_heading: false
+      show_root_full_path: false
+      show_root_toc_entry: false
       show_source: true
 
-::: lexsi_sdk.core.case
+::: lexsi_sdk.core.image
     options:
       show_root_heading: false
       show_root_full_path: false
@@ -127,6 +141,13 @@ project = workspace.project("Your Project name")
 
 ## Data Classes
 ::: lexsi_sdk.common.types
+    options:
+      show_root_heading: false
+      show_root_full_path: false
+      show_root_toc_entry: false
+      show_source: false
+
+::: lexsi_sdk.common.monitoring
     options:
       show_root_heading: false
       show_root_full_path: false
