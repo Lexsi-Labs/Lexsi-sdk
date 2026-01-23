@@ -1198,7 +1198,9 @@ class TabularProject(Project):
                     "base_line_tag": [""],
                     "current_tag": [""],
                     "baseline_true_label": "",
+                    "current_true_label": "",
                     "baseline_pred_label": "",
+                    "current_pred_label": "",
                     "priority": 2, # between 1-5 
                     "pod": ""  #Pod type to used for running trigger
                 }

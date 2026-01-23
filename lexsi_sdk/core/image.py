@@ -964,65 +964,78 @@ class ImageProject(Project):
     def create_monitor(self, payload: dict) -> str:
         """Create monitoring trigger for project
 
-        :param payload: **Data Drift Trigger Payload**
-                {
-                    "trigger_type": "Data Drift",
-                    "trigger_name": "",
-                    "mail_list": [],
-                    "frequency": "daily",
-                    "stat_test_name": "",
-                    "stat_test_threshold": 0,
-                    "datadrift_features_per": 7,
-                    "dataset_drift_percentage": 50,
-                    "features_to_use": [],
-                    "date_feature": "",
-                    "baseline_date": {"start_date": "", "end_date": ""},
-                    "current_date": {"start_date": "", "end_date": ""},
-                    "base_line_tag": [""],
-                    "current_tag": [""],
-                    "priority": 2,
-                    "pod": ""
-                }
+        :param payload: **Label Drift Trigger Payload**
+            {
+                "trigger_name": "",
+                "trigger_type":"Label Drift",
+                "mail_list": [],
+                "frequency": "daily",
+                "stat_test_threshold": 0,
+                "model_type": "",
+                "base_line_tag": [],
+                "current_tag": [],
+                "priority":1,
+                "pod": "",
+            }
 
-            **Target Drift Trigger Payload**
-                {
-                    "trigger_type": "Target Drift",
-                    "trigger_name": "",
-                    "mail_list": [],
-                    "frequency": "daily",
-                    "model_type": "",
-                    "stat_test_name": "",
-                    "stat_test_threshold": 0,
-                    "date_feature": "",
-                    "baseline_date": {"start_date": "", "end_date": ""},
-                    "current_date": {"start_date": "", "end_date": ""},
-                    "base_line_tag": [""],
-                    "current_tag": [""],
-                    "baseline_true_label": "",
-                    "current_true_label": "",
-                    "priority": 2,
-                    "pod": ""
-                }
+            **Image Dataset Drift Trigger Payload**
+            {
+                "trigger_name": "",
+                "trigger_type":"Image Dataset Drift",
+                "mail_list": [],
+                "frequency": "daily",
+                "stat_test_threshold": 0,
+                "model_type": "",
+                "base_line_tag": [],
+                "current_tag": [],
+                "priority":1,
+                "pod": ""
+            }
 
-            **Model Performance Trigger Payload**
-                {
-                    "trigger_type": "Model Performance",
-                    "trigger_name": "",
-                    "mail_list": [],
-                    "frequency": "daily",
-                    "model_type": "",
-                    "model_performance_metric": "",
-                    "model_performance_threshold": "",
-                    "date_feature": "",
-                    "baseline_date": {"start_date": "", "end_date": ""},
-                    "current_date": {"start_date": "", "end_date": ""},
-                    "base_line_tag": [""],
-                    "current_tag": [""],
-                    "baseline_true_label": "",
-                    "baseline_pred_label": "",
-                    "priority": 2,
-                    "pod": ""
-                }
+            **Property Label Drift Trigger Payload**
+            {
+                "trigger_name": "",
+                "trigger_type":"Property Label Correlation",
+                "mail_list": [],
+                "frequency": "daily",
+                "stat_test_threshold": 1,
+                "model_type": "",
+                "base_line_tag": [],
+                "current_tag": [],
+                "priority": 1,
+                "pod": "",
+                "label_correlation_property": ""
+            }
+
+            **Image Property Drift Trigger Payload**
+            {
+                "trigger_name": "",
+                "trigger_type":"Image Property Drift",
+                "mail_list": [],
+                "frequency": "daily",
+                "stat_test_threshold": 1,
+                "model_type": "",
+                "base_line_tag": [],
+                "current_tag": [],
+                "priority": 1,
+                "pod": "",
+                "image_drift_property": ""
+            }
+
+            **Model Performance Drift Trigger Payload**
+            {
+                "trigger_name": "",
+                "trigger_type":"Model Performance",
+                "mail_list": [],
+                "frequency": "daily",
+                "model_type": "",
+                "current_tag": [],
+                "priority": 1,
+                "pod": "",
+                "model_performance_threshold":0,
+                "model_name": "",
+                "model_performance_metric": ""
+            }
         :return: response
         """
         payload["project_name"] = self.project_name
@@ -1547,10 +1560,10 @@ class ImageProject(Project):
         unique_identifier: str,
         project_name: str,
         tag: str,
+        file_path: str,
         image_class: Optional[str] = None,
         serverless_type: Optional[str] = None,
         xai: Optional[str] = None,
-        file_path: str = None,
     ) -> dict:
         """
         Register a new case entry using an image file path for the project and return the computed result.
