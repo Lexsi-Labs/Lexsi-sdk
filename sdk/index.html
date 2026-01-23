@@ -3400,21 +3400,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#lexsi_sdk.common.types.BatchCPUInstanceTypeValues" class="md-nav__link">
+  <a href="#lexsi_sdk.common.types.CPUPodValues" class="md-nav__link">
     <span class="md-ellipsis">
       
-        BatchCPUInstanceTypeValues
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#lexsi_sdk.common.types.BatchGPUInstanceTypeValues" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        BatchGPUInstanceTypeValues
+        CPUPodValues
       
     </span>
   </a>
@@ -3455,10 +3444,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#lexsi_sdk.common.types.DedicatedCPUInstanceTypeValues" class="md-nav__link">
+  <a href="#lexsi_sdk.common.types.DedicatedCPUNodeValues" class="md-nav__link">
     <span class="md-ellipsis">
       
-        DedicatedCPUInstanceTypeValues
+        DedicatedCPUNodeValues
       
     </span>
   </a>
@@ -3466,10 +3455,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#lexsi_sdk.common.types.DedicatedGPUInstanceTypeValues" class="md-nav__link">
+  <a href="#lexsi_sdk.common.types.DedicatedGPUNodeValues" class="md-nav__link">
     <span class="md-ellipsis">
       
-        DedicatedGPUInstanceTypeValues
+        DedicatedGPUNodeValues
       
     </span>
   </a>
@@ -3520,6 +3509,17 @@
     <span class="md-ellipsis">
       
         GDriveConfig
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lexsi_sdk.common.types.GPUPodValues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GPUPodValues
       
     </span>
   </a>
@@ -3643,10 +3643,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#lexsi_sdk.common.types.ServerlessInstanceTypeValues" class="md-nav__link">
+  <a href="#lexsi_sdk.common.types.ServerlessTypeValues" class="md-nav__link">
     <span class="md-ellipsis">
       
-        ServerlessInstanceTypeValues
+        ServerlessTypeValues
       
     </span>
   </a>
@@ -38791,6 +38791,7 @@ Returns the API response.</p>
       <tbody>
           <tr class="doc-section-item">
             <td>
+                  <code><span title="str">str</span></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -38900,7 +38901,7 @@ Returns the API response.</p>
     <span class="n">bucket_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">file_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">dataset_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<span class="p">):</span>
+<span class="p">)</span> <span class="o">-&gt;</span>  <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Upload text data stored in a configured data connector (such as S3 or GCS).</span>
 <span class="sd">    Requires the connector name, a tag, and optionally the bucket name and file path.</span>
 <span class="sd">    Returns the API response.</span>
@@ -41984,11 +41985,11 @@ Stores configuration and prepares the object for use.</p>
 
 
 
-<h2 id="lexsi_sdk.common.types.BatchCPUInstanceTypeValues" class="doc doc-heading">
-            <span class="doc doc-object-name doc-class-name">BatchCPUInstanceTypeValues</span>
+<h2 id="lexsi_sdk.common.types.CPUPodValues" class="doc doc-heading">
+            <span class="doc doc-object-name doc-class-name">CPUPodValues</span>
 
 
-<a href="#lexsi_sdk.common.types.BatchCPUInstanceTypeValues" class="headerlink" title="Permanent link">&para;</a></h2>
+<a href="#lexsi_sdk.common.types.CPUPodValues" class="headerlink" title="Permanent link">&para;</a></h2>
 
 
     <div class="doc doc-contents ">
@@ -42013,48 +42014,6 @@ Stores configuration and prepares the object for use.</p>
 &quot;xlarge&quot;
 &quot;2xlarge&quot;
 &quot;3xlarge&quot;
-</code></pre></div>
-
-
-
-
-
-
-
-
-
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-class">
-
-
-
-<h2 id="lexsi_sdk.common.types.BatchGPUInstanceTypeValues" class="doc doc-heading">
-            <span class="doc doc-object-name doc-class-name">BatchGPUInstanceTypeValues</span>
-
-
-<a href="#lexsi_sdk.common.types.BatchGPUInstanceTypeValues" class="headerlink" title="Permanent link">&para;</a></h2>
-
-
-    <div class="doc doc-contents ">
-            <p class="doc doc-class-bases">
-              Bases: <code><span title="typing.TypedDict">TypedDict</span></code></p>
-
-
-
-        <p>Allowed values for batch GPU instance types.</p>
-<p>Values::</p>
-<div class="highlight"><pre><span></span><code>&quot;T4.small&quot;
-&quot;T4.xsmall&quot;
-&quot;T4.2xsmall&quot;
-&quot;T4.3xsmall&quot;
-
-&quot;A10G.medium&quot;
-&quot;A10G.xmedium&quot;
-&quot;A10G.2xmedium&quot;
-&quot;A10G.3xmedium&quot;
 </code></pre></div>
 
 
@@ -42616,11 +42575,11 @@ imbalance handling, and explainability.</p>
 
 
 
-<h2 id="lexsi_sdk.common.types.DedicatedCPUInstanceTypeValues" class="doc doc-heading">
-            <span class="doc doc-object-name doc-class-name">DedicatedCPUInstanceTypeValues</span>
+<h2 id="lexsi_sdk.common.types.DedicatedCPUNodeValues" class="doc doc-heading">
+            <span class="doc doc-object-name doc-class-name">DedicatedCPUNodeValues</span>
 
 
-<a href="#lexsi_sdk.common.types.DedicatedCPUInstanceTypeValues" class="headerlink" title="Permanent link">&para;</a></h2>
+<a href="#lexsi_sdk.common.types.DedicatedCPUNodeValues" class="headerlink" title="Permanent link">&para;</a></h2>
 
 
     <div class="doc doc-contents ">
@@ -42669,11 +42628,11 @@ imbalance handling, and explainability.</p>
 
 
 
-<h2 id="lexsi_sdk.common.types.DedicatedGPUInstanceTypeValues" class="doc doc-heading">
-            <span class="doc doc-object-name doc-class-name">DedicatedGPUInstanceTypeValues</span>
+<h2 id="lexsi_sdk.common.types.DedicatedGPUNodeValues" class="doc doc-heading">
+            <span class="doc doc-object-name doc-class-name">DedicatedGPUNodeValues</span>
 
 
-<a href="#lexsi_sdk.common.types.DedicatedGPUInstanceTypeValues" class="headerlink" title="Permanent link">&para;</a></h2>
+<a href="#lexsi_sdk.common.types.DedicatedGPUNodeValues" class="headerlink" title="Permanent link">&para;</a></h2>
 
 
     <div class="doc doc-contents ">
@@ -43284,6 +43243,48 @@ reproducibility, and probability calibration.</p>
 
 
 
+<h2 id="lexsi_sdk.common.types.GPUPodValues" class="doc doc-heading">
+            <span class="doc doc-object-name doc-class-name">GPUPodValues</span>
+
+
+<a href="#lexsi_sdk.common.types.GPUPodValues" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="typing.TypedDict">TypedDict</span></code></p>
+
+
+
+        <p>Allowed values for batch GPU instance types.</p>
+<p>Values::</p>
+<div class="highlight"><pre><span></span><code>&quot;T4.small&quot;
+&quot;T4.xsmall&quot;
+&quot;T4.2xsmall&quot;
+&quot;T4.3xsmall&quot;
+
+&quot;A10G.medium&quot;
+&quot;A10G.xmedium&quot;
+&quot;A10G.2xmedium&quot;
+&quot;A10G.3xmedium&quot;
+</code></pre></div>
+
+
+
+
+
+
+
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
 <h2 id="lexsi_sdk.common.types.InferenceCompute" class="doc doc-heading">
             <span class="doc doc-object-name doc-class-name">InferenceCompute</span>
 
@@ -43316,11 +43317,11 @@ reproducibility, and probability calibration.</p>
                 <code>compute_type</code>
             </td>
             <td>
-                  <code><span title="typing.Union">Union</span>[<a class="autorefs autorefs-internal" title="DedicatedCPUInstanceTypeValues (lexsi_sdk.common.types.DedicatedCPUInstanceTypeValues)" href="#lexsi_sdk.common.types.DedicatedCPUInstanceTypeValues">DedicatedCPUInstanceTypeValues</a>, <a class="autorefs autorefs-internal" title="DedicatedGPUInstanceTypeValues (lexsi_sdk.common.types.DedicatedGPUInstanceTypeValues)" href="#lexsi_sdk.common.types.DedicatedGPUInstanceTypeValues">DedicatedGPUInstanceTypeValues</a>, <a class="autorefs autorefs-internal" title="ServerlessInstanceTypeValues (lexsi_sdk.common.types.ServerlessInstanceTypeValues)" href="#lexsi_sdk.common.types.ServerlessInstanceTypeValues">ServerlessInstanceTypeValues</a>]</code>
+                  <code><span title="typing.Union">Union</span>[<a class="autorefs autorefs-internal" title="DedicatedCPUNodeValues (lexsi_sdk.common.types.DedicatedCPUNodeValues)" href="#lexsi_sdk.common.types.DedicatedCPUNodeValues">DedicatedCPUNodeValues</a>, <a class="autorefs autorefs-internal" title="DedicatedGPUNodeValues (lexsi_sdk.common.types.DedicatedGPUNodeValues)" href="#lexsi_sdk.common.types.DedicatedGPUNodeValues">DedicatedGPUNodeValues</a>, <a class="autorefs autorefs-internal" title="ServerlessTypeValues (lexsi_sdk.common.types.ServerlessTypeValues)" href="#lexsi_sdk.common.types.ServerlessTypeValues">ServerlessTypeValues</a>]</code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Instance type identifier. Use str values from supported instance types defined in classes: - <code>DedicatedCPUInstanceTypeValues</code> - <code>DedicatedGPUInstanceTypeValues</code> - <code>ServerlessInstanceTypeValues</code></p>
+                <p>Instance type identifier. Use str values from supported instance types defined in classes: - <code>DedicatedCPUNodeValues</code> - <code>DedicatedGPUNodeValues</code> - <code>ServerlessTypeValues</code></p>
               </div>
             </td>
             <td>
@@ -44650,11 +44651,11 @@ foundational tabular models.</p>
 
 
 
-<h2 id="lexsi_sdk.common.types.ServerlessInstanceTypeValues" class="doc doc-heading">
-            <span class="doc doc-object-name doc-class-name">ServerlessInstanceTypeValues</span>
+<h2 id="lexsi_sdk.common.types.ServerlessTypeValues" class="doc doc-heading">
+            <span class="doc doc-object-name doc-class-name">ServerlessTypeValues</span>
 
 
-<a href="#lexsi_sdk.common.types.ServerlessInstanceTypeValues" class="headerlink" title="Permanent link">&para;</a></h2>
+<a href="#lexsi_sdk.common.types.ServerlessTypeValues" class="headerlink" title="Permanent link">&para;</a></h2>
 
 
     <div class="doc doc-contents ">
