@@ -315,6 +315,28 @@ class TextProject(Project):
         :param inference_settings: Inference runtime settings for the model.
         :type inference_settings: InferenceSettings | None
 
+        :param requirements_file: file path for the requirements file
+            a YAML file defining the runtime environment, including base Docker image,
+            system-level dependencies, and Python packages required for model deployment.
+            Not required for the transformers serverless inference engine.
+            Requirements file is needed when updating inference settings for an existing model.
+
+            Example::
+                image: nvidia/cuda:12.1.1-cudnn8-runtime-ubuntu22.04
+                system_packages:
+                    - build-essential
+                python_packages:
+                    - fastapi>=0.115.5
+                    - uvicorn>=0.30.6
+                    - transformers==4.52.3
+                    - pydantic>=2.9.2
+                    - torch==2.7.0
+                    - accelerate==1.8.1
+
+        :param app_file: file path for the app file
+            a Python application file that implements the model inference logic,
+            including how inputs are processed and how predictions are generated and returned
+
         :return: a response indicating the result of the inference settings configuration
         """
         data = {
