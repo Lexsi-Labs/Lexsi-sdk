@@ -314,6 +314,28 @@ class TextProject(Project):
         :param inference_settings: Inference runtime settings for the model.
         :type inference_settings: InferenceSettings | None
 
+        :param requirements_file: file path for the requirements file
+            a YAML file defining the runtime environment, including base Docker image,
+            system-level dependencies, and Python packages required for model deployment.
+            Not required for the transformers serverless inference engine.
+            Requirements file is needed when updating inference settings for an existing model.
+
+            Example::
+                image: nvidia/cuda:12.1.1-cudnn8-runtime-ubuntu22.04
+                system_packages:
+                    - build-essential
+                python_packages:
+                    - fastapi>=0.115.5
+                    - uvicorn>=0.30.6
+                    - transformers==4.52.3
+                    - pydantic>=2.9.2
+                    - torch==2.7.0
+                    - accelerate==1.8.1
+
+        :param app_file: file path for the app file
+            a Python application file that implements the model inference logic,
+            including how inputs are processed and how predictions are generated and returned
+
         :return: a response indicating the result of the inference settings configuration
         """
         data = {
@@ -336,17 +358,6 @@ class TextProject(Project):
         
         return res.get("details", "Inference Settings Updated")
 
-    def available_text_models(self) -> pd.DataFrame:
-        """Get available text models
-
-        :return: list of available text models
-        """
-        res = self.api_client.get(f"{GET_AVAILABLE_TEXT_MODELS_URI}")
-        if not res["success"]:
-            raise Exception(
-                res.get("details", " Failed to fetch available text models")
-            )
-        return pd.DataFrame(res.get("details"))
 
     def upload_data(
         self,
@@ -710,18 +721,17 @@ class TextProject(Project):
         model: str,
         prompt: str,
         XAI_pods: Optional[str] = "xlarge",
-        explainability_method: List[str] = ["DLB"],
+        # explainability_method: List[str] = ["DLB"],
         XAI: bool = False,
         session_id: Optional[UUID] = None,
         min_tokens: int = 100,
         max_tokens: int = 1024,
-    ):
+    ) -> dict :
         """Generate an explainable text case using a hosted Lexsi model.
 
         :param model: Name of the deployed text model.
         :param prompt: Input prompt for generation.
         :param XAI_pods: Dedicated instance type (if applicable).
-        :param explainability_method: Methods to compute explanations with.
         :param XAI: Whether to explain the model behavior.
         :param session_id: Optional existing session id.
         :param min_tokens: Minimum tokens to generate.
@@ -735,7 +745,6 @@ class TextProject(Project):
             "prompt": prompt,
             "XAI_pods": XAI_pods,
             "provider" : "Lexsi",
-            "explainability_method": explainability_method,
             "XAI": XAI,
             "max_tokens": max_tokens,
             "min_tokens": min_tokens,
