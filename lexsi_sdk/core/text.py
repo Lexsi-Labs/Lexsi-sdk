@@ -423,7 +423,7 @@ class TextProject(Project):
         bucket_name: Optional[str] = None,
         file_path: Optional[str] = None,
         dataset_name: Optional[str] = None,
-    ):
+    ) ->  str:
         """Upload text data stored in a configured data connector (such as S3 or GCS).
         Requires the connector name, a tag, and optionally the bucket name and file path.
         Returns the API response.
