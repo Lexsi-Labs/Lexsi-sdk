@@ -1091,9 +1091,9 @@ class TabularProject(Project):
     def create_monitor(self, payload: dict) -> str:
         """Create monitoring trigger for project
 
-        :param payload: Data Drift Trigger Payload
+        :param payload: **Data Drift Trigger Payload** 
                 {
-                    "trigger_type": ""  #["Data Drift", "Target Drift", "Model Performance"]
+                    "trigger_type": "Data Drift",
                     "trigger_name": "",
                     "mail_list": [],
                     "frequency": "",   #['daily','weekly','monthly','quarterly','yearly']
@@ -1109,9 +1109,10 @@ class TabularProject(Project):
                     "current_tag": [""],
                     "priority": 2, # between 1-5 
                     "pod": ""  #Pod type to used for running trigger
-                } OR Target Drift Trigger Payload
+                } OR 
+                **Target Drift Trigger Payload** 
                 {
-                    "trigger_type": ""  #["Data Drift", "Target Drift", "Model Performance"]
+                    "trigger_type": "Target Drift",
                     "trigger_name": "",
                     "mail_list": [],
                     "frequency": "",   #['daily','weekly','monthly','quarterly','yearly']
@@ -1127,9 +1128,10 @@ class TabularProject(Project):
                     "current_true_label": "",
                     "priority": 2, # between 1-5 
                     "pod": ""  #Pod type to used for running trigger
-                } OR Model Performance Trigger Payload
+                } OR 
+                **Model Performance Trigger Payload** 
                 {
-                    "trigger_type": ""  #["Data Drift", "Target Drift", "Model Performance"]
+                    "trigger_type": "Model Performance",
                     "trigger_name": "",
                     "mail_list": [],
                     "frequency": "",   #['daily','weekly','monthly','quarterly','yearly']

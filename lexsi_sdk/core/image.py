@@ -967,7 +967,6 @@ class ImageProject(Project):
         """Create monitoring trigger for project
 
         :param payload: **Data Drift Trigger Payload**
-            .. code-block:: json
                 {
                     "trigger_type": "Data Drift",
                     "trigger_name": "",
@@ -988,8 +987,6 @@ class ImageProject(Project):
                 }
 
             **Target Drift Trigger Payload**
-            .. code-block:: json
-
                 {
                     "trigger_type": "Target Drift",
                     "trigger_name": "",
@@ -1010,8 +1007,6 @@ class ImageProject(Project):
                 }
 
             **Model Performance Trigger Payload**
-            .. code-block:: json
-
                 {
                     "trigger_type": "Model Performance",
                     "trigger_name": "",
