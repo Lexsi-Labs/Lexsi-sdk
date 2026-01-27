@@ -49,7 +49,6 @@ from lexsi_sdk.common.xai_uris import (
 )
 import io
 from lexsi_sdk.core.alert import Alert
-from lexsi_sdk.core.case import CaseImage, CaseTabular, CaseText
 from lexsi_sdk.core.dashboard import DASHBOARD_TYPES, Dashboard
 from datetime import datetime
 from lexsi_sdk.core.model_summary import ModelSummary
@@ -73,10 +72,10 @@ class Project(BaseModel):
         modality = kwargs.get("metadata", {}).get("modality")
 
         if cls is Project and modality == "tabular":
-            from lexsi_sdk.core.tabular import TabularProject
+            from lexsi_sdk.core.tabular import TabularProject, CaseTabular
             return super().__new__(TabularProject)
         elif cls is Project and modality == "image":
-            from lexsi_sdk.core.image import ImageProject
+            from lexsi_sdk.core.image import ImageProject, CaseImage
             return super().__new__(ImageProject)
 
         return super().__new__(cls)
@@ -245,7 +244,13 @@ class Project(BaseModel):
         if not res["success"]:
             error_details = res.get("details", "Failed to get available tags.")
             raise Exception(error_details)
-        res["details"]["lexsi_tags"] = res["details"].pop("arya_tags", [])
+        details = res["details"]
+        items = list(details.items())
+        idx = list(details.keys()).index("arya_tags")
+        value = details.pop("arya_tags")
+        items.pop(idx)
+        items.insert(idx, ("lexsi_tags", value))
+        res["details"] = dict(items)
         return res["details"]
 
     def files(self) -> pd.DataFrame:
@@ -784,243 +789,6 @@ class Project(BaseModel):
             print(res["message"])
         return res["details"]
 
-    def upload_data_dataconnectors(
-        self,
-        data_connector_name: str,
-        tag: str,
-        model_path: Optional[str] = None,
-        model_name: Optional[str] = None,
-        model_architecture: Optional[str] = None,
-        model_type: Optional[str] = None,
-        bucket_name: Optional[str] = None,
-        file_path: Optional[str] = None,
-        config: Optional[ProjectConfig] = None,
-    ) -> str:
-        """Uploads data for the current project with data connectors
-        :param data_connector_name: name of the data connector
-        :param tag: tag for data
-        :param bucket_name: if data connector has buckets # Example: s3/gcs buckets
-        :param file_path: filepath from the bucket for the data to read
-        :param config: project config
-                {
-                    "project_type": "",
-                    "unique_identifier": "",
-                    "true_label": "",
-                    "pred_label": "",
-                    "feature_exclude": [],
-                    "drop_duplicate_uid: "",
-                    "handle_errors": False,
-                    "feature_encodings": Dict[str, str]   # {"feature_name":"labelencode | countencode | onehotencode"}
-                },
-                defaults to None
-        :return: response
-        """
-        print("Preparing Data Upload")
-
-        def get_connector() -> str | pd.DataFrame:
-            """Look up the configured data connector by name.
-            Returns a one-row DataFrame (or an error string) with connector metadata."""
-            url = build_list_data_connector_url(
-                LIST_DATA_CONNECTORS, self.project_name, self.organization_id
-            )
-            res = self.api_client.post(url)
-
-            if res["success"]:
-                df = pd.DataFrame(res["details"])
-                filtered_df = df.loc[df["link_service_name"] == data_connector_name]
-                if filtered_df.empty:
-                    return "No data connector found"
-                return filtered_df
-
-            return res["details"]
-
-        connectors = get_connector()
-        if isinstance(connectors, pd.DataFrame):
-            value = connectors.loc[
-                connectors["link_service_name"] == data_connector_name,
-                "link_service_type",
-            ].values[0]
-            ds_type = value
-
-            if ds_type == "s3" or ds_type == "gcs":
-                if not bucket_name:
-                    return "Missing argument bucket_name"
-                if not file_path:
-                    return "Missing argument file_path"
-        else:
-            return connectors
-
-        def upload_file_and_return_path(file_path, data_type, tag=None) -> str:
-            """Trigger a connector-to-Lexsi upload for a file path.
-            Returns the stored `filepath` in Lexsi storage to be referenced by other APIs.
-
-            :param file_path: Source path in the connector (bucket/object path, sftp path, etc.).
-            :param data_type: Upload type such as `data`, `model`, etc.
-            :param tag: Optional tag to associate with the upload.
-            :return: Server-side filepath for the uploaded artifact."""
-            if not self.project_name:
-                return "Missing Project Name"
-            query_params = f"project_name={self.project_name}&link_service_name={data_connector_name}&data_type={data_type}&tag={tag}&bucket_name={bucket_name}&file_path={file_path}"
-            if self.organization_id:
-                query_params += f"&organization_id={self.organization_id}"
-            res = self.api_client.post(f"{UPLOAD_FILE_DATA_CONNECTORS}?{query_params}")
-            if not res["success"]:
-                raise Exception(res.get("details"))
-            uploaded_path = res.get("metadata").get("filepath")
-
-            return uploaded_path
-
-        project_config = self.config()
-
-        if project_config == "Not Found":
-            if self.metadata.get("modality") == "image":
-                if (
-                    not model_path
-                    or not model_architecture
-                    or not model_type
-                    or not model_name
-                ):
-                    raise Exception("Model details is required for Image project type")
-
-                uploaded_path = upload_file_and_return_path(file_path, "data", tag)
-
-                model_uploaded_path = upload_file_and_return_path(model_path, "model")
-
-                payload = {
-                    "project_name": self.project_name,
-                    "project_type": self.metadata.get("project_type"),
-                    "metadata": {
-                        "path": uploaded_path,
-                        "model_name": model_name,
-                        "model_path": model_uploaded_path,
-                        "model_architecture": model_architecture,
-                        "model_type": model_type,
-                        "tag": tag,
-                        "tags": [tag],
-                    },
-                }
-
-            if self.metadata.get("modality") == "tabular":
-                if not config.get("project_type"):
-                    config["project_type"] = self.metadata.get("project_type")
-                if not config:
-                    config = {
-                        "project_type": "",
-                        "unique_identifier": "",
-                        "true_label": "",
-                        "pred_label": "",
-                        "feature_exclude": [],
-                        "drop_duplicate_uid": False,
-                        "handle_errors": False,
-                    }
-                    raise Exception(
-                        f"Project Config is required, since no config is set for project \n {json.dumps(config,indent=1)}"
-                    )
-
-                Validate.check_for_missing_keys(
-                    config, ["project_type", "unique_identifier", "true_label"]
-                )
-
-                Validate.value_against_list(
-                    "project_type", config, ["classification", "regression"]
-                )
-
-                uploaded_path = upload_file_and_return_path(file_path, "data", tag)
-
-                file_info = self.api_client.post(
-                    UPLOAD_DATA_FILE_INFO_URI, {"path": uploaded_path}
-                )
-
-                column_names = file_info.get("details").get("column_names")
-
-                Validate.value_against_list(
-                    "unique_identifier",
-                    config["unique_identifier"],
-                    column_names,
-                    lambda: self.delete_file(uploaded_path),
-                )
-
-                if config.get("feature_exclude"):
-                    Validate.value_against_list(
-                        "feature_exclude",
-                        config["feature_exclude"],
-                        column_names,
-                        lambda: self.delete_file(uploaded_path),
-                    )
-
-                feature_exclude = [
-                    config["unique_identifier"],
-                    config["true_label"],
-                    *config.get("feature_exclude", []),
-                ]
-
-                feature_include = [
-                    feature
-                    for feature in column_names
-                    if feature not in feature_exclude
-                ]
-
-                feature_encodings = config.get("feature_encodings", {})
-                if feature_encodings:
-                    Validate.value_against_list(
-                        "feature_encodings_feature",
-                        list(feature_encodings.keys()),
-                        column_names,
-                    )
-                    Validate.value_against_list(
-                        "feature_encodings_feature",
-                        list(feature_encodings.values()),
-                        ["labelencode", "countencode", "onehotencode"],
-                    )
-
-                payload = {
-                    "project_name": self.project_name,
-                    "project_type": config["project_type"],
-                    "unique_identifier": config["unique_identifier"],
-                    "true_label": config["true_label"],
-                    "pred_label": config.get("pred_label"),
-                    "metadata": {
-                        "path": uploaded_path,
-                        "tag": tag,
-                        "tags": [tag],
-                        "drop_duplicate_uid": config.get("drop_duplicate_uid"),
-                        "handle_errors": config.get("handle_errors", False),
-                        "feature_exclude": feature_exclude,
-                        "feature_include": feature_include,
-                        "feature_encodings": feature_encodings,
-                        "feature_actual_used": [],
-                    },
-                }
-
-            res = self.api_client.post(UPLOAD_DATA_WITH_CHECK_URI, payload)
-
-            if not res["success"]:
-                self.delete_file(uploaded_path)
-                raise Exception(res.get("details"))
-
-            poll_events(self.api_client, self.project_name, res["event_id"])
-
-            return res.get("details")
-
-        if project_config != "Not Found" and config:
-            raise Exception("Config already exists, please remove config")
-
-        uploaded_path = upload_file_and_return_path(file_path, "data", tag)
-
-        payload = {
-            "path": uploaded_path,
-            "tag": tag,
-            "type": "data",
-            "project_name": self.project_name,
-        }
-        res = self.api_client.post(UPLOAD_DATA_URI, payload)
-
-        if not res["success"]:
-            self.delete_file(uploaded_path)
-            raise Exception(res.get("details"))
-
-        return res.get("details")
-
     def case_logs(self, page: Optional[int] = 1) -> pd.DataFrame:
         """Get already viewed case logs
 
@@ -1052,7 +820,7 @@ class Project(BaseModel):
 
         return case_logs_df
 
-    def case_record(self, case_id: str):
+    def case_record(self, case_id: str) -> any:
         """Get already viewed case
 
         :param case_id: case id
@@ -1068,10 +836,13 @@ class Project(BaseModel):
         data = {**res["details"], **res["details"].get("result", {})}
         data["api_client"] = self.api_client
         if self.metadata.get("modality") == "tabular":
+            from lexsi_sdk.core.tabular import CaseTabular
             case = CaseTabular(**data)
         elif self.metadata.get("modality") == "image":
+            from lexsi_sdk.core.image import CaseImage
             case = CaseImage(**data)
         elif self.metadata.get("modality") == "text":
+            from lexsi_sdk.core.text import CaseText
             case = CaseText(**data)
         return case
 

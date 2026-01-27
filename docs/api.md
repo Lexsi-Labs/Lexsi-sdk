@@ -77,37 +77,39 @@ curl --http2 -X POST "https://apiv1.lexsi.ai/v2/project/case-register" \
 
 ## Text Modality API's
 
-### Text Generation API
+### Text Generation
 
 ```bash
-curl --http2 -X POST 'https://apiv1.lexsi.ai/v2/project/case-register' \
-  -H "x-api-token: <$API_TOKEN>" \
-  -F "provider= <$MODEL_PROVIDER>" \
-  -F "client_id=<$USERNAME>" \
-  -F "project_name=<$PROJECT_NAME>" \
-  -F "prompt=<$INPUT_PROMPT>" \
-  -F "serverless_instance_type=<$SERVERLESS_COMPUTE_TYPE>" \
-  -F "model_name=<$MODEL_NAME>" \
-  -F "min_tokens=<$MIN_TOKENS>" \
-  -F "max_tokens=<$MAX_TOKENS>" \
-  -F "session_id=<$SESSION_ID>" \
-  -F "instance_type=<$POD_INSTANCE_TYPE>" \
-  -F "explain_model=<$EXPLAINABILTY_FLAG>"
+curl --http2 -X POST "https://apiv1.lexsi.ai/gateway/v1/text/generation" \
+  --header "x-api-token: <$API_TOKEN>" \
+  --header "Content-Type: application/json" \
+  --data '{
+    "provider": "<$MODEL_PROVIDER>",
+    "client_id": "<$USERNAME>",
+    "project_name": "<$PROJECT_NAME>",
+    "model": "<$MODEL_NAME>",
+    "prompt": "<$PROMPT>",
+    "min_tokens": <$MIN_TOKENS>,
+    "max_tokens": <$MAX_TOKENS>,
+    "session_id": "<$SESSION_ID>",
+    "XAI": <$XAI_ENABLED>,
+    "XAI_pods": "<$XAI_POD_TYPE>"
+  }'
 ```
 
 | Placeholder | Description |
 |------------|-------------|
 | `$API_TOKEN` | Your Lexsi API token |
-| `$MODEL_PROVIDER` | Provider identifier (e.g. `Lexsi`, `OpenAI`, `Grok`) |
+| `$MODEL_PROVIDER` | Provider identifier (e.g. `openai`, `lexsi`) |
 | `$USERNAME` | Your Lexsi username / client ID |
 | `$PROJECT_NAME` | Target text project name |
-| `$INPUT_PROMPT` | User prompt to send to the model |
-| `$SERVERLESS_COMPUTE_TYPE` | Serverless instance type for processing |
 | `$MODEL_NAME` | Model name within the selected provider |
-| `$MIN_TOKENS` / `$MAX_TOKENS` | Minimum and maximum tokens to generate (integers) |
-| `$SESSION_ID` | Optional session ID for threaded or multi-turn conversations |
-| `$POD_INSTANCE_TYPE` | Optional dedicated instance type for processing |
-| `$EXPLAINABILTY_FLAG` | Boolean flag indicating whether explainability is computed |
+| `$PROMPT` | User prompt to send to the model |
+| `$MIN_TOKENS` | Optional minimum tokens to generate (integer) |
+| `$MAX_TOKENS` | Optional maximum tokens to generate (integer) |
+| `$SESSION_ID` | Optional session ID for multi-turn conversations |
+| `$XAI_ENABLED` | Optional boolean flag for explainability (`true` or `false`) |
+| `$XAI_POD_TYPE` | Optional pod instance type for explainability processing |
 
 
 ### Chat completions

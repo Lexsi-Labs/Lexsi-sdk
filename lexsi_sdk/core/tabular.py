@@ -1,7 +1,9 @@
+from __future__ import annotations
 import datetime
 import io
 import json
-from typing import List, Optional, Union
+from typing import Dict, List, Optional, Union
+import httpx
 import pandas as pd
 from lexsi_sdk.core.alert import Alert
 from lexsi_sdk.common.constants import BIAS_MONITORING_DASHBOARD_REQUIRED_FIELDS, DATA_DRIFT_DASHBOARD_REQUIRED_FIELDS, DATA_DRIFT_STAT_TESTS, MODEL_PERF_DASHBOARD_REQUIRED_FIELDS, MODEL_TYPES, SYNTHETIC_MODELS_DEFAULT_HYPER_PARAMS, TARGET_DRIFT_DASHBOARD_REQUIRED_FIELDS, TARGET_DRIFT_STAT_TESTS
@@ -9,14 +11,15 @@ from lexsi_sdk.common.monitoring import BiasMonitoringPayload, DataDriftPayload,
 from lexsi_sdk.common.types import CatBoostParams, DataConfig, FoundationalModelParams, InferenceCompute, LightGBMParams, PEFTParams, ProcessorParams, ProjectConfig, RandomForestParams, SyntheticDataConfig, SyntheticModelHyperParams, TuningParams, XGBoostParams
 from lexsi_sdk.common.utils import poll_events
 from lexsi_sdk.common.validation import Validate
-from lexsi_sdk.common.xai_uris import ALL_DATA_FILE_URI, AVAILABLE_BATCH_SERVERS_URI, AVAILABLE_SYNTHETIC_CUSTOM_SERVERS_URI, CASE_DTREE_URI, CASE_INFO_TEXT_URI, CASE_INFO_URI, CREATE_OBSERVATION_URI, CREATE_POLICY_URI, CREATE_SYNTHETIC_PROMPT_URI, DELETE_CASE_URI, DELETE_SYNTHETIC_MODEL_URI, DELETE_SYNTHETIC_TAG_URI, DOWNLOAD_DASHBOARD_LOGS_URI, DOWNLOAD_SYNTHETIC_DATA_URI, DOWNLOAD_TAG_DATA_URI, DUPLICATE_OBSERVATION_URI, DUPLICATE_POLICY_URI, GENERATE_DASHBOARD_URI, GET_CASES_URI, GET_DASHBOARD_SCORE_URI, GET_DATA_DIAGNOSIS_URI, GET_DATA_DRIFT_DIAGNOSIS_URI, GET_DATA_SUMMARY_URI, GET_FEATURE_IMPORTANCE_URI, GET_LABELS_URI, GET_MODELS_URI, GET_OBSERVATION_PARAMS_URI, GET_OBSERVATIONS_URI, GET_POLICIES_URI, GET_POLICY_PARAMS_URI, GET_PROJECT_CONFIG, GET_SYNTHETIC_DATA_TAGS_URI, GET_SYNTHETIC_MODEL_DETAILS_URI, GET_SYNTHETIC_MODEL_PARAMS_URI, GET_SYNTHETIC_MODELS_URI, GET_SYNTHETIC_PROMPT_URI, LIST_DATA_CONNECTORS, MODEL_INFERENCES_URI, MODEL_PARAMETERS_URI, MODEL_SUMMARY_URI, PROJECT_OVERVIEW_TEXT_URI, RUN_DATA_DRIFT_DIAGNOSIS_URI, RUN_MODEL_ON_DATA_URI, SEARCH_CASE_URI, TABULAR_ML, TEXT_MODEL_INFERENCE_SETTINGS_URI, TRAIN_MODEL_URI, TRAIN_SYNTHETIC_MODEL_URI, UPDATE_ACTIVE_INFERENCE_MODEL_URI, UPDATE_OBSERVATION_URI, UPDATE_POLICY_URI, UPDATE_SYNTHETIC_PROMPT_URI, UPLOAD_DATA_FILE_URI, UPLOAD_DATA_URI, UPLOAD_FILE_DATA_CONNECTORS, AVAILABLE_BATCH_SERVERS_URI, CREATE_TRIGGER_URI, DASHBOARD_LOGS_URI, DELETE_TRIGGER_URI, DUPLICATE_MONITORS_URI, EXECUTED_TRIGGER_URI, GENERATE_DASHBOARD_URI, GET_DASHBOARD_SCORE_URI, GET_DASHBOARD_URI, GET_EXECUTED_TRIGGER_INFO, GET_MODEL_TYPES_URI, GET_MODELS_URI, GET_MONITORS_ALERTS, GET_PROJECT_CONFIG, GET_TRIGGERS_URI, LIST_DATA_CONNECTORS, MODEL_PARAMETERS_URI, MODEL_PERFORMANCE_DASHBOARD_URI, UPLOAD_DATA_FILE_INFO_URI, UPLOAD_DATA_FILE_URI, UPLOAD_DATA_URI, UPLOAD_DATA_WITH_CHECK_URI, UPLOAD_FILE_DATA_CONNECTORS, UPLOAD_MODEL_URI
-from lexsi_sdk.core.case import CaseImage, CaseTabular, CaseText
+from lexsi_sdk.common.xai_uris import ALL_DATA_FILE_URI, AVAILABLE_BATCH_SERVERS_URI, AVAILABLE_SYNTHETIC_CUSTOM_SERVERS_URI, CASE_DTREE_URI, CASE_INFO_TEXT_URI, CASE_INFO_URI, CREATE_OBSERVATION_URI, CREATE_POLICY_URI, CREATE_SYNTHETIC_PROMPT_URI, DELETE_CASE_URI, DELETE_SYNTHETIC_MODEL_URI, DELETE_SYNTHETIC_TAG_URI, DOWNLOAD_DASHBOARD_LOGS_URI, DOWNLOAD_SYNTHETIC_DATA_URI, DOWNLOAD_TAG_DATA_URI, DUPLICATE_OBSERVATION_URI, DUPLICATE_POLICY_URI, GENERATE_DASHBOARD_URI, GET_CASES_URI, GET_DASHBOARD_SCORE_URI, GET_DATA_DIAGNOSIS_URI, GET_DATA_DRIFT_DIAGNOSIS_URI, GET_DATA_SUMMARY_URI, GET_FEATURE_IMPORTANCE_URI, GET_LABELS_URI, GET_MODELS_URI, GET_OBSERVATION_PARAMS_URI, GET_OBSERVATIONS_URI, GET_POLICIES_URI, GET_POLICY_PARAMS_URI, GET_PROJECT_CONFIG, GET_SYNTHETIC_DATA_TAGS_URI, GET_SYNTHETIC_MODEL_DETAILS_URI, GET_SYNTHETIC_MODEL_PARAMS_URI, GET_SYNTHETIC_MODELS_URI, GET_SYNTHETIC_PROMPT_URI, LIST_DATA_CONNECTORS, MODEL_INFERENCES_URI, MODEL_PARAMETERS_URI, MODEL_SUMMARY_URI, PROJECT_OVERVIEW_TEXT_URI, RUN_DATA_DRIFT_DIAGNOSIS_URI, RUN_MODEL_ON_DATA_URI, SEARCH_CASE_URI, TABULAR_ML, TEXT_MODEL_INFERENCE_SETTINGS_URI, TRAIN_MODEL_URI, TRAIN_SYNTHETIC_MODEL_URI, UPDATE_ACTIVE_INFERENCE_MODEL_URI, UPDATE_OBSERVATION_URI, UPDATE_POLICY_URI, UPDATE_SYNTHETIC_PROMPT_URI, UPLOAD_DATA_FILE_URI, UPLOAD_DATA_PROJECT_URI, UPLOAD_DATA_URI, UPLOAD_FILE_DATA_CONNECTORS, AVAILABLE_BATCH_SERVERS_URI, CREATE_TRIGGER_URI, DASHBOARD_LOGS_URI, DELETE_TRIGGER_URI, DUPLICATE_MONITORS_URI, EXECUTED_TRIGGER_URI, GENERATE_DASHBOARD_URI, GET_DASHBOARD_SCORE_URI, GET_DASHBOARD_URI, GET_EXECUTED_TRIGGER_INFO, GET_MODEL_TYPES_URI, GET_MODELS_URI, GET_MONITORS_ALERTS, GET_PROJECT_CONFIG, GET_TRIGGERS_URI, LIST_DATA_CONNECTORS, MODEL_PARAMETERS_URI, MODEL_PERFORMANCE_DASHBOARD_URI, UPLOAD_DATA_FILE_INFO_URI, UPLOAD_DATA_FILE_URI, UPLOAD_DATA_URI, UPLOAD_DATA_WITH_CHECK_URI, UPLOAD_FILE_DATA_CONNECTORS, UPLOAD_MODEL_URI, EXPLAINABILITY_SUMMARY, GET_TRIGGERS_DAYS_URI
 from lexsi_sdk.core.dashboard import DASHBOARD_TYPES, Dashboard
-from lexsi_sdk.core.model_summary import ModelSummary
 from lexsi_sdk.core.project import Project, build_expression, generate_expression, validate_configuration
 from lexsi_sdk.core.synthetic import SyntheticDataTag, SyntheticModel, SyntheticPrompt
 from lexsi_sdk.core.utils import build_list_data_connector_url
-
+from pydantic import BaseModel, ConfigDict
+import plotly.graph_objects as go
+from IPython.display import SVG, display
+from lexsi_sdk.client.client import APIClient
 
 class TabularProject(Project):
     """Tabular Project class extending the base Project class with tabular-specific methods."""
@@ -89,115 +92,111 @@ class TabularProject(Project):
 
         return file_summary_df
 
-    def update_config(self, compute_type: str, config: DataConfig) -> str:
-        """Update the project configurations. Accepts a config dictionary.
-        :param compute_type: compute type to run model training
-        :param config: updated config
-                    {
-                        "tags": List[str]
-                        "feature_exclude": List[str]
-                        "feature_encodings": Dict[str, str]   # {"feature_name":"labelencode | countencode"}
-                        "drop_duplicate_uid": bool
-                    },
+    # def update_config(self, compute_type: str, config: DataConfig) -> str:
+    #     """Update the project configurations. Accepts a config dictionary.
+    #     :param compute_type: compute type to run model training
+    #     :param config: updated config
+    #                 {
+    #                     "tags": List[str]
+    #                     "feature_exclude": List[str]
+    #                     "feature_encodings": Dict[str, str]   # {"feature_name":"labelencode | countencode"}
+    #                     "drop_duplicate_uid": bool
+    #                 },
 
-        :return: response
-        """
-        if not config:
-            raise Exception("Please upload config")
+    #     :return: response
+    #     """
+    #     if not config:
+    #         raise Exception("Please upload config")
 
-        project_config = self.config()
+    #     project_config = self.config()
 
-        if project_config == "Not Found":
-            raise Exception("Config does not exist, please upload files first")
+    #     if project_config == "Not Found":
+    #         raise Exception("Config does not exist, please upload files first")
 
-        available_tags = self.available_tags()
+    #     available_tags = self.available_tags()
 
-        if config.get("tags"):
-            Validate.value_against_list(
-                "tags", config["tags"], available_tags.get("user_tags")
-            )
+    #     if config.get("tags"):
+    #         Validate.value_against_list(
+    #             "tags", config["tags"], available_tags.get("user_tags")
+    #         )
 
-        all_unique_features = [
-            *project_config["metadata"]["feature_exclude"],
-            *project_config["metadata"]["feature_include"],
-        ]
+    #     all_unique_features = [
+    #         *project_config["metadata"]["feature_exclude"],
+    #         *project_config["metadata"]["feature_include"],
+    #     ]
 
-        if config.get("feature_exclude"):
-            Validate.value_against_list(
-                "feature_exclude",
-                config["feature_exclude"],
-                all_unique_features,
-            )
+    #     if config.get("feature_exclude"):
+    #         Validate.value_against_list(
+    #             "feature_exclude",
+    #             config["feature_exclude"],
+    #             all_unique_features,
+    #         )
 
-        if config.get("feature_encodings"):
-            Validate.value_against_list(
-                "feature_encodings_feature",
-                list(config["feature_encodings"].keys()),
-                list(project_config["metadata"]["feature_encodings"].keys()),
-            )
-            Validate.value_against_list(
-                "feature_encodings_feature",
-                list(config["feature_encodings"].values()),
-                ["labelencode", "countencode"],
-            )
+    #     if config.get("feature_encodings"):
+    #         Validate.value_against_list(
+    #             "feature_encodings_feature",
+    #             list(config["feature_encodings"].keys()),
+    #             list(project_config["metadata"]["feature_encodings"].keys()),
+    #         )
+    #         Validate.value_against_list(
+    #             "feature_encodings_feature",
+    #             list(config["feature_encodings"].values()),
+    #             ["labelencode", "countencode"],
+    #         )
 
-        if config.get("feature_exclude") is None:
-            feature_exclude = project_config["metadata"]["feature_exclude"]
-        else:
-            feature_exclude = config.get("feature_exclude", [])
+    #     if config.get("feature_exclude") is None:
+    #         feature_exclude = project_config["metadata"]["feature_exclude"]
+    #     else:
+    #         feature_exclude = config.get("feature_exclude", [])
 
-        feature_include = [
-            feature for feature in all_unique_features if feature not in feature_exclude
-        ]
+    #     feature_include = [
+    #         feature for feature in all_unique_features if feature not in feature_exclude
+    #     ]
 
-        feature_encodings = (
-            config.get("feature_encodings")
-            or project_config["metadata"]["feature_encodings"]
-        )
+    #     feature_encodings = (
+    #         config.get("feature_encodings")
+    #         or project_config["metadata"]["feature_encodings"]
+    #     )
 
-        drop_duplicate_uid = (
-            config.get("drop_duplicate_uid")
-            or project_config["metadata"]["drop_duplicate_uid"]
-        )
+    #     drop_duplicate_uid = (
+    #         config.get("drop_duplicate_uid")
+    #         or project_config["metadata"]["drop_duplicate_uid"]
+    #     )
 
-        tags = config.get("tags") or project_config["metadata"]["tags"]
+    #     tags = config.get("tags") or project_config["metadata"]["tags"]
 
-        payload = {
-            "project_name": self.project_name,
-            "project_type": project_config["project_type"],
-            "unique_identifier": project_config["unique_identifier"],
-            "true_label": project_config["true_label"],
-            "pred_label": project_config.get("pred_label"),
-            "instance_type": compute_type,
-            "config_update": True,
-            "metadata": {
-                "feature_include": feature_include,
-                "feature_exclude": feature_exclude,
-                "feature_encodings": feature_encodings,
-                "drop_duplicate_uid": drop_duplicate_uid,
-                "tags": tags,
-            },
-        }
+    #     payload = {
+    #         "project_name": self.project_name,
+    #         "project_type": project_config["project_type"],
+    #         "unique_identifier": project_config["unique_identifier"],
+    #         "true_label": project_config["true_label"],
+    #         "pred_label": project_config.get("pred_label"),
+    #         "instance_type": compute_type,
+    #         "config_update": True,
+    #         "metadata": {
+    #             "feature_include": feature_include,
+    #             "feature_exclude": feature_exclude,
+    #             "feature_encodings": feature_encodings,
+    #             "drop_duplicate_uid": drop_duplicate_uid,
+    #             "tags": tags,
+    #         },
+    #     }
 
-        print("Config :-")
-        print(json.dumps(payload["metadata"], indent=1))
+    #     print("Config :-")
+    #     print(json.dumps(payload["metadata"], indent=1))
 
-        res = self.api_client.post(TRAIN_MODEL_URI, payload)
+    #     res = self.api_client.post(TRAIN_MODEL_URI, payload)
 
-        if not res["success"]:
-            raise Exception(res.get("details", "Failed to update config"))
+    #     if not res["success"]:
+    #         raise Exception(res.get("details", "Failed to update config"))
 
-        poll_events(self.api_client, self.project_name, res.get("event_id"))
+    #     poll_events(self.api_client, self.project_name, res.get("event_id"))
 
     
     def upload_data(
         self,
         data: str | pd.DataFrame,
         tag: str,
-        model: Optional[str] = None,
-        model_name: Optional[str] = None,
-        model_architecture: Optional[str] = None,
-        model_type: Optional[str] = None,
         config: Optional[ProjectConfig] = None,
         model_config: Optional[Union[XGBoostParams, LightGBMParams, CatBoostParams, RandomForestParams, FoundationalModelParams]] = None,
         tunning_config: Optional[TuningParams] = None,
@@ -205,7 +204,7 @@ class TabularProject(Project):
         processor_config: Optional[ProcessorParams] = None,
         finetune_mode: Optional[str] = None,
         tunning_strategy: Optional[str] = None,
-        compute_type: Optional[str] = "shared"
+        compute_type: Optional[str] = None
     ) -> str:
         """
         Upload dataset(s) to the project and triggers model training.
@@ -228,38 +227,6 @@ class TabularProject(Project):
         :param tag: Tag associated with the uploaded dataset, used for filtering
             and train/test selection.
         :type tag: str
-
-        :param model: Optional model identifier or alias.
-        :type model: str | None
-
-        :param model_name: Optional human-readable name for the trained model.
-        :type model_name: str | None
-
-        :param model_architecture: Optional architecture identifier
-            (used mainly for foundation models).
-        :type model_architecture: str | None
-
-        :param model_type: Type of model to train.
-
-            **Classic ML models**
-            - ``XGBoost``
-            - ``LightGBM``
-            - ``CatBoost``
-            - ``RandomForest``
-            - ``SGD``
-            - ``LogisticRegression``
-            - ``LinearRegression``
-            - ``GaussianNaiveBayes``
-
-            **Tabular foundation models**
-            - ``TabPFN``
-            - ``TabICL``
-            - ``TabDPT``
-            - ``OrionMSP``
-            - ``OrionBix``
-            - ``Mitra``
-            - ``ContextTab``
-        :type model_type: str | None
 
         :param config: Dataset and training configuration controlling feature
             selection, encodings, sampling, and data behavior.
@@ -346,131 +313,103 @@ class TabularProject(Project):
         project_config = self.config()
 
         if project_config == "Not Found":
-            if self.metadata.get("modality") == "image":
-                if (
-                    not model
-                    or not model_architecture
-                    or not model_type
-                    or not model_name
-                ):
-                    raise Exception("Model details is required for Image project type")
-
-                uploaded_path = upload_file_and_return_path(data, "data", tag)
-
-                model_uploaded_path = upload_file_and_return_path(model, "model")
-
-                payload = {
-                    "project_name": self.project_name,
-                    "project_type": self.metadata.get("project_type"),
-                    "metadata": {
-                        "path": uploaded_path,
-                        "model_name": model_name,
-                        "model_path": model_uploaded_path,
-                        "model_architecture": model_architecture,
-                        "model_type": model_type,
-                        "tag": tag,
-                        "tags": [tag],
-                    },
+            if not config:
+                config = {
+                    "project_type": "",
+                    "unique_identifier": "",
+                    "true_label": "",
+                    "pred_label": "",
+                    "feature_exclude": [],
+                    "drop_duplicate_uid": False,
+                    "handle_errors": False,
+                    "handle_data_imbalance": False,
                 }
-
-            if self.metadata.get("modality") == "tabular":
-                if not config:
-                    config = {
-                        "project_type": "",
-                        "unique_identifier": "",
-                        "true_label": "",
-                        "pred_label": "",
-                        "feature_exclude": [],
-                        "drop_duplicate_uid": False,
-                        "handle_errors": False,
-                        "handle_data_imbalance": False,
-                    }
-                    raise Exception(
-                        f"Project Config is required, since no config is set for project \n {json.dumps(config,indent=1)}"
-                    )
-
-                Validate.check_for_missing_keys(
-                    config, ["project_type", "unique_identifier", "true_label"]
+                raise Exception(
+                    f"Project Config is required, since no config is set for project \n {json.dumps(config,indent=1)}"
                 )
 
+            Validate.check_for_missing_keys(
+                config, ["project_type", "unique_identifier", "true_label"]
+            )
+
+            Validate.value_against_list(
+                "project_type", config, ["classification", "regression"]
+            )
+
+            uploaded_path = upload_file_and_return_path(data, "data", tag)
+
+            file_info = self.api_client.post(
+                UPLOAD_DATA_FILE_INFO_URI, {"path": uploaded_path}
+            )
+
+            column_names = file_info.get("details").get("column_names")
+
+            Validate.value_against_list(
+                "unique_identifier",
+                config["unique_identifier"],
+                column_names,
+                lambda: self.delete_file(uploaded_path),
+            )
+
+            if config.get("feature_exclude"):
                 Validate.value_against_list(
-                    "project_type", config, ["classification", "regression"]
-                )
-
-                uploaded_path = upload_file_and_return_path(data, "data", tag)
-
-                file_info = self.api_client.post(
-                    UPLOAD_DATA_FILE_INFO_URI, {"path": uploaded_path}
-                )
-
-                column_names = file_info.get("details").get("column_names")
-
-                Validate.value_against_list(
-                    "unique_identifier",
-                    config["unique_identifier"],
+                    "feature_exclude",
+                    config["feature_exclude"],
                     column_names,
                     lambda: self.delete_file(uploaded_path),
                 )
 
-                if config.get("feature_exclude"):
-                    Validate.value_against_list(
-                        "feature_exclude",
-                        config["feature_exclude"],
-                        column_names,
-                        lambda: self.delete_file(uploaded_path),
-                    )
+            feature_exclude = [
+                config["unique_identifier"],
+                config["true_label"],
+                *config.get("feature_exclude", []),
+            ]
 
-                feature_exclude = [
-                    config["unique_identifier"],
-                    config["true_label"],
-                    *config.get("feature_exclude", []),
-                ]
+            feature_include = [
+                feature
+                for feature in column_names
+                if feature not in feature_exclude
+            ]
 
-                feature_include = [
-                    feature
-                    for feature in column_names
-                    if feature not in feature_exclude
-                ]
+            feature_encodings = config.get("feature_encodings", {})
+            if feature_encodings:
+                Validate.value_against_list(
+                    "feature_encodings_feature",
+                    list(feature_encodings.keys()),
+                    column_names,
+                )
+                Validate.value_against_list(
+                    "feature_encodings_feature",
+                    list(feature_encodings.values()),
+                    ["labelencode", "countencode", "onehotencode"],
+                )
 
-                feature_encodings = config.get("feature_encodings", {})
-                if feature_encodings:
-                    Validate.value_against_list(
-                        "feature_encodings_feature",
-                        list(feature_encodings.keys()),
-                        column_names,
-                    )
-                    Validate.value_against_list(
-                        "feature_encodings_feature",
-                        list(feature_encodings.values()),
-                        ["labelencode", "countencode", "onehotencode"],
-                    )
-
-                payload = {
-                    "project_name": self.project_name,
-                    "project_type": config["project_type"],
-                    "unique_identifier": config["unique_identifier"],
-                    "true_label": config["true_label"],
-                    "pred_label": config.get("pred_label"),
-                    "metadata": {
-                        "path": uploaded_path,
-                        "tag": tag,
-                        "tags": [tag],
-                        "drop_duplicate_uid": config.get("drop_duplicate_uid"),
-                        "handle_errors": config.get("handle_errors", False),
-                        "feature_exclude": feature_exclude,
-                        "feature_include": feature_include,
-                        "feature_encodings": feature_encodings,
-                        "feature_actual_used": [],
-                        "handle_data_imbalance": config.get(
-                            "handle_data_imbalance", False
-                        ),
-                    },
-                    # "gpu": gpu,
-                    "instance_type": compute_type,
-                    "sample_percentage": config.get("sample_percentage", None),
-                }
-                if config.get("model_name"):
-                    payload["metadata"]["model_name"] = config.get("model_name")
+            payload = {
+                "project_name": self.project_name,
+                "project_type": config["project_type"],
+                "unique_identifier": config["unique_identifier"],
+                "true_label": config["true_label"],
+                "pred_label": config.get("pred_label"),
+                "metadata": {
+                    "path": uploaded_path,
+                    "tag": tag,
+                    "tags": [tag],
+                    "drop_duplicate_uid": config.get("drop_duplicate_uid"),
+                    "handle_errors": config.get("handle_errors", False),
+                    "feature_exclude": feature_exclude,
+                    "feature_include": feature_include,
+                    "feature_encodings": feature_encodings,
+                    "feature_actual_used": [],
+                    "handle_data_imbalance": config.get(
+                        "handle_data_imbalance", False
+                    ),
+                },
+                # "gpu": gpu,
+                "instance_type": compute_type,
+                "sample_percentage": config.get("sample_percentage", None),
+            }
+            if config.get("model_name"):
+                payload["metadata"]["model_name"] = config.get("model_name")
 
             if config.get("xai_method"):
                 payload["metadata"]["explainability_method"] = config.get(
@@ -518,6 +457,266 @@ class TabularProject(Project):
             raise Exception(res.get("details"))
 
         return res.get("details")
+    
+    def upload_data_dataconnectors(
+        self,
+        data_connector_name: str,
+        tag: str,
+        bucket_name: Optional[str] = None,
+        file_path: str = None,
+        config: Optional[ProjectConfig] = None,
+        model_config: Optional[Union[XGBoostParams, LightGBMParams, CatBoostParams, RandomForestParams, FoundationalModelParams]] = None,
+        tunning_config: Optional[TuningParams] = None,
+        peft_config: Optional[PEFTParams] = None,
+        processor_config: Optional[ProcessorParams] = None,
+        finetune_mode: Optional[str] = None,
+        tunning_strategy: Optional[str] = None,
+        compute_type: Optional[str] = None
+    ) -> str:
+        """Uploads data for the current project with data connectors
+        :param data_connector_name: name of the data connector
+        :param tag: tag for data
+        :param bucket_name: if data connector has buckets # Example: s3/gcs buckets
+        :param file_path: filepath from the bucket for the data to read
+        :param config: project config
+                {
+                    "project_type": "",
+                    "unique_identifier": "",
+                    "true_label": "",
+                    "pred_label": "",
+                    "feature_exclude": [],
+                    "drop_duplicate_uid: "",
+                    "handle_errors": False,
+                    "feature_encodings": Dict[str, str]   # {"feature_name":"labelencode | countencode | onehotencode"}
+                },
+                defaults to None
+        
+        :param processor_config: Optional preprocessing and feature engineering
+            configuration (e.g., imputation, scaling, resampling).
+        :type processor_config: ProcessorParams | None
+
+        :param model_config: Hyperparameters for the selected ``model_type``.
+            Must match the chosen model family.
+        :type model_config: XGBoostParams | LightGBMParams | CatBoostParams |
+            RandomForestParams | FoundationalModelParams | None
+
+        :param tunning_config: Optional tuning or adaptation configuration.
+        :type tunning_config: TuningParams | None
+
+        :param tunning_strategy: Training or fine-tuning strategy.
+
+            - ``"inference"``: Zero-shot inference only
+            - ``"base-ft"`` / ``"finetune"``: Full fine-tuning
+            - ``"peft"``: Parameter-efficient fine-tuning (requires ``peft_config``)
+        :type tunning_strategy: str | None
+
+        :param finetune_mode: Fine-tuning mode for foundation models.
+
+            - ``"meta-learning"``: Episodic meta-learning
+            - ``"sft"``: Standard supervised fine-tuning
+        :type finetune_mode: str | None
+
+        :param peft_config: PEFT (e.g., LoRA) configuration, used when
+            ``tunning_strategy="peft"``.
+        :type peft_config: PEFTParams | None
+
+        :param compute_type: Compute instance used for training.
+            Examples: ``"shared"``, ``"small"``, ``"medium"``, ``"large"``,
+            ``"T4.small"``, ``"A10G.xmedium"``.
+        :type compute_type: str | None
+        :return: response
+        """
+        print("Preparing Data Upload")
+
+        def get_connector() -> str | pd.DataFrame:
+            """Look up the configured data connector by name.
+            Returns a one-row DataFrame (or an error string) with connector metadata."""
+            url = build_list_data_connector_url(
+                LIST_DATA_CONNECTORS, self.project_name, self.organization_id
+            )
+            res = self.api_client.post(url)
+
+            if res["success"]:
+                df = pd.DataFrame(res["details"])
+                filtered_df = df.loc[df["link_service_name"] == data_connector_name]
+                if filtered_df.empty:
+                    return "No data connector found"
+                return filtered_df
+
+            return res["details"]
+
+        connectors = get_connector()
+        if isinstance(connectors, pd.DataFrame):
+            value = connectors.loc[
+                connectors["link_service_name"] == data_connector_name,
+                "link_service_type",
+            ].values[0]
+            ds_type = value
+
+            if ds_type == "s3" or ds_type == "gcs":
+                if not bucket_name:
+                    return "Missing argument bucket_name"
+                if not file_path:
+                    return "Missing argument file_path"
+        else:
+            return connectors
+
+        def upload_file_and_return_path(file_path, data_type, tag=None) -> str:
+            """Trigger a connector-to-Lexsi upload for a file path.
+            Returns the stored `filepath` in Lexsi storage to be referenced by other APIs.
+
+            :param file_path: Source path in the connector (bucket/object path, sftp path, etc.).
+            :param data_type: Upload type such as `data`, `model`, etc.
+            :param tag: Optional tag to associate with the upload.
+            :return: Server-side filepath for the uploaded artifact."""
+            if not self.project_name:
+                return "Missing Project Name"
+            query_params = f"project_name={self.project_name}&link_service_name={data_connector_name}&data_type={data_type}&tag={tag}&bucket_name={bucket_name}&file_path={file_path}"
+            if self.organization_id:
+                query_params += f"&organization_id={self.organization_id}"
+            res = self.api_client.post(f"{UPLOAD_FILE_DATA_CONNECTORS}?{query_params}")
+            if not res["success"]:
+                raise Exception(res.get("details"))
+            uploaded_path = res.get("metadata").get("filepath")
+
+            return uploaded_path
+
+        project_config = self.config()
+
+        if project_config == "Not Found":
+            if not config.get("project_type"):
+                config["project_type"] = self.metadata.get("project_type")
+            if not config:
+                config = {
+                    "project_type": "",
+                    "unique_identifier": "",
+                    "true_label": "",
+                    "pred_label": "",
+                    "feature_exclude": [],
+                    "drop_duplicate_uid": False,
+                    "handle_errors": False,
+                }
+                raise Exception(
+                    f"Project Config is required, since no config is set for project \n {json.dumps(config,indent=1)}"
+                )
+
+            Validate.check_for_missing_keys(
+                config, ["project_type", "unique_identifier", "true_label"]
+            )
+
+            Validate.value_against_list(
+                "project_type", config, ["classification", "regression"]
+            )
+
+            uploaded_path = upload_file_and_return_path(file_path, "data", tag)
+
+            file_info = self.api_client.post(
+                UPLOAD_DATA_FILE_INFO_URI, {"path": uploaded_path}
+            )
+
+            column_names = file_info.get("details").get("column_names")
+
+            Validate.value_against_list(
+                "unique_identifier",
+                config["unique_identifier"],
+                column_names,
+                lambda: self.delete_file(uploaded_path),
+            )
+
+            if config.get("feature_exclude"):
+                Validate.value_against_list(
+                    "feature_exclude",
+                    config["feature_exclude"],
+                    column_names,
+                    lambda: self.delete_file(uploaded_path),
+                )
+
+            feature_exclude = [
+                config["unique_identifier"],
+                config["true_label"],
+                *config.get("feature_exclude", []),
+            ]
+
+            feature_include = [
+                feature
+                for feature in column_names
+                if feature not in feature_exclude
+            ]
+
+            feature_encodings = config.get("feature_encodings", {})
+            if feature_encodings:
+                Validate.value_against_list(
+                    "feature_encodings_feature",
+                    list(feature_encodings.keys()),
+                    column_names,
+                )
+                Validate.value_against_list(
+                    "feature_encodings_feature",
+                    list(feature_encodings.values()),
+                    ["labelencode", "countencode", "onehotencode"],
+                )
+
+            payload = {
+                "project_name": self.project_name,
+                "project_type": config["project_type"],
+                "unique_identifier": config["unique_identifier"],
+                "true_label": config["true_label"],
+                "pred_label": config.get("pred_label"),
+                "metadata": {
+                    "path": uploaded_path,
+                    "tag": tag,
+                    "tags": [tag],
+                    "drop_duplicate_uid": config.get("drop_duplicate_uid"),
+                    "handle_errors": config.get("handle_errors", False),
+                    "feature_exclude": feature_exclude,
+                    "feature_include": feature_include,
+                    "feature_encodings": feature_encodings,
+                    "feature_actual_used": [],
+                },
+                "instance_type": compute_type
+            }
+            if model_config:
+                payload["metadata"]["model_parameters"] = model_config
+            if tunning_config:
+                payload["metadata"]["tunning_parameters"] = tunning_config
+            if peft_config:
+                payload["metadata"]["peft_parameters"] = peft_config
+            if processor_config:
+                payload["metadata"]["processor_parameters"] = processor_config
+            if finetune_mode:
+                payload["metadata"]["finetune_mode"] = finetune_mode
+            if tunning_strategy:
+                payload["metadata"]["tunning_strategy"] = tunning_strategy
+
+            res = self.api_client.post(UPLOAD_DATA_WITH_CHECK_URI, payload)
+
+            if not res["success"]:
+                self.delete_file(uploaded_path)
+                raise Exception(res.get("details"))
+
+            poll_events(self.api_client, self.project_name, res["event_id"])
+
+            return res.get("details")
+
+        if project_config != "Not Found" and config:
+            raise Exception("Config already exists, please remove config")
+
+        uploaded_path = upload_file_and_return_path(file_path, "data", tag)
+
+        payload = {
+            "path": uploaded_path,
+            "tag": tag,
+            "type": "data",
+            "project_name": self.project_name,
+        }
+        res = self.api_client.post(UPLOAD_DATA_URI, payload)
+
+        if not res["success"]:
+            self.delete_file(uploaded_path)
+            raise Exception(res.get("details"))
+
+        return res.get("details")
+
 
     def upload_model_types(self) -> dict:
         """Model types which can be uploaded using upload_model()
@@ -550,7 +749,7 @@ class TabularProject(Project):
         :param model_train: data tags for model
         :param model_test: test tags for model (optional)
         :param pod: pod to be used for uploading model (optional)
-        :param explainability_method: explainability method to be used while uploading model ["shap", "lime"] (optional)
+        :param xai_method: xai method to be used while uploading model ["shap", "lime"] (optional)
         :param feature_list: list of features in sequence which are to be passed in the model (optional)
         """
 
@@ -900,7 +1099,7 @@ class TabularProject(Project):
             query_params=query_params,
         )
 
-    def monitoring_triggers(self) -> pd.DataFrame:
+    def monitors(self) -> pd.DataFrame:
         """List of monitoring triggers for the project.
 
         :return: DataFrame
@@ -925,17 +1124,17 @@ class TabularProject(Project):
 
         return monitoring_triggers
 
-    def duplicate_monitoring_triggers(self, trigger_name: str, new_trigger_name: str) -> str:
+    def duplicate_monitor(self, monitor_name: str, new_monitor_name: str) -> str:
         """Duplicate an existing monitoring trigger under a new name.
         Calls the backend duplication endpoint and returns the server response message.
 
-        :param trigger_name: Existing trigger name to duplicate.
-        :param new_trigger_name: New name for the duplicated trigger.
+        :param monitor_name: Existing monitor name to duplicate.
+        :param new_monitor_name: New name for the duplicated monitor.
         :return: Backend response message.
         :rtype: str"""
-        if trigger_name == new_trigger_name:
+        if monitor_name == new_monitor_name:
             return "Duplicate trigger name can't be same"
-        url = f"{DUPLICATE_MONITORS_URI}?project_name={self.project_name}&trigger_name={trigger_name}&new_trigger_name={new_trigger_name}"
+        url = f"{DUPLICATE_MONITORS_URI}?project_name={self.project_name}&trigger_name={monitor_name}&new_trigger_name={new_monitor_name}"
         res = self.api_client.post(url)
 
         if not res["success"]:
@@ -946,9 +1145,9 @@ class TabularProject(Project):
     def create_monitor(self, payload: dict) -> str:
         """Create monitoring trigger for project
 
-        :param payload: Data Drift Trigger Payload
+        :param payload: **Data Drift Trigger Payload** 
                 {
-                    "trigger_type": ""  #["Data Drift", "Target Drift", "Model Performance"]
+                    "trigger_type": "Data Drift",
                     "trigger_name": "",
                     "mail_list": [],
                     "frequency": "",   #['daily','weekly','monthly','quarterly','yearly']
@@ -964,9 +1163,10 @@ class TabularProject(Project):
                     "current_tag": [""],
                     "priority": 2, # between 1-5 
                     "pod": ""  #Pod type to used for running trigger
-                } OR Target Drift Trigger Payload
+                } OR 
+                **Target Drift Trigger Payload** 
                 {
-                    "trigger_type": ""  #["Data Drift", "Target Drift", "Model Performance"]
+                    "trigger_type": "Target Drift",
                     "trigger_name": "",
                     "mail_list": [],
                     "frequency": "",   #['daily','weekly','monthly','quarterly','yearly']
@@ -982,9 +1182,10 @@ class TabularProject(Project):
                     "current_true_label": "",
                     "priority": 2, # between 1-5 
                     "pod": ""  #Pod type to used for running trigger
-                } OR Model Performance Trigger Payload
+                } OR 
+                **Model Performance Trigger Payload** 
                 {
-                    "trigger_type": ""  #["Data Drift", "Target Drift", "Model Performance"]
+                    "trigger_type": "Model Performance",
                     "trigger_name": "",
                     "mail_list": [],
                     "frequency": "",   #['daily','weekly','monthly','quarterly','yearly']
@@ -995,8 +1196,11 @@ class TabularProject(Project):
                     "baseline_date": { "start_date": "", "end_date": ""},
                     "current_date": { "start_date": "", "end_date": ""},
                     "base_line_tag": [""],
+                    "current_tag": [""],
                     "baseline_true_label": "",
+                    "current_true_label": "",
                     "baseline_pred_label": "",
+                    "current_pred_label": "",
                     "priority": 2, # between 1-5 
                     "pod": ""  #Pod type to used for running trigger
                 }
@@ -1028,7 +1232,7 @@ class TabularProject(Project):
 
         return "Trigger created successfully."
 
-    def delete_monitoring_trigger(self, name: str) -> str:
+    def delete_monitor(self, name: str) -> str:
         """delete a monitoring trigger from project
 
         :param name: trigger name
@@ -1499,7 +1703,7 @@ class TabularProject(Project):
         self,
         baseline_tags: Optional[List[str]] = None,
         current_tags: Optional[List[str]] = None,
-        pod: Optional[str] = "",
+        pod: Optional[str] = None,
     ) -> pd.DataFrame:
         """Generate Data Drift Diagnosis for the project with specified baseline and current tags.
 
@@ -2663,7 +2867,7 @@ class TabularProject(Project):
         serverless_type: Optional[str] = None,
         xai: Optional[list] = [],
         risk_policies: Optional[bool] = False,
-    ):
+    ) -> CaseTabular:
         """Case Prediction for given unique identifier
 
         :param unique_identifier: unique identifier of case
@@ -2810,14 +3014,13 @@ class TabularProject(Project):
         {
             "compute_type": "2xlargeA10G",  # compute_type for running inference
             "custom_server_config": {
-                "start": datetime_object,  # Start time for custom server
-                "stop": datetime_object,    # Stop time for custom server
+                "start": "2026-01-20T14:00:00+05:30",  # Start time for custom server
+                "stop": "2026-01-20T14:00:00+05:30",    # Stop time for custom server
                 "shutdown_after": 5,  # Operation hours for custom server
                 "op_hours": True / False  # Whether to restrict to business hours
                 "auto_start": True / False  # Automatically start the server when requested.
             }
         }
-        :param model_task_type: task type of model
         :return: response
         """
         if inference_compute.get("compute_type", None):
@@ -3316,6 +3519,7 @@ class TabularProject(Project):
         :param decision: decision of policy
         :param input: custom input for the decision if input selected for decision of policy
         :param models: List of trained model names - The policy will only execute for the selected model. In case of empty list will execute for all models
+        :param priority: Priority of the policy. Lower number indicates higher priority. Defaults to 5
         :return: response
         """
         configuration, expression = build_expression(expression)
@@ -3517,7 +3721,6 @@ class TabularProject(Project):
             defaults to {}
         :param node: type of node to run training
             for all available GPU nodes check lexsi.available_node_servers(type="GPU")
-            defaults to shared
 
         :return: response
         """
@@ -3965,7 +4168,7 @@ class TabularProject(Project):
             raise Exception(res["message"])
         return res.get("feature_importance", "")
 
-    def get_score(self, dashboard_id: str, feature_name: str):
+    def get_score(self, dashboard_id: str, feature_name: str) -> dict:
         """Fetch dashboard score/drift details for a single feature.
 
         :param dashboard_id: Dashboard identifier to query.
@@ -4003,4 +4206,353 @@ class TabularProject(Project):
             None,
         )
         return matched_column_info
+    
+    def register_case(
+        self,
+        token: str,
+        client_id: str,
+        unique_identifier: str,
+        project_name: str,
+        tag: str,
+        data: str,
+        serverless_type: Optional[str] = None,
+        xai: Optional[List[str]] = None
+    ) -> dict:
+        """
+        Register a new case entry with raw or processed data for the project and return the computed result.
+
+        :param token: Lexsi API authentication token
+        :param client_id: Lexsi username or client ID
+        :param unique_identifier: Filename or unique identifier for the tabular case
+        :param project_name: Target project name for this tabular case
+        :param tag: Dataset tag to associate with this upload or prediction
+        :param data: List of JSON objects containing feature key–value pairs
+        :param serverless_type: Serverless type (e.g., nova-2, gova-2, or local)
+        :param xai: Explainability technique to run (e.g., shap, lime, ig, dlb)
+
+        :return: Response containing the prediction results for the registered case
+        """
+        form_data = {
+            "client_id": client_id,
+            "project_name": project_name,
+            "unique_identifier": unique_identifier,
+            "tag": tag,
+            "data": json.dumps(data) if isinstance(data, list) else data,
+            "serverless_type": serverless_type,
+            "xai": xai
+        }
+        headers = {"x-api-token": token}
+        form_data = {k: v for k, v in form_data.items() if v is not None}
+        files = {}
+
+        with httpx.Client(http2=True, timeout=None) as client:
+            response = client.post(
+                self.env.get_base_url() + "/" + UPLOAD_DATA_PROJECT_URI,
+                data=form_data,
+                files=files or None,
+                headers=headers,
+            )
+            response.raise_for_status()
+            response = response.json()
+
+        return response
+
+
+class CaseTabular(BaseModel):
+    """Represents an explainability case for a prediction. Provides visualization helpers such as SHAP, LIME, DLB and decision paths for tabular data."""
+    
+    status: str
+    true_value: str | int
+    pred_value: str | int
+    pred_category: str | int
+    observations: List
+    shap_feature_importance: Optional[Dict] = {}
+    lime_feature_importance: Optional[Dict] = {}
+    ig_features_importance: Optional[Dict] = {}
+    dlb_feature_importance: Optional[Dict] = {}
+    similar_cases: List
+    is_automl_prediction: Optional[bool] = False
+    model_name: str
+    case_prediction_path: Optional[str] = ""
+    case_prediction_svg: Optional[str] = ""
+    observation_checklist: Optional[List] = []
+    policy_checklist: Optional[List] = []
+    final_decision: Optional[str] = ""
+    unique_identifier: Optional[str] = ""
+    tag: Optional[str] = ""
+    created_at: Optional[str] = ""
+    data: Optional[Dict] = {}
+    similar_cases_data: Optional[List] = []
+    audit_trail: Optional[dict] = {}
+    project_name: Optional[str] = ""
+    data_id: Optional[str] = ""
+    summary: Optional[str] = ""
+    model_config = ConfigDict(protected_namespaces=())
+
+    api_client: APIClient
+
+    def __init__(self, **kwargs):
+        """Capture API client used to fetch additional explainability data.
+        Stores configuration and prepares the object for use."""
+        super().__init__(**kwargs)
+        self.api_client = kwargs.get("api_client")
+
+    def xai_shap(self):
+        """Plot a horizontal bar chart showing SHAP-based feature importance for the case. Uses stored Shapley values for features."""
+        fig = go.Figure()
+
+        if len(list(self.shap_feature_importance.values())) < 1:
+            return "No Shap Feature Importance for the case"
+
+        if isinstance(list(self.shap_feature_importance.values())[0], dict):
+            for col in self.shap_feature_importance.keys():
+                fig.add_trace(
+                    go.Bar(
+                        x=list(self.shap_feature_importance[col].values()),
+                        y=list(self.shap_feature_importance[col].keys()),
+                        orientation="h",
+                        name=col,
+                    )
+                )
+        else:
+            fig.add_trace(
+                go.Bar(
+                    x=list(self.shap_feature_importance.values()),
+                    y=list(self.shap_feature_importance.keys()),
+                    orientation="h",
+                )
+            )
+        fig.update_layout(
+            barmode="relative",
+            height=800,
+            width=800,
+            yaxis_autorange="reversed",
+            bargap=0.01,
+            legend_orientation="h",
+            legend_x=0.1,
+            legend_y=1.1,
+        )
+        fig.show(config={"displaylogo": False})
+
+    def xai_ig(self):
+        """Plot a horizontal bar chart showing Integrated Gradients-based feature importance for the case."""
+        fig = go.Figure()
+
+        if len(list(self.ig_features_importance.values())) < 1:
+            return "No IG Feature Importance for the case"
+
+        if isinstance(list(self.ig_features_importance.values())[0], dict):
+            for col in self.ig_features_importance.keys():
+                fig.add_trace(
+                    go.Bar(
+                        x=list(self.ig_features_importance[col].values()),
+                        y=list(self.ig_features_importance[col].keys()),
+                        orientation="h",
+                        name=col,
+                    )
+                )
+        else:
+            fig.add_trace(
+                go.Bar(
+                    x=list(self.ig_features_importance.values()),
+                    y=list(self.ig_features_importance.keys()),
+                    orientation="h",
+                )
+            )
+        fig.update_layout(
+            barmode="relative",
+            height=800,
+            width=800,
+            yaxis_autorange="reversed",
+            bargap=0.01,
+            legend_orientation="h",
+            legend_x=0.1,
+            legend_y=1.1,
+        )
+        fig.show(config={"displaylogo": False})
+
+    def xai_lime(self):
+        """Plot a horizontal bar chart showing LIME-based feature importance for the case."""
+        fig = go.Figure()
+
+        if len(list(self.lime_feature_importance.values())) < 1:
+            return "No Lime Feature Importance for the case"
+
+        if isinstance(list(self.lime_feature_importance.values())[0], dict):
+            for col in self.lime_feature_importance.keys():
+                fig.add_trace(
+                    go.Bar(
+                        x=list(self.lime_feature_importance[col].values()),
+                        y=list(self.lime_feature_importance[col].keys()),
+                        orientation="h",
+                        name=col,
+                    )
+                )
+        else:
+            fig.add_trace(
+                go.Bar(
+                    x=list(self.lime_feature_importance.values()),
+                    y=list(self.lime_feature_importance.keys()),
+                    orientation="h",
+                )
+            )
+        fig.update_layout(
+            barmode="relative",
+            height=800,
+            width=800,
+            yaxis_autorange="reversed",
+            bargap=0.01,
+            legend_orientation="h",
+            legend_x=0.1,
+            legend_y=1.1,
+        )
+        fig.show(config={"displaylogo": False})
+
+    def xai_dlb(self):
+        """Plot a horizontal bar chart showing Deep Lift Bayesian (DLB)-based feature importance for the case."""
+        fig = go.Figure()
+        if len(list(self.dlb_feature_importance.values())) < 1:
+            return "No DLB Feature Importance for the case"
+
+        if isinstance(list(self.dlb_feature_importance.values())[0], dict):
+            for col in self.dlb_feature_importance.keys():
+                fig.add_trace(
+                    go.Bar(
+                        x=list(self.dlb_feature_importance[col].values()),
+                        y=list(self.dlb_feature_importance[col].keys()),
+                        orientation="h",
+                        name=col,
+                    )
+                )
+        else:
+            fig.add_trace(
+                go.Bar(
+                    x=list(self.dlb_feature_importance.values()),
+                    y=list(self.dlb_feature_importance.keys()),
+                    orientation="h",
+                )
+            )
+        fig.update_layout(
+            barmode="relative",
+            height=800,
+            width=800,
+            yaxis_autorange="reversed",
+            bargap=0.01,
+            legend_orientation="h",
+            legend_x=0.1,
+            legend_y=1.1,
+        )
+        fig.show(config={"displaylogo": False})
+
+    def xai_prediction_path(self):
+        """Display the model’s prediction path as a sequence of decision nodes for the case, typically visualized as an SVG or plot."""
+        svg = SVG(self.case_prediction_svg)
+        display(svg)
+
+    def xai_raw_data(self) -> pd.DataFrame:
+        """Return the raw data used for the case as a DataFrame, with feature names and values.
+
+        :return: raw data dataframe
+        """
+        raw_data_df = (
+            pd.DataFrame([self.data])
+            .transpose()
+            .reset_index()
+            .rename(columns={"index": "Feature", 0: "Value"})
+        )
+        return raw_data_df
+
+    def xai_observations(self) -> pd.DataFrame:
+        """Return a DataFrame listing the checklist of observations (e.g., heuristics or warnings) associated with the case.
+
+        :return: observations dataframe
+        """
+        observations_df = pd.DataFrame(self.observation_checklist)
+
+        return observations_df
+
+    def xai_policies(self) -> pd.DataFrame:
+        """Return a DataFrame listing policies or rules applied during the model’s decision for the case.
+
+        :return: policies dataframe
+        """
+        policy_df = pd.DataFrame(self.policy_checklist)
+
+        return policy_df
+
+    def inference_output(self) -> pd.DataFrame:
+        """Return a DataFrame summarizing the final decision for the case, including the true value, predicted value, predicted category, and final decision.
+
+        :return: decision dataframe
+        """
+        data = {
+            "True Value": self.true_value,
+            "Prediction Value": self.pred_value,
+            "Prediction Category": self.pred_category,
+            "Final Prediction": self.final_decision,
+        }
+        decision_df = pd.DataFrame([data])
+
+        return decision_df
+
+    def xai_similar_cases(self) -> pd.DataFrame | str:
+        """Return a DataFrame of cases similar to the current case (if similar cases are available). If no similar cases are found, returns a message.
+
+        :return: similar cases dataframe
+        """
+        if not self.similar_cases_data:
+            return "No similar cases found. Or add 'similar_cases' in components case_info()"
+
+        similar_cases_df = pd.DataFrame(self.similar_cases_data)
+        return similar_cases_df
+    
+    def alerts_trail(self, page_num: Optional[int] = 1, days: Optional[int] = 7):
+        """Fetch alerts for this case over the given window.
+        Encapsulates a small unit of SDK logic and returns the computed result."""
+        if days == 7:
+            return pd.DataFrame(self.audit_trail.get("alerts", {}))
+        resp = self.api_client.post(
+            f"{GET_TRIGGERS_DAYS_URI}?project_name={self.project_name}&page_num={page_num}&days={days}"
+        )
+        if resp.get("details"):
+            return pd.DataFrame(resp.get("details"))
+        else:
+            return "No alerts found."
+
+    def audit(self):
+        """Return stored audit trail.
+        Encapsulates a small unit of SDK logic and returns the computed result."""
+        return self.audit_trail
+
+    def feature_importance(self, feature: str) -> float:
+        """Return feature importance values for a specific feature.
+        Encapsulates a small unit of SDK logic and returns the computed result.
+        :param feature: name of the feature for which the importance score is to be fetched.
+        :return: feature importance value
+        """
+        if self.shap_feature_importance:
+            return self.shap_feature_importance.get(feature, {})
+        elif self.lime_feature_importance:
+            return self.lime_feature_importance.get(feature, {})
+        elif self.ig_features_importance:
+            return self.ig_features_importance.get(feature, {})
+        else:
+            return "No Feature Importance found for the case"
+
+    def xai_summary(self):
+        """Request or return cached explainability summary text.
+        Encapsulates a small unit of SDK logic and returns the computed result."""
+        if self.data_id and not self.summary:
+            payload = {
+                "project_name": self.project_name,
+                "viewed_case_id": self.data_id,
+            }
+            res = self.api_client.post(EXPLAINABILITY_SUMMARY, payload)
+            if not res.get("success"):
+                raise Exception(res.get("details", "Failed to summarize"))
+
+            self.summary = res.get("details")
+            return res.get("details")
+
+        return self.summary
 

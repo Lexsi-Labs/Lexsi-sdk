@@ -6,7 +6,7 @@ ServerlessInstanceType = Literal[
     "gova-0.5", "gova-1", "gova-1.5", "gova-2", "gova-4", "gova-6", "gova-8", "gova-10", "gova-12", "gova-14", "gova-16", "gova-18", "gova-20", "gova-22", "gova-24"
 ]
 
-class ServerlessInstanceTypeValues(TypedDict):
+class ServerlessTypeValues(TypedDict):
     """
     Allowed values for serverless instance types.
 
@@ -52,7 +52,7 @@ DedicatedGPUInstanceType = Literal[
     "4xlargeH100", 
 ]
 
-class DedicatedGPUInstanceTypeValues(TypedDict):
+class DedicatedGPUNodeValues(TypedDict):
     """
     Allowed values for dedicated GPU instance types.
 
@@ -81,7 +81,7 @@ BatchCPUInstanceType = Literal[
     "large", "xlarge", "2xlarge", "3xlarge"
 ]
 
-class BatchCPUInstanceTypeValues(TypedDict):
+class CPUPodValues(TypedDict):
     """
     Allowed values for batch CPU instance types.
 
@@ -110,7 +110,7 @@ BatchGPUInstanceType = Literal[
     "A10G.medium", "A10G.xmedium", "A10G.2xmedium", "A10G.3xmedium"
 ]
 
-class BatchGPUInstanceTypeValues(TypedDict):
+class GPUPodValues(TypedDict):
     """
     Allowed values for batch GPU instance types.
 
@@ -128,7 +128,7 @@ class BatchGPUInstanceTypeValues(TypedDict):
     """
     #instance_type: BatchGPUInstanceType
     pass
-class DedicatedCPUInstanceTypeValues(TypedDict):
+class DedicatedCPUNodeValues(TypedDict):
     """
     Allowed values for dedicated CPU instance types.
 
@@ -163,10 +163,10 @@ class ProjectConfig(TypedDict):
     Configuration keys required to describe a project.
 
     :param project_type: Project type identifier.
-    :type project_type: str | None
+    :type project_type: Optional[str]
 
     :param model_name: Model name associated with the project.
-    :type model_name: str | None
+    :type model_name: Optional[str]
 
     :param unique_identifier: Column name used as the unique identifier.
     :type unique_identifier: str
@@ -178,10 +178,10 @@ class ProjectConfig(TypedDict):
     :type tag: str
 
     :param pred_label: Column name containing predicted labels (if present).
-    :type pred_label: str | None
+    :type pred_label: Optional[str]
 
     :param feature_exclude: Features to exclude from training/inference.
-    :type feature_exclude: list[str] | None
+    :type feature_exclude: Optional[str]
 
     :param drop_duplicate_uid: Drop duplicate records based on the unique identifier.
     :type drop_duplicate_uid: bool | None
@@ -196,10 +196,10 @@ class ProjectConfig(TypedDict):
     :type handle_data_imbalance: bool | None
 
     :param sample_percentage: Fraction of data used for training (0.0–1.0).
-    :type sample_percentage: float | None
+    :type sample_percentage: Optional[float]
 
-    :param explainability_method: Explainability methods to apply.
-    :type explainability_method: list[str] | None
+    :param xai_method: Explainability methods to apply.
+    :type xai_method: Optional[list[str]]
     """
 
     project_type: Optional[str] = None
@@ -937,14 +937,23 @@ class InferenceCompute(TypedDict):
     """
     Inference compute selection payload.
 
-    :param compute_type: Compute type for inference.
-    :type compute_type: str
+    :param compute_type: Instance type identifier.
+        Use str values from supported instance types defined in classes:
+        - ``DedicatedCPUNodeValues``
+        - ``DedicatedGPUNodeValues``
+        - ``ServerlessTypeValues``
 
+    :type compute_type: Union[
+        DedicatedCPUNodeValues,
+        DedicatedGPUNodeValues,
+        ServerlessTypeValues
+    ]
+    
     :param custom_server_config: Optional scheduling configuration.
     :type custom_server_config: CustomServerConfig | None
     """
 
-    compute_type: str
+    compute_type: Union[DedicatedCPUNodeValues, DedicatedGPUNodeValues, ServerlessTypeValues]
     custom_server_config: Optional[CustomServerConfig] = CustomServerConfig()
 
 

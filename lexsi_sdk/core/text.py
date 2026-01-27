@@ -1,9 +1,17 @@
+from __future__ import annotations
 from datetime import datetime
 import io
+from io import BytesIO
 from typing import Optional, List, Dict, Any, Union
 
 import httpx
 from lexsi_sdk.common.types import BatchCPUInstanceTypeValues, BatchGPUInstanceTypeValues, InferenceCompute, InferenceSettings, ServerlessInstanceTypeValues
+from pydantic import BaseModel
+from pydantic import BaseModel
+import plotly.graph_objects as go
+import base64
+from PIL import Image
+from lexsi_sdk.common.types import InferenceCompute, InferenceSettings
 from lexsi_sdk.common.utils import poll_events
 from lexsi_sdk.common.xai_uris import (
     AVAILABLE_GUARDRAILS_URI,
@@ -27,30 +35,20 @@ from lexsi_sdk.common.xai_uris import (
     RUN_IMAGE_GENERATION,
     RUN_CREATE_EMBEDDING,
     RUN_COMPLETION,
+    GENERATE_TEXT_CASE_URI
 )
 from lexsi_sdk.core.project import Project
 import pandas as pd
 
 from lexsi_sdk.core.utils import build_list_data_connector_url
-from lexsi_sdk.core.wrapper import LexsiModels, monitor
 import json
 import aiohttp
 from typing import AsyncIterator, Iterator
-import requests
 from uuid import UUID
 
 
 class TextProject(Project):
     """Specialized project abstraction for text and LLM-based workloads. Supports sessions, messages, traces, guardrails, and token-level explainability."""
-
-    def llm_monitor(self, client, session_id=None):
-        """Monitor a custom large language model (LLM) client for inference. Accepts a client object (e.g., an OpenAI API wrapper) and an optional session_id to monitor a specific conversation.
-
-        :param client: client to monitor like OpenAI
-        :param session_id: id of the session
-        :return: response
-        """
-        return monitor(project=self, client=client, session_id=session_id)
 
     def sessions(self) -> pd.DataFrame:
         """Return a DataFrame listing all conversation sessions for this text project.
@@ -360,57 +358,6 @@ class TextProject(Project):
         
         return res.get("details", "Inference Settings Updated")
 
-    def generate_text_case(
-        self,
-        model_name: str,
-        prompt: str,
-        serverless_instance_type: ServerlessInstanceTypeValues,
-        instance_type: Optional[Union[BatchCPUInstanceTypeValues, BatchGPUInstanceTypeValues]] = None,
-        explainability_method: Optional[list] = ["DLB"],
-        explain_model: Optional[bool] = False,
-        session_id: Optional[str] = None,
-        max_tokens: Optional[int] = None,
-        min_tokens: Optional[int] = None,
-        stream: Optional[bool] = False,
-    ) -> dict:
-        """Generate a text inference case using the specified model and prompt.
-
-        :param model_name: Name of the model to use for text generation
-        :param prompt: Input prompt to be provided to the model
-        :param serverless_instance_type: Serverless instance type used for case inference
-            Use str values from supported instance types defined in classes:
-            - ``ServerlessInstanceTypeValues``
-        :param instance_type: Instance type used for explainability processing, defaults to None
-            Use str values from supported instance types defined in classes:
-            - ``BatchCPUInstanceTypeValues``
-            - ``BatchGPUInstanceTypeValues``
-        :param explainability_method: Explainability method(s) for the case, defaults to ["DLB"]
-        :param explain_model: Boolean flag indicating whether to run explainability for the case, defaults to False
-        :param session_id: Session ID associated with this case, if applicable
-        :param max_tokens: Maximum number of tokens to generate
-        :param min_tokens: Minimum number of tokens to generate
-        :param stream: Whether to stream the response
-        :return: a dictionary containing the generated text and related metadata
-        """
-        if explain_model and not instance_type:
-            raise Exception("instance_type required for explainability.")
-        llm = monitor(
-            project=self,
-            client=LexsiModels(project=self, api_client=self.api_client),
-            session_id=session_id,
-        )
-        res = llm.generate_text_case(
-            model_name=model_name,
-            prompt=prompt,
-            instance_type=instance_type,
-            serverless_instance_type=serverless_instance_type,
-            explainability_method=explainability_method,
-            explain_model=explain_model,
-            max_tokens=max_tokens,
-            min_tokens=min_tokens,
-            stream=stream,
-        )
-        return res
 
     def upload_data(
         self,
@@ -487,7 +434,7 @@ class TextProject(Project):
         bucket_name: Optional[str] = None,
         file_path: Optional[str] = None,
         dataset_name: Optional[str] = None,
-    ):
+    ) ->  str:
         """Upload text data stored in a configured data connector (such as S3 or GCS).
         Requires the connector name, a tag, and optionally the bucket name and file path.
         Returns the API response.
@@ -768,22 +715,151 @@ class TextProject(Project):
         res = self.api_client.post(RUN_IMAGE_GENERATION, payload=payload)
 
         return res
+    
+    def text_generation(
+        self,
+        model: str,
+        prompt: str,
+        XAI_pods: Optional[str] = "xlarge",
+        # explainability_method: List[str] = ["DLB"],
+        XAI: bool = False,
+        session_id: Optional[UUID] = None,
+        min_tokens: int = 100,
+        max_tokens: int = 1024,
+    ) -> dict :
+        """Generate an explainable text case using a hosted Lexsi model.
 
-    def update_inference_model_status(self, model_name: str, activate: bool) -> str:
-        """Sets the provided model to active for inferencing
-
-        :param model_name: name of the model
-        :return: response
+        :param model: Name of the deployed text model.
+        :param prompt: Input prompt for generation.
+        :param XAI_pods: Dedicated instance type (if applicable).
+        :param XAI: Whether to explain the model behavior.
+        :param session_id: Optional existing session id.
+        :param min_tokens: Minimum tokens to generate.
+        :param max_tokens: Maximum tokens to generate.
+        :return: API response with generation details.
         """
         payload = {
+            "session_id": session_id,
             "project_name": self.project_name,
-            "model_name": model_name,
-            "activate": activate,
+            "model": model,
+            "prompt": prompt,
+            "XAI_pods": XAI_pods,
+            "provider" : "Lexsi",
+            "XAI": XAI,
+            "max_tokens": max_tokens,
+            "min_tokens": min_tokens,
         }
+    
+        res = self.api_client.post(GENERATE_TEXT_CASE_URI, payload)
+        if not res.get("success"):
+            raise Exception(res.get("details"))
+        return res
+    
 
-        res = self.api_client.post(UPDATE_ACTIVE_INFERENCE_MODEL_URI, payload)
+class CaseText(BaseModel):
+    """Explainability view for text-based cases. Supports token-level importance, attention visualization, and LLM output analysis."""
 
-        if not res["success"]:
-            raise Exception(res["details"])
+    model_name: str
+    status: str
+    prompt: str
+    output: str
+    explainability: Optional[Dict] = {}
+    audit_trail: Optional[Dict] = {}
 
-        return res.get("details")
+    def prompt(self):
+        """Get prompt
+        Encapsulates a small unit of SDK logic and returns the computed result."""
+        return self.prompt
+
+    def output(self):
+        """Get output
+        Encapsulates a small unit of SDK logic and returns the computed result."""
+        return self.output
+
+    def xai_raw_data(self) -> pd.DataFrame:
+        """Return the raw data used for the case as a DataFrame, with feature names and values.
+
+        :return: raw data dataframe
+        """
+        raw_data_df = (
+            pd.DataFrame([self.explainability.get("feature_importance", {})])
+            .transpose()
+            .reset_index()
+            .rename(columns={"index": "Feature", 0: "Value"})
+            .sort_values(by="Value", ascending=False)
+        )
+        return raw_data_df
+
+    def xai_feature_importance(self):
+        """Plots Feature Importance chart
+        Encapsulates a small unit of SDK logic and returns the computed result."""
+        fig = go.Figure()
+        feature_importance = self.explainability.get("feature_importance", {})
+
+        if not feature_importance:
+            return "No Feature Importance for the case"
+        raw_data_df = (
+            pd.DataFrame([feature_importance])
+            .transpose()
+            .reset_index()
+            .rename(columns={"index": "Feature", 0: "Value"})
+            .sort_values(by="Value", ascending=False)
+        )
+        fig.add_trace(
+            go.Bar(x=raw_data_df["Value"], y=raw_data_df["Feature"], orientation="h")
+        )
+        fig.update_layout(
+            barmode="relative",
+            height=max(400, len(raw_data_df) * 20),
+            width=800,
+            yaxis=dict(
+                autorange="reversed",
+                tickmode="array",
+                tickvals=list(raw_data_df["Feature"]),
+                ticktext=list(raw_data_df["Feature"]),
+                tickfont=dict(size=10),
+            ),
+            bargap=0.01,
+            margin=dict(l=150, r=20, t=30, b=30),
+            legend_orientation="h",
+            legend_x=0.1,
+            legend_y=0.5,
+        )
+
+        fig.show(config={"displaylogo": False})
+
+    def network_graph(self):
+        """Decode and return a base64-encoded network graph image.
+        Encapsulates a small unit of SDK logic and returns the computed result."""
+        network_graph_data = self.explainability.get("network_graph", {})
+        if not network_graph_data:
+            return "No Network graph found for this case"
+        base64_str = network_graph_data
+        try:
+            img_bytes = base64.b64decode(base64_str)
+            image = Image.open(BytesIO(img_bytes))
+            return image
+        except Exception as e:
+            print(f"Error decoding base64 image: {e}")
+            return None
+
+    def token_attribution_graph(self):
+        """Decode and return a base64-encoded token attribution graph.
+        Encapsulates a small unit of SDK logic and returns the computed result."""
+        relevance_data = self.explainability.get("relevance", {})
+        if not relevance_data:
+            return "No Token Attribution graph found for this case"
+        base64_str = relevance_data
+        try:
+            img_bytes = base64.b64decode(base64_str)
+            image = Image.open(BytesIO(img_bytes))
+            return image
+        except Exception as e:
+            print(f"Error decoding base64 image: {e}")
+            return None
+
+    def audit(self):
+        """Return audit details for the text case.
+        Encapsulates a small unit of SDK logic and returns the computed result."""
+        return self.audit_trail
+

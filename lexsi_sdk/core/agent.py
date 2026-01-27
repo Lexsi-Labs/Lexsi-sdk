@@ -13,8 +13,6 @@ from lexsi_sdk.common.xai_uris import (
 from lexsi_sdk.core.project import Project
 import pandas as pd
 
-from lexsi_sdk.core.wrapper import monitor
-
 
 class AgentProject(Project):
     """Project abstraction for agent-based workflows. Enables tracing, guardrail enforcement, tool invocation tracking, and agent execution analysis."""
