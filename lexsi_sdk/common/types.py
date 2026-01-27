@@ -214,7 +214,7 @@ class ProjectConfig(TypedDict):
     feature_encodings: Optional[dict]
     handle_data_imbalance: Optional[bool]
     sample_percentage: Optional[float] = None
-    explainability_method: Optional[List[str]] = None
+    xai_method: Optional[List[str]] = None
 
 
 class DataConfig(TypedDict):
@@ -267,7 +267,7 @@ class DataConfig(TypedDict):
     sample_percentage: float
     explainability_sample_percentage: float
     lime_explainability_iterations: int
-    explainability_method: List[str]
+    xai_method: List[str]
     handle_data_imbalance: Optional[bool]
 
 
@@ -937,23 +937,14 @@ class InferenceCompute(TypedDict):
     """
     Inference compute selection payload.
 
-    :param compute_type: Instance type identifier.
-        Use str values from supported instance types defined in classes:
-        - ``DedicatedCPUInstanceTypeValues``
-        - ``DedicatedGPUInstanceTypeValues``
-        - ``ServerlessInstanceTypeValues``
+    :param compute_type: Compute type for inference.
+    :type compute_type: str
 
-    :type compute_type: Union[
-        DedicatedCPUInstanceTypeValues,
-        DedicatedGPUInstanceTypeValues,
-        ServerlessInstanceTypeValues
-    ]
-    
     :param custom_server_config: Optional scheduling configuration.
     :type custom_server_config: CustomServerConfig | None
     """
 
-    compute_type: Union[DedicatedCPUInstanceTypeValues, DedicatedGPUInstanceTypeValues, ServerlessInstanceTypeValues]
+    compute_type: str
     custom_server_config: Optional[CustomServerConfig] = CustomServerConfig()
 
 

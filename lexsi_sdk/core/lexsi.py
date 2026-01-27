@@ -1,6 +1,6 @@
 import json
 import os
-from typing import List, Optional
+from typing import List, Literal, Optional
 import httpx
 import pandas as pd
 from pydantic import BaseModel
@@ -11,6 +11,7 @@ from lexsi_sdk.core.organization import Organization
 from lexsi_sdk.common.xai_uris import (
     AVAILABLE_BATCH_SERVERS_URI,
     AVAILABLE_CUSTOM_SERVERS_URI,
+    AVAILABLE_SERVERLESS_URI,
     AVAILABLE_SYNTHETIC_CUSTOM_SERVERS_URI,
     CLEAR_NOTIFICATIONS_URI,
     CREATE_ORGANIZATION_URI,
@@ -21,6 +22,7 @@ from lexsi_sdk.common.xai_uris import (
     USER_ORGANIZATION_URI,
 )
 import getpass
+from lexsi_sdk.core.utils import split_cpu_gpu_servers
 
 
 class LEXSI(BaseModel):
@@ -181,29 +183,51 @@ class LEXSI(BaseModel):
 
         return res["details"]
 
-    def available_batch_servers(self) -> dict:
+    def available_pod_servers(self, type: Optional[Literal["GPU", "CPU"]]= None) -> dict:
         """Retrieve a dictionary of available batch servers (compute instances) that can be used for running custom batch tasks. Useful for selecting compute resources.
-
+        :param type: Type of server to filter by GPU/CPU
         :return: response
         """
+        if type and type not in ["GPU", "CPU"]:
+            raise ValueError("Invalid type. Must be 'GPU' or 'CPU'.")
         res = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
-        return res["details"]
+        if type=="GPU":
+            return res["available_gpu_custom_servers"]
+        elif type=="CPU":
+            return res["details"]
+        else:
+            return {"CPU pods": res["details"], "GPU pods": res["available_gpu_custom_servers"]}
 
-    def available_custom_servers(self) -> dict:
+    def available_node_servers(self, type: Optional[Literal["GPU", "CPU"]]= None) -> dict:
         """Retrieve a dictionary or list of available custom servers that can be used for deploying models or running compute-heavy workloads.
-
+        :param type: Type of server to filter by GPU/CPU
         :return: response
         """
+        if type and type not in ["GPU", "CPU"]:
+            raise ValueError("Invalid type. Must be 'GPU' or 'CPU'.")
         res = self.api_client.get(AVAILABLE_CUSTOM_SERVERS_URI)
-        return res
+        cpu_gpu_dict = split_cpu_gpu_servers(res)
+        if type=="GPU":
+            return cpu_gpu_dict["gpu_servers"]
+        elif type=="CPU":
+            return cpu_gpu_dict["cpu_servers"]
+        else:
+            return {"CPU nodes": cpu_gpu_dict["cpu_servers"], "GPU nodes": cpu_gpu_dict["gpu_servers"]}
 
-    def available_synthetic_custom_servers(self) -> dict:
-        """Retrieve details of custom servers available for generating synthetic data. This helps select the appropriate compute instance for synthetic data generation.
-
+    def available_serverless_types(self, type: Optional[Literal["GPU", "CPU"]]= None) -> List[str]:
+        """Retrieve a list of available serverless types that can be used for deploying models or running workloads.
         :return: response
         """
-        res = self.api_client.get(AVAILABLE_SYNTHETIC_CUSTOM_SERVERS_URI)
-        return res["details"]
+        if type and type not in ["GPU", "CPU"]:
+            raise ValueError("Invalid type. Must be 'GPU' or 'CPU'.")
+        res = self.api_client.get(AVAILABLE_SERVERLESS_URI)
+        cpu_gpu_dict = split_cpu_gpu_servers(res)
+        if type=="GPU":
+            return cpu_gpu_dict["gpu_servers"]
+        elif type=="CPU":
+            return cpu_gpu_dict["cpu_servers"]
+        else:
+            return {"CPU serverless": cpu_gpu_dict["cpu_servers"], "GPU serverless": cpu_gpu_dict["gpu_servers"]}
 
     def register_case(
         self,
@@ -217,7 +241,7 @@ class LEXSI(BaseModel):
         merge: Optional[bool] = False,
         image_class: Optional[str] = None,
         prompt: Optional[str] = None,
-        serverless_instance_type: Optional[str] = None,
+        serverless_type: Optional[str] = None,
         explainability_method: Optional[str] = None,
         explain_model: Optional[bool] = False,
         session_id: Optional[str] = None,
@@ -236,7 +260,7 @@ class LEXSI(BaseModel):
             "merge": str(merge).lower(),
             "image_class": image_class,
             "prompt": prompt,
-            "serverless_instance_type": serverless_instance_type,
+            "serverless_type": serverless_type,
             "explainability_method": explainability_method,
             "explain_model": str(explain_model).lower(),
             "session_id": str(session_id).lower(),

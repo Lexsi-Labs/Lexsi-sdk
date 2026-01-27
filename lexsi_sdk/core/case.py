@@ -10,10 +10,9 @@ from lexsi_sdk.common.xai_uris import EXPLAINABILITY_SUMMARY, GET_TRIGGERS_DAYS_
 import base64
 from PIL import Image
 
-
-class Case(BaseModel):
-    """Represents an explainability case for a prediction. Provides visualization helpers such as SHAP, LIME, Integrated Gradients, and decision paths."""
-
+class CaseTabular(BaseModel):
+    """Represents an explainability case for a prediction. Provides visualization helpers such as SHAP, LIME, DLB and decision paths for tabular data."""
+    
     status: str
     true_value: str | int
     pred_value: str | int
@@ -38,7 +37,6 @@ class Case(BaseModel):
     similar_cases_data: Optional[List] = []
     audit_trail: Optional[dict] = {}
     project_name: Optional[str] = ""
-    image_data: Optional[Dict] = {}
     data_id: Optional[str] = ""
     summary: Optional[str] = ""
     model_config = ConfigDict(protected_namespaces=())
@@ -51,7 +49,7 @@ class Case(BaseModel):
         super().__init__(**kwargs)
         self.api_client = kwargs.get("api_client")
 
-    def explainability_shap_feature_importance(self):
+    def xai_shap(self):
         """Plot a horizontal bar chart showing SHAP-based feature importance for the case. Uses stored Shapley values for features."""
         fig = go.Figure()
 
@@ -88,7 +86,7 @@ class Case(BaseModel):
         )
         fig.show(config={"displaylogo": False})
 
-    def explainability_ig_feature_importance(self):
+    def xai_ig(self):
         """Plot a horizontal bar chart showing Integrated Gradients-based feature importance for the case."""
         fig = go.Figure()
 
@@ -125,7 +123,7 @@ class Case(BaseModel):
         )
         fig.show(config={"displaylogo": False})
 
-    def explainability_lime_feature_importance(self):
+    def xai_lime(self):
         """Plot a horizontal bar chart showing LIME-based feature importance for the case."""
         fig = go.Figure()
 
@@ -162,7 +160,7 @@ class Case(BaseModel):
         )
         fig.show(config={"displaylogo": False})
 
-    def explainability_dlb_feature_importance(self):
+    def xai_dlb(self):
         """Plot a horizontal bar chart showing Deep Lift Bayesian (DLB)-based feature importance for the case."""
         fig = go.Figure()
         if len(list(self.dlb_feature_importance.values())) < 1:
@@ -198,12 +196,12 @@ class Case(BaseModel):
         )
         fig.show(config={"displaylogo": False})
 
-    def explainability_prediction_path(self):
+    def xai_prediction_path(self):
         """Display the model’s prediction path as a sequence of decision nodes for the case, typically visualized as an SVG or plot."""
         svg = SVG(self.case_prediction_svg)
         display(svg)
 
-    def explainability_raw_data(self) -> pd.DataFrame:
+    def xai_raw_data(self) -> pd.DataFrame:
         """Return the raw data used for the case as a DataFrame, with feature names and values.
 
         :return: raw data dataframe
@@ -216,7 +214,7 @@ class Case(BaseModel):
         )
         return raw_data_df
 
-    def explainability_observations(self) -> pd.DataFrame:
+    def xai_observations(self) -> pd.DataFrame:
         """Return a DataFrame listing the checklist of observations (e.g., heuristics or warnings) associated with the case.
 
         :return: observations dataframe
@@ -225,7 +223,7 @@ class Case(BaseModel):
 
         return observations_df
 
-    def explainability_policies(self) -> pd.DataFrame:
+    def xai_policies(self) -> pd.DataFrame:
         """Return a DataFrame listing policies or rules applied during the model’s decision for the case.
 
         :return: policies dataframe
@@ -234,7 +232,7 @@ class Case(BaseModel):
 
         return policy_df
 
-    def explainability_decision(self) -> pd.DataFrame:
+    def inference_output(self) -> pd.DataFrame:
         """Return a DataFrame summarizing the final decision for the case, including the true value, predicted value, predicted category, and final decision.
 
         :return: decision dataframe
@@ -249,7 +247,7 @@ class Case(BaseModel):
 
         return decision_df
 
-    def explainability_similar_cases(self) -> pd.DataFrame | str:
+    def xai_similar_cases(self) -> pd.DataFrame | str:
         """Return a DataFrame of cases similar to the current case (if similar cases are available). If no similar cases are found, returns a message.
 
         :return: similar cases dataframe
@@ -259,8 +257,98 @@ class Case(BaseModel):
 
         similar_cases_df = pd.DataFrame(self.similar_cases_data)
         return similar_cases_df
+    
+    def alerts_trail(self, page_num: Optional[int] = 1, days: Optional[int] = 7):
+        """Fetch alerts for this case over the given window.
+        Encapsulates a small unit of SDK logic and returns the computed result."""
+        if days == 7:
+            return pd.DataFrame(self.audit_trail.get("alerts", {}))
+        resp = self.api_client.post(
+            f"{GET_TRIGGERS_DAYS_URI}?project_name={self.project_name}&page_num={page_num}&days={days}"
+        )
+        if resp.get("details"):
+            return pd.DataFrame(resp.get("details"))
+        else:
+            return "No alerts found."
 
-    def explainability_gradcam(self):
+    def audit(self):
+        """Return stored audit trail.
+        Encapsulates a small unit of SDK logic and returns the computed result."""
+        return self.audit_trail
+
+    def feature_importance(self, feature: str):
+        """Return feature importance values for a specific feature.
+        Encapsulates a small unit of SDK logic and returns the computed result."""
+        if self.shap_feature_importance:
+            return self.shap_feature_importance.get(feature, {})
+        elif self.lime_feature_importance:
+            return self.lime_feature_importance.get(feature, {})
+        elif self.ig_features_importance:
+            return self.ig_features_importance.get(feature, {})
+        else:
+            return "No Feature Importance found for the case"
+
+    def xai_summary(self):
+        """Request or return cached explainability summary text.
+        Encapsulates a small unit of SDK logic and returns the computed result."""
+        if self.data_id and not self.summary:
+            payload = {
+                "project_name": self.project_name,
+                "viewed_case_id": self.data_id,
+            }
+            res = self.api_client.post(EXPLAINABILITY_SUMMARY, payload)
+            if not res.get("success"):
+                raise Exception(res.get("details", "Failed to summarize"))
+
+            self.summary = res.get("details")
+            return res.get("details")
+
+        return self.summary
+
+class CaseImage(BaseModel):
+    """Represents an explainability case for a prediction. Provides visualization helpers such as SHAP, LIME, Integrated Gradients, GradCAM"""
+
+    status: str
+    true_value: str | int
+    pred_value: str | int
+    pred_category: str | int
+    model_name: str
+    final_decision: Optional[str] = ""
+    unique_identifier: Optional[str] = ""
+    tag: Optional[str] = ""
+    created_at: Optional[str] = ""
+    data: Optional[Dict] = {}
+    similar_cases_data: Optional[List] = []
+    audit_trail: Optional[dict] = {}
+    project_name: Optional[str] = ""
+    image_data: Optional[Dict] = {}
+    data_id: Optional[str] = ""
+    summary: Optional[str] = ""
+
+    api_client: APIClient
+
+    def __init__(self, **kwargs):
+        """Capture API client used to fetch additional explainability data.
+        Stores configuration and prepares the object for use."""
+        super().__init__(**kwargs)
+        self.api_client = kwargs.get("api_client")
+
+    def inference_output(self) -> pd.DataFrame:
+        """Return a DataFrame summarizing the final decision for the case, including the true value, predicted value, predicted category, and final decision.
+
+        :return: decision dataframe
+        """
+        data = {
+            "True Value": self.true_value,
+            "Prediction Value": self.pred_value,
+            "Prediction Category": self.pred_category,
+            "Final Prediction": self.final_decision,
+        }
+        decision_df = pd.DataFrame([data])
+
+        return decision_df
+
+    def xai_gradcam(self):
         """Visualize Grad-CAM results for image data, showing heatmaps and superimposed regions that contributed to the prediction."""
         if not self.image_data.get("gradcam", None):
             return "No Gradcam method found for this case"
@@ -322,7 +410,7 @@ class Case(BaseModel):
 
         fig.show(config={"displaylogo": False})
 
-    def explainability_shap(self):
+    def xai_shap(self):
         """Render a SHAP attribution plot for image cases, displaying attributions as an overlay on the original image."""
         if not self.image_data.get("shap", None):
             return "No Shap method found for this case"
@@ -351,7 +439,7 @@ class Case(BaseModel):
 
         fig.show(config={"displaylogo": False})
 
-    def explainability_lime(self):
+    def xai_lime(self):
         """Render a LIME attribution plot for image cases, displaying attributions as an overlay on the original image."""
         if not self.image_data.get("lime", None):
             return "No Lime method found for this case"
@@ -380,7 +468,7 @@ class Case(BaseModel):
 
         fig.show(config={"displaylogo": False})
 
-    def explainability_integrated_gradients(self):
+    def xai_ig(self):
         """Render an integrated gradients attribution plot for image cases, showing positive and negative attributions side-by-side."""
         if not self.image_data.get("integrated_gradients", None):
             return "No Integrated Gradients method found for this case"
@@ -489,35 +577,6 @@ class Case(BaseModel):
         """Return stored audit trail.
         Encapsulates a small unit of SDK logic and returns the computed result."""
         return self.audit_trail
-
-    def feature_importance(self, feature: str):
-        """Return feature importance values for a specific feature.
-        Encapsulates a small unit of SDK logic and returns the computed result."""
-        if self.shap_feature_importance:
-            return self.shap_feature_importance.get(feature, {})
-        elif self.lime_feature_importance:
-            return self.lime_feature_importance.get(feature, {})
-        elif self.ig_features_importance:
-            return self.ig_features_importance.get(feature, {})
-        else:
-            return "No Feature Importance found for the case"
-
-    def explainability_summary(self):
-        """Request or return cached explainability summary text.
-        Encapsulates a small unit of SDK logic and returns the computed result."""
-        if self.data_id and not self.summary:
-            payload = {
-                "project_name": self.project_name,
-                "viewed_case_id": self.data_id,
-            }
-            res = self.api_client.post(EXPLAINABILITY_SUMMARY, payload)
-            if not res.get("success"):
-                raise Exception(res.get("details", "Failed to summarize"))
-
-            self.summary = res.get("details")
-            return res.get("details")
-
-        return self.summary
 
 
 class CaseText(BaseModel):
