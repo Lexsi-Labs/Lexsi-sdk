@@ -1607,46 +1607,7 @@ class Project(BaseModel):
                 "current_date": { "start_date": "", "end_date": ""},
             }
             defaults to None
-            key values for payload:
-                stat_test_name=
-                    chisquare (Chi-Square test):
-                        default for categorical features if the number of labels for feature > 2
-                        only for categorical features
-                        returns p_value
-                        default threshold 0.05
-                        drift detected when p_value < threshold
-                    jensenshannon (Jensen-Shannon distance):
-                        for numerical and categorical features
-                        returns distance
-                        default threshold 0.05
-                        drift detected when distance >= threshold
-                    ks (Kolmogorov–Smirnov (K-S) test):
-                        default for numerical features
-                        only for numerical features
-                        returns p_value
-                        default threshold 0.05
-                        drift detected when p_value < threshold
-                    kl_div (Kullback-Leibler divergence):
-                        for numerical and categorical features
-                        returns divergence
-                        default threshold 0.05
-                        drift detected when divergence >= threshold,
-                    psi (Population Stability Index):
-                        for numerical and categorical features
-                        returns psi_value
-                        default_threshold=0.1
-                        drift detected when psi_value >= threshold
-                    wasserstein (Wasserstein distance (normed)):
-                        only for numerical features
-                        returns distance
-                        default threshold 0.05
-                        drift detected when distance >= threshold
-                    z (Ztest):
-                        default for categorical features if the number of labels for feature <= 2
-                        only for categorical features
-                        returns p_value
-                        default threshold 0.05
-                        drift detected when p_value < threshold
+
         :return: A Dashboard object that provides the following capabilities:
             - plot(): Re-render the dashboard with custom width/height
             - get_config(): Retrieve the dashboard configuration (excluding metadata)
