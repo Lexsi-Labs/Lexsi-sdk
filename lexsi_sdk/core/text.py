@@ -5,7 +5,7 @@ from io import BytesIO
 from typing import Optional, List, Dict, Any, Union
 
 import httpx
-from lexsi_sdk.common.types import BatchCPUInstanceTypeValues, BatchGPUInstanceTypeValues, InferenceCompute, InferenceSettings, ServerlessInstanceTypeValues
+from lexsi_sdk.common.types import InferenceCompute, InferenceSettings
 from pydantic import BaseModel
 from pydantic import BaseModel
 import plotly.graph_objects as go
