@@ -42,8 +42,7 @@ import pandas as pd
 
 from lexsi_sdk.core.utils import build_list_data_connector_url
 import json
-import aiohttp
-from typing import AsyncIterator, Iterator
+from typing import Iterator
 from uuid import UUID
 
 
