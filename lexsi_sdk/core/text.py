@@ -758,7 +758,7 @@ class TextProject(Project):
         """Sets the provided model to active for inferencing
 
         :param model_name: name of the model
-        :param activate: Boolean flag to control the model state.
+        :param activate: Boolean flag to control the model inference state.
                      - True: Activates the model inference.
                      - False: Deactivates the model inference.
         :return: response
