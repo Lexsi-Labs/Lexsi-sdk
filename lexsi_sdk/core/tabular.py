@@ -2990,8 +2990,8 @@ class TabularProject(Project):
 
         :param model_name: name of the model
         :param activate: Boolean flag to control the model state.
-                     - True: Activates the model.
-                     - False: Deactivates the model.
+                     - True: Activates the model inference.
+                     - False: Deactivates the model inference.
         :return: response
         """
         payload = {
