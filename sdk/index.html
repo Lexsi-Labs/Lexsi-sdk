@@ -4503,7 +4503,7 @@ Stores configuration and prepares the object for use.</p>
 
     <div class="doc doc-contents ">
 
-        <p>Authenticate with Lexsi.ai using an access token. It prompts for or reads the access token from the environment variable XAI_ACCESS_TOKEN and sets it on the API client, enabling subsequent calls to the platform.</p>
+        <p>Authenticate with Lexsi.ai using an access token. It prompts for or reads the access token from the environment variable SDK_ACCESS_TOKEN and sets it on the API client, enabling subsequent calls to the platform.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -4519,18 +4519,17 @@ Stores configuration and prepares the object for use.</p>
       <tbody>
           <tr class="doc-section-item">
             <td>
-                <code>sdk_access_token</code>
+                <code>SDK_ACCESS_TOKEN</code>
             </td>
             <td>
-                  <code><span title="typing.Optional">Optional</span>[<span title="str">str</span>]</code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>SDK Access Token, defaults to XAI_ACCESS_TOKEN environment variable</p>
+                <p>SDK Access Token, defaults to SDK_ACCESS_TOKEN environment variable</p>
               </div>
             </td>
             <td>
-                  <code>None</code>
+                <em>required</em>
             </td>
           </tr>
       </tbody>
@@ -4557,17 +4556,17 @@ Stores configuration and prepares the object for use.</p>
 <span class="normal">59</span>
 <span class="normal">60</span>
 <span class="normal">61</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">login</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sdk_access_token</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Authenticate with Lexsi.ai using an access token. It prompts for or reads the access token from the environment variable XAI_ACCESS_TOKEN and sets it on the API client, enabling subsequent calls to the platform.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Authenticate with Lexsi.ai using an access token. It prompts for or reads the access token from the environment variable SDK_ACCESS_TOKEN and sets it on the API client, enabling subsequent calls to the platform.</span>
 
-<span class="sd">    :param sdk_access_token: SDK Access Token, defaults to XAI_ACCESS_TOKEN environment variable</span>
+<span class="sd">    :param SDK_ACCESS_TOKEN: SDK Access Token, defaults to SDK_ACCESS_TOKEN environment variable</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">sdk_access_token</span><span class="p">:</span>
-        <span class="n">sdk_access_token</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;XAI_ACCESS_TOKEN&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="n">getpass</span><span class="o">.</span><span class="n">getpass</span><span class="p">(</span>
+        <span class="n">sdk_access_token</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;SDK_ACCESS_TOKEN&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="n">getpass</span><span class="o">.</span><span class="n">getpass</span><span class="p">(</span>
             <span class="s2">&quot;Enter your Lexsi.ai SDK Access Token: &quot;</span>
         <span class="p">)</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="n">sdk_access_token</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Either set XAI_ACCESS_TOKEN or pass the Access token&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Either set SDK_ACCESS_TOKEN or pass the Access token&quot;</span><span class="p">)</span>
 
     <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">api_client</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="n">LOGIN_URI</span><span class="p">,</span> <span class="n">payload</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;access_token&quot;</span><span class="p">:</span> <span class="n">sdk_access_token</span><span class="p">})</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">api_client</span><span class="o">.</span><span class="n">update_headers</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="s2">&quot;access_token&quot;</span><span class="p">])</span>
@@ -22819,7 +22818,7 @@ training pipeline end-to-end:</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Boolean flag to control the model state. - True: Activates the model. - False: Deactivates the model.</p>
+                <p>Boolean flag to control the model state. - True: Activates the model inference. - False: Deactivates the model inference.</p>
               </div>
             </td>
             <td>
@@ -22880,8 +22879,8 @@ training pipeline end-to-end:</p>
 
 <span class="sd">    :param model_name: name of the model</span>
 <span class="sd">    :param activate: Boolean flag to control the model state.</span>
-<span class="sd">                 - True: Activates the model.</span>
-<span class="sd">                 - False: Deactivates the model.</span>
+<span class="sd">                 - True: Activates the model inference.</span>
+<span class="sd">                 - False: Deactivates the model inference.</span>
 <span class="sd">    :return: response</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">payload</span> <span class="o">=</span> <span class="p">{</span>
@@ -38476,7 +38475,7 @@ Requires the guardrail_id and a boolean status value.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Boolean flag to control the model state. - True: Activates the model. - False: Deactivates the model.</p>
+                <p>Boolean flag to control the model inference state. - True: Activates the model inference. - False: Deactivates the model inference.</p>
               </div>
             </td>
             <td>
@@ -38536,9 +38535,9 @@ Requires the guardrail_id and a boolean status value.</p>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Sets the provided model to active for inferencing</span>
 
 <span class="sd">    :param model_name: name of the model</span>
-<span class="sd">    :param activate: Boolean flag to control the model state.</span>
-<span class="sd">                 - True: Activates the model.</span>
-<span class="sd">                 - False: Deactivates the model.</span>
+<span class="sd">    :param activate: Boolean flag to control the model inference state.</span>
+<span class="sd">                 - True: Activates the model inference.</span>
+<span class="sd">                 - False: Deactivates the model inference.</span>
 <span class="sd">    :return: response</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">payload</span> <span class="o">=</span> <span class="p">{</span>
