@@ -294,7 +294,7 @@ class Workspace(BaseModel):
     def update_server(self, server_type: str) -> str:
         """Change the compute instance type for the workspace by specifying a new server_type. Valid values depend on available custom servers.
         :param server_type: dedicated instance to run workloads
-            for all available instances check xai.available_custom_servers()
+            for all available instances check lexsi.available_node_servers()
 
         :return: response
         """

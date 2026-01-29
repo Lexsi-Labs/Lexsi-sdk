@@ -203,7 +203,7 @@ class Project(BaseModel):
     def update_server(self, server_type: str) -> str:
         """Update the dedicated server for the project by specifying a new instance type.
         :param server_type: dedicated instance to run workloads
-            for all available instances check xai.available_custom_servers()
+            for all available instances check lexsi.available_node_servers()
 
         :return: response
         """
