@@ -195,6 +195,7 @@ class BiasMonitoringPayload(TypedDict):
     :param features_to_use: List of feature names to be used for bias analysis.
     :type features_to_use: List[str]
     :param stat_test_threshold: Threshold for the statistical test.
+    :type features_to_use: Optional[str]
     """
 
     project_name: str

@@ -758,6 +758,9 @@ class TextProject(Project):
         """Sets the provided model to active for inferencing
 
         :param model_name: name of the model
+        :param activate: Boolean flag to control the model state.
+                     - True: Activates the model.
+                     - False: Deactivates the model.
         :return: response
         """
         payload = {

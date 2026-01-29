@@ -674,7 +674,7 @@ class ImageProject(Project):
         :param tag: data tag for filtering, defaults to None
         :param start_date: start date for filtering, defaults to None
         :param end_date: end data for filtering, defaults to None
-        :return: casse details dataframe
+        :return: case details dataframe
         """
 
         def get_cases():

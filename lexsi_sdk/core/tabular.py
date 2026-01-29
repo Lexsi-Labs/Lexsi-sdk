@@ -39,7 +39,7 @@ class TabularProject(Project):
 
         return res.get("details")
 
-    def get_labels(self, feature_name: str):
+    def get_labels(self, feature_name: str) -> list:
         """Get the unique values of a particular feature (column) in the dataset. Useful for enumerated categorical values.
 
         :param feature_name: feature name
@@ -2817,7 +2817,7 @@ class TabularProject(Project):
         :param tag: data tag for filtering, defaults to None
         :param start_date: start date for filtering, defaults to None
         :param end_date: end data for filtering, defaults to None
-        :return: casse details dataframe
+        :return: case details dataframe
         """
 
         def get_cases():
@@ -2989,6 +2989,9 @@ class TabularProject(Project):
         """Sets the provided model to active for inferencing
 
         :param model_name: name of the model
+        :param activate: Boolean flag to control the model state.
+                     - True: Activates the model.
+                     - False: Deactivates the model.
         :return: response
         """
         payload = {
@@ -3689,7 +3692,7 @@ class TabularProject(Project):
         node: str,
         data_config: Optional[SyntheticDataConfig] = {},
         hyper_params: Optional[SyntheticModelHyperParams] = {},
-    ):
+    ) -> str:
         """Train synthetic model
 
         :param model_name: model name ['GPT2', 'CTGAN']
@@ -4140,10 +4143,11 @@ class TabularProject(Project):
 
         return SyntheticPrompt(**curr_prompt, api_client=self.api_client, project=self)
 
-    def evals_tabular(self, model_name: str, tag: Optional[str] = "") -> pd.DataFrame:
+    def evals_tabular(self, model_name: str, tag: Optional[str] = None) -> pd.DataFrame:
         """get evals for ml tabular model
 
         :param model_name: model name
+        :param tag: data tag
         :return: evals
         """
         url = f"{TABULAR_ML}?model_name={model_name}&project_name={self.project_name}&tag={tag}"
@@ -4155,7 +4159,7 @@ class TabularProject(Project):
 
     def get_feature_importance(
         self, model_name: str, feature_name: str, xai_method: str
-    ):
+    ) -> float:
         """Fetches feature-importance values for a given model, feature, and XAI method.
 
         :param model_name: Trained model name.
