@@ -417,10 +417,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#text-generation-api" class="md-nav__link">
+  <a href="#text-generation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Text Generation API
+        Text Generation
       
     </span>
   </a>
@@ -655,20 +655,22 @@
 </tbody>
 </table>
 <h2 id="text-modality-apis">Text Modality API's<a class="headerlink" href="#text-modality-apis" title="Permanent link">&para;</a></h2>
-<h3 id="text-generation-api">Text Generation API<a class="headerlink" href="#text-generation-api" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code>curl<span class="w"> </span>--http2<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span><span class="s1">&#39;https://apiv1.lexsi.ai/v2/project/case-register&#39;</span><span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>-H<span class="w"> </span><span class="s2">&quot;x-api-token: &lt;</span><span class="nv">$API_TOKEN</span><span class="s2">&gt;&quot;</span><span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>-F<span class="w"> </span><span class="s2">&quot;provider= &lt;</span><span class="nv">$MODEL_PROVIDER</span><span class="s2">&gt;&quot;</span><span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>-F<span class="w"> </span><span class="s2">&quot;client_id=&lt;</span><span class="nv">$USERNAME</span><span class="s2">&gt;&quot;</span><span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>-F<span class="w"> </span><span class="s2">&quot;project_name=&lt;</span><span class="nv">$PROJECT_NAME</span><span class="s2">&gt;&quot;</span><span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>-F<span class="w"> </span><span class="s2">&quot;prompt=&lt;</span><span class="nv">$INPUT_PROMPT</span><span class="s2">&gt;&quot;</span><span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>-F<span class="w"> </span><span class="s2">&quot;serverless_instance_type=&lt;</span><span class="nv">$SERVERLESS_COMPUTE_TYPE</span><span class="s2">&gt;&quot;</span><span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>-F<span class="w"> </span><span class="s2">&quot;model_name=&lt;</span><span class="nv">$MODEL_NAME</span><span class="s2">&gt;&quot;</span><span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>-F<span class="w"> </span><span class="s2">&quot;min_tokens=&lt;</span><span class="nv">$MIN_TOKENS</span><span class="s2">&gt;&quot;</span><span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>-F<span class="w"> </span><span class="s2">&quot;max_tokens=&lt;</span><span class="nv">$MAX_TOKENS</span><span class="s2">&gt;&quot;</span><span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>-F<span class="w"> </span><span class="s2">&quot;session_id=&lt;</span><span class="nv">$SESSION_ID</span><span class="s2">&gt;&quot;</span><span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>-F<span class="w"> </span><span class="s2">&quot;instance_type=&lt;</span><span class="nv">$POD_INSTANCE_TYPE</span><span class="s2">&gt;&quot;</span><span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>-F<span class="w"> </span><span class="s2">&quot;explain_model=&lt;</span><span class="nv">$EXPLAINABILTY_FLAG</span><span class="s2">&gt;&quot;</span>
+<h3 id="text-generation">Text Generation<a class="headerlink" href="#text-generation" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code>curl<span class="w"> </span>--http2<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span><span class="s2">&quot;https://apiv1.lexsi.ai/gateway/v1/text/generation&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--header<span class="w"> </span><span class="s2">&quot;x-api-token: &lt;</span><span class="nv">$API_TOKEN</span><span class="s2">&gt;&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--header<span class="w"> </span><span class="s2">&quot;Content-Type: application/json&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--data<span class="w"> </span><span class="s1">&#39;{</span>
+<span class="s1">    &quot;provider&quot;: &quot;&lt;$MODEL_PROVIDER&gt;&quot;,</span>
+<span class="s1">    &quot;client_id&quot;: &quot;&lt;$USERNAME&gt;&quot;,</span>
+<span class="s1">    &quot;project_name&quot;: &quot;&lt;$PROJECT_NAME&gt;&quot;,</span>
+<span class="s1">    &quot;model&quot;: &quot;&lt;$MODEL_NAME&gt;&quot;,</span>
+<span class="s1">    &quot;prompt&quot;: &quot;&lt;$PROMPT&gt;&quot;,</span>
+<span class="s1">    &quot;min_tokens&quot;: &lt;$MIN_TOKENS&gt;,</span>
+<span class="s1">    &quot;max_tokens&quot;: &lt;$MAX_TOKENS&gt;,</span>
+<span class="s1">    &quot;session_id&quot;: &quot;&lt;$SESSION_ID&gt;&quot;,</span>
+<span class="s1">    &quot;XAI&quot;: &lt;$XAI_ENABLED&gt;,</span>
+<span class="s1">    &quot;XAI_pods&quot;: &quot;&lt;$XAI_POD_TYPE&gt;&quot;</span>
+<span class="s1">  }&#39;</span>
 </code></pre></div>
 <table>
 <thead>
@@ -684,7 +686,7 @@
 </tr>
 <tr>
 <td><code>$MODEL_PROVIDER</code></td>
-<td>Provider identifier (e.g. <code>Lexsi</code>, <code>OpenAI</code>, <code>Grok</code>)</td>
+<td>Provider identifier (e.g. <code>openai</code>, <code>lexsi</code>)</td>
 </tr>
 <tr>
 <td><code>$USERNAME</code></td>
@@ -695,32 +697,32 @@
 <td>Target text project name</td>
 </tr>
 <tr>
-<td><code>$INPUT_PROMPT</code></td>
-<td>User prompt to send to the model</td>
-</tr>
-<tr>
-<td><code>$SERVERLESS_COMPUTE_TYPE</code></td>
-<td>Serverless instance type for processing</td>
-</tr>
-<tr>
 <td><code>$MODEL_NAME</code></td>
 <td>Model name within the selected provider</td>
 </tr>
 <tr>
-<td><code>$MIN_TOKENS</code> / <code>$MAX_TOKENS</code></td>
-<td>Minimum and maximum tokens to generate (integers)</td>
+<td><code>$PROMPT</code></td>
+<td>User prompt to send to the model</td>
+</tr>
+<tr>
+<td><code>$MIN_TOKENS</code></td>
+<td>Optional minimum tokens to generate (integer)</td>
+</tr>
+<tr>
+<td><code>$MAX_TOKENS</code></td>
+<td>Optional maximum tokens to generate (integer)</td>
 </tr>
 <tr>
 <td><code>$SESSION_ID</code></td>
-<td>Optional session ID for threaded or multi-turn conversations</td>
+<td>Optional session ID for multi-turn conversations</td>
 </tr>
 <tr>
-<td><code>$POD_INSTANCE_TYPE</code></td>
-<td>Optional dedicated instance type for processing</td>
+<td><code>$XAI_ENABLED</code></td>
+<td>Optional boolean flag for explainability (<code>true</code> or <code>false</code>)</td>
 </tr>
 <tr>
-<td><code>$EXPLAINABILTY_FLAG</code></td>
-<td>Boolean flag indicating whether explainability is computed</td>
+<td><code>$XAI_POD_TYPE</code></td>
+<td>Optional pod instance type for explainability processing</td>
 </tr>
 </tbody>
 </table>
