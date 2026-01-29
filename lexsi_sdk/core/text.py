@@ -754,6 +754,24 @@ class TextProject(Project):
             raise Exception(res.get("details"))
         return res
     
+    def update_inference_model_status(self, model_name: str, activate: bool) -> str:
+        """Sets the provided model to active for inferencing
+
+        :param model_name: name of the model
+        :return: response
+        """
+        payload = {
+            "project_name": self.project_name,
+            "model_name": model_name,
+            "activate": activate,
+        }
+
+        res = self.api_client.post(UPDATE_ACTIVE_INFERENCE_MODEL_URI, payload)
+
+        if not res["success"]:
+            raise Exception(res["details"])
+
+        return res.get("details")
 
 class CaseText(BaseModel):
     """Explainability view for text-based cases. Supports token-level importance, attention visualization, and LLM output analysis."""
