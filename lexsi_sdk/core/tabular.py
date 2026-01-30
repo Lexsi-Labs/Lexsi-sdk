@@ -799,7 +799,7 @@ class TabularProject(Project):
 
         if xai_method:
             Validate.value_against_list(
-                "explainability_method", xai_method, ["shap", "lime"]
+                "explainability_method", xai_method, ["shap", "lime", "ig", "dlb"]
             )
 
         payload = {
