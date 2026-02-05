@@ -927,8 +927,8 @@ class CustomServerConfig(TypedDict):
     :type auto_start: bool
     """
 
-    start: Optional[datetime] = None
-    stop: Optional[datetime] = None
+    start: Optional[Union[str, datetime]] = None
+    stop: Optional[Union[str, datetime]] = None
     shutdown_after: Optional[int] = 1
     op_hours: Optional[bool] = None
     auto_start: bool = False
