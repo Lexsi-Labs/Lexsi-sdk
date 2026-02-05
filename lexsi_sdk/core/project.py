@@ -5,6 +5,7 @@ from pydantic import BaseModel
 from typing import Dict, List, Optional, Union
 from lexsi_sdk.client.client import APIClient
 from lexsi_sdk.common.types import (
+    CustomServerConfig,
     ProjectConfig,
     GCSConfig,
     S3Config,
@@ -200,7 +201,7 @@ class Project(BaseModel):
 
         return res["message"]
 
-    def update_server(self, server_type: str) -> str:
+    def update_server(self, server_type: str, server_config: Optional[CustomServerConfig] = CustomServerConfig()) -> str:
         """Update the dedicated server for the project by specifying a new instance type.
         :param server_type: dedicated instance to run workloads
             for all available instances check xai.available_custom_servers()
@@ -221,7 +222,7 @@ class Project(BaseModel):
                     "project_name": self.user_project_name,
                     "instance_type": server_type,
                 },
-                "update_operational_hours": {},
+                "update_operational_hours": server_config if server_config else {},
             },
         }
 
