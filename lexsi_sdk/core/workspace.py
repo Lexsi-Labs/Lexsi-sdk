@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from typing import Optional
 from lexsi_sdk.client.client import APIClient
 from lexsi_sdk.common.enums import UserRole
+from lexsi_sdk.common.types import CustomServerConfig
 from lexsi_sdk.common.validation import Validate
 from lexsi_sdk.common.xai_uris import (
     AVAILABLE_CUSTOM_SERVERS_URI,
@@ -179,6 +180,7 @@ class Workspace(BaseModel):
         modality: str,
         project_type: str,
         server_type: Optional[str] = None,
+        server_config: Optional[CustomServerConfig] = CustomServerConfig()
     ) -> Project:
         """Create a new project within the workspace. Requires project_name, modality (e.g., tabular, text, image), project_type (e.g., classification), and optional project_sub_type and server_type. Returns the created Project object.
 
@@ -189,6 +191,17 @@ class Workspace(BaseModel):
             Eg:- classification, regression
         :param server_type: dedicated node to run workloads
             for all available nodes check lexsi.available_node_servers()
+        :param server_config: project server settings
+        {
+            "compute_type": "2xlargeA10G",  # compute_type for project
+            "custom_server_config": {
+                "start": "2026-01-20T14:00:00+05:30",  # Start time for custom server
+                "stop": "2026-01-20T14:00:00+05:30",    # Stop time for custom server
+                "shutdown_after": 5,  # Operation hours for custom server
+                "op_hours": True / False  # Whether to restrict to business hours
+                "auto_start": True / False  # Automatically start the server when requested.
+            }
+        }
         :return: response
         """
         payload = {
@@ -210,7 +223,7 @@ class Workspace(BaseModel):
             )
 
             payload["instance_type"] = server_type
-            payload["server_config"] = {}
+            payload["server_config"] = server_config if server_config else {}
 
         res = self.api_client.post(CREATE_PROJECT_URI, payload)
 
@@ -291,7 +304,7 @@ class Workspace(BaseModel):
 
         return res["message"]
 
-    def update_server(self, server_type: str) -> str:
+    def update_server(self, server_type: str, server_config: Optional[CustomServerConfig] = CustomServerConfig()) -> str:
         """Change the compute instance type for the workspace by specifying a new server_type. Valid values depend on available custom servers.
         :param server_type: dedicated instance to run workloads
             for all available instances check xai.available_custom_servers()
@@ -312,7 +325,7 @@ class Workspace(BaseModel):
                     "workspace_name": self.user_workspace_name,
                     "instance_type": server_type,
                 },
-                "update_operational_hours": {},
+                "update_operational_hours": server_config if server_config else {},
             },
         }
 

@@ -171,6 +171,17 @@ class Organization(BaseModel):
         :param server_type: dedicated instance to run workloads
             for all available instances check lexsi.available_node_servers()
             defaults to local
+        :param server_config: workspace server settings
+        {
+            "compute_type": "2xlargeA10G",  # compute_type for workspace
+            "custom_server_config": {
+                "start": "2026-01-20T14:00:00+05:30",  # Start time for custom server
+                "stop": "2026-01-20T14:00:00+05:30",    # Stop time for custom server
+                "shutdown_after": 5,  # Operation hours for custom server
+                "op_hours": True / False  # Whether to restrict to business hours
+                "auto_start": True / False  # Automatically start the server when requested.
+            }
+        }
         :return: response
         """
         payload = {"workspace_name": workspace_name}
