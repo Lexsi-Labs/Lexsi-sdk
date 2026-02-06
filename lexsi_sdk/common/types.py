@@ -911,11 +911,15 @@ class CustomServerConfig(TypedDict):
     """
     Scheduling options when requesting dedicated inference compute.
 
-    :param start: Start time for the server.
-    :type start: datetime | None
+    :param start: Start time for the server in "HH:MM" or "HH:MM±HH:MM" (timezone offset) format. 
+            Examples: "10:30" or "10:30+05:30".
+            If no timezone offset is provided, the time is assumed to be in UTC.
+    :type start: datetime | str | None
 
-    :param stop: Stop time for the server.
-    :type stop: datetime | None
+    :param stop: Stop time for the server in "HH:MM" or "HH:MM±HH:MM" (timezone offset) format.
+            Examples: "11:30" or "11:30+05:30".
+            If no timezone offset is provided, the time is assumed to be in UTC.
+    :type stop: datetime | str | None
 
     :param shutdown_after: Auto-shutdown timeout (in hours).
     :type shutdown_after: int | None

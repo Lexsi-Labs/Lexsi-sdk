@@ -392,7 +392,7 @@ class TabularProject(Project):
                     for server in available_custom_batch_servers
                 ]
                 self.delete_file(uploaded_path)
-                return Exception(f"For Foundational models compute_type is mandatory. select from \n {valid_list}")
+                raise Exception(f"For Foundational models compute_type is mandatory. select from \n {valid_list}")
 
             if tunning_strategy != "inference" and compute_type and "gova" not in compute_type:
                 Validate.value_against_list(
@@ -3034,8 +3034,8 @@ class TabularProject(Project):
         {
             "compute_type": "2xlargeA10G",  # compute_type for running inference
             "custom_server_config": {
-                "start": "2026-01-20T14:00:00+05:30",  # Start time for custom server
-                "stop": "2026-01-20T14:00:00+05:30",    # Stop time for custom server
+                "start": "14:00+05:30" or "14:00",  # Start time ("HH:MM±HH:MM" or "HH:MM"; assumed UTC if no offset)
+                "stop": "15:00+05:30" or "15:00"",  # Stop time ("HH:MM±HH:MM" or "HH:MM"; assumed UTC if no offset)
                 "shutdown_after": 5,  # Operation hours for custom server
                 "op_hours": True / False  # Whether to restrict to business hours
                 "auto_start": True / False  # Automatically start the server when requested.
