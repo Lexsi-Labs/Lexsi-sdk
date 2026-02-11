@@ -775,6 +775,115 @@ class TextProject(Project):
             raise Exception(res["details"])
 
         return res.get("details")
+    
+    def configure_guardrails_v2(
+        self,
+        guardrails : List[dict],
+        model_name: str,
+        apply_on: str,
+    ) :
+        """Configure a new guardrail in the project.
+        Requires the guardrail flow list, a list of dictionary which contains the flow name , flow deatils , model details if required, the model name, and where to apply it (input or output). 
+        for example
+            Input - {
+                "input_data": "Hi let's talk about Apple",
+                "guardrails": [
+                    {
+                    "flow": "self check input",
+                    "prompt" : "check if the user have any /{user_input}/ jailbreak content",
+                    "model_alias": "self_check",
+                    "model" : "llama-3.3-70b-versatile",
+                    "engine" : "chat_groq",
+                    "parameters" : {
+                        "groq_api_key" : ""
+                    }
+                    },
+                    {
+                    "flow": "guardrailsai check input",
+                    "guardrails_ai": {
+                        "validators": [
+                        {
+                            "name": "competitor_check",
+                            "parameters": {
+                            "competitors": ["Apple", "Samsung", "Microsoft"]
+                            }
+                        }
+                        ]
+                    }
+                    }
+                ]
+                }
+
+        Returns a confirmation message.
+
+        :param guardrails: list of guardrails
+        :param model_name: Name of the model to which the guardrail applies
+        :param apply_on: Specifies when to apply the guardrail ("input" or "output")
+        :return: a response indicating the result of the configuration operation
+        """
+        payload = {
+            "guardrail_flows": guardrails,
+            "model_name": model_name,
+            "apply_on": apply_on,
+            "project_name": self.project_name,
+        }
+        CONFIGURE_GUARDRAILS_URI_v2 = "http://3.108.15.217:30095/project/configure"
+        # res = self.api_client.post(CONFIGURE_GUARDRAILS_URI_v2, payload)
+        import httpx
+
+        with httpx.Client(http2=True, timeout=None) as client:
+            response = client.post(CONFIGURE_GUARDRAILS_URI_v2, json=payload)
+        
+        return response
+    
+    def run_project_guardrails_v2(
+        self,
+        model_name: str,
+        input_data : str
+    ) :
+        """
+        Configure the guardrails for any model to run on that
+
+        Returns results of guardrails (passed or failed).
+
+        :param model_name: Name of the model on which the guardrail applies
+        :param input_data: User input ("input" or "output")
+        :return: a response indicating the result of the configuration operation
+        """
+        payload = {
+            "model_name": model_name,
+            "input_data": input_data,
+            "project_name": self.project_name,
+        }
+        CONFIGURE_GUARDRAILS_URI_v2 = "http://3.108.15.217:30095/project/run"
+        # res = self.api_client.post(CONFIGURE_GUARDRAILS_URI_v2, payload)
+        import httpx
+
+        with httpx.Client(http2=True, timeout=None) as client:
+            response = client.post(CONFIGURE_GUARDRAILS_URI_v2, json=payload)
+        
+        return response
+    
+    def run_guardrails_v2(
+        self,
+        guardrails : List[dict],
+        input_data : str
+    ) :
+        """
+        Run the guardrails for any input 
+        """
+        payload = {
+            "guardrails": guardrails,
+            "input_data": input_data,
+        }
+        CONFIGURE_GUARDRAILS_URI_v2 = "http://3.108.15.217:30095/guardrails/run"
+        # res = self.api_client.post(CONFIGURE_GUARDRAILS_URI_v2, payload)
+        import httpx
+
+        with httpx.Client(http2=True, timeout=None) as client:
+            response = client.post(CONFIGURE_GUARDRAILS_URI_v2, json=payload)
+        
+        return response
 
 class CaseText(BaseModel):
     """Explainability view for text-based cases. Supports token-level importance, attention visualization, and LLM output analysis."""
@@ -882,4 +991,3 @@ class CaseText(BaseModel):
         """Return audit details for the text case.
         Encapsulates a small unit of SDK logic and returns the computed result."""
         return self.audit_trail
-
