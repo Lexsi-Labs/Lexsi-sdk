@@ -1,5 +1,6 @@
-from datetime import datetime
-from typing import Callable, Optional
+from datetime import date, datetime, time, timedelta, timezone
+import re
+from typing import Callable, Optional, Union
 from lexsi_sdk.client.client import APIClient
 from IPython.display import display, HTML
 
@@ -91,3 +92,45 @@ def poll_events(
             if handle_failed_event:
                 handle_failed_event()
             raise Exception(details.get("message"))
+
+TIME_RE = re.compile(
+    r"^(?P<h>\d{2}):(?P<m>\d{2})(?P<tz>Z|[+-]\d{2}:\d{2})?$"
+)
+
+def normalize_time(
+    value: Optional[Union[str, datetime]],
+    base_date: Optional[date] = None
+) -> Optional[str]:
+
+    if value is None:
+        return None
+    base_date = base_date or datetime.utcnow().date()
+    if isinstance(value, datetime):
+        if value.tzinfo is None:
+            value = value.replace(tzinfo=timezone.utc)
+        return value.isoformat()
+
+    if isinstance(value, str):
+        match = TIME_RE.match(value)
+        if not match:
+            raise ValueError("Time must be HH:MM, HH:MM±HH:MM, or HH:MMZ")
+
+        hour = int(match.group("h"))
+        minute = int(match.group("m"))
+        tz_part = match.group("tz")
+        tzinfo = timezone.utc
+
+        if tz_part:
+            if tz_part == "Z":
+                tzinfo = timezone.utc
+            else:
+                sign = 1 if tz_part[0] == "+" else -1
+                tzh, tzm = map(int, tz_part[1:].split(":"))
+                tzinfo = timezone(
+                    sign * timedelta(hours=tzh, minutes=tzm)
+                )
+
+        dt = datetime.combine(base_date, time(hour, minute, tzinfo=tzinfo))
+        return dt.isoformat()
+
+    raise ValueError("Invalid time value")

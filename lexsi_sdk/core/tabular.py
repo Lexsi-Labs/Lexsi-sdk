@@ -1,5 +1,5 @@
 from __future__ import annotations
-import datetime
+from datetime import datetime, timedelta
 import io
 import json
 from typing import Dict, List, Optional, Union
@@ -9,9 +9,9 @@ from lexsi_sdk.core.alert import Alert
 from lexsi_sdk.common.constants import BIAS_MONITORING_DASHBOARD_REQUIRED_FIELDS, DATA_DRIFT_DASHBOARD_REQUIRED_FIELDS, DATA_DRIFT_STAT_TESTS, MODEL_PERF_DASHBOARD_REQUIRED_FIELDS, MODEL_TYPES, SYNTHETIC_MODELS_DEFAULT_HYPER_PARAMS, TARGET_DRIFT_DASHBOARD_REQUIRED_FIELDS, TARGET_DRIFT_STAT_TESTS
 from lexsi_sdk.common.monitoring import BiasMonitoringPayload, DataDriftPayload, ModelPerformancePayload, TargetDriftPayload
 from lexsi_sdk.common.types import CatBoostParams, DataConfig, FoundationalModelParams, InferenceCompute, LightGBMParams, PEFTParams, ProcessorParams, ProjectConfig, RandomForestParams, SyntheticDataConfig, SyntheticModelHyperParams, TuningParams, XGBoostParams
-from lexsi_sdk.common.utils import poll_events
+from lexsi_sdk.common.utils import normalize_time, poll_events
 from lexsi_sdk.common.validation import Validate
-from lexsi_sdk.common.xai_uris import ALL_DATA_FILE_URI, AVAILABLE_BATCH_SERVERS_URI, AVAILABLE_SYNTHETIC_CUSTOM_SERVERS_URI, CASE_DTREE_URI, CASE_INFO_TEXT_URI, CASE_INFO_URI, CREATE_OBSERVATION_URI, CREATE_POLICY_URI, CREATE_SYNTHETIC_PROMPT_URI, DELETE_CASE_URI, DELETE_SYNTHETIC_MODEL_URI, DELETE_SYNTHETIC_TAG_URI, DOWNLOAD_DASHBOARD_LOGS_URI, DOWNLOAD_SYNTHETIC_DATA_URI, DOWNLOAD_TAG_DATA_URI, DUPLICATE_OBSERVATION_URI, DUPLICATE_POLICY_URI, GENERATE_DASHBOARD_URI, GET_CASES_URI, GET_DASHBOARD_SCORE_URI, GET_DATA_DIAGNOSIS_URI, GET_DATA_DRIFT_DIAGNOSIS_URI, GET_DATA_SUMMARY_URI, GET_FEATURE_IMPORTANCE_URI, GET_LABELS_URI, GET_MODELS_URI, GET_OBSERVATION_PARAMS_URI, GET_OBSERVATIONS_URI, GET_POLICIES_URI, GET_POLICY_PARAMS_URI, GET_PROJECT_CONFIG, GET_SYNTHETIC_DATA_TAGS_URI, GET_SYNTHETIC_MODEL_DETAILS_URI, GET_SYNTHETIC_MODEL_PARAMS_URI, GET_SYNTHETIC_MODELS_URI, GET_SYNTHETIC_PROMPT_URI, LIST_DATA_CONNECTORS, MODEL_INFERENCES_URI, MODEL_PARAMETERS_URI, MODEL_SUMMARY_URI, PROJECT_OVERVIEW_TEXT_URI, RUN_DATA_DRIFT_DIAGNOSIS_URI, RUN_MODEL_ON_DATA_URI, SEARCH_CASE_URI, TABULAR_ML, TEXT_MODEL_INFERENCE_SETTINGS_URI, TRAIN_MODEL_URI, TRAIN_SYNTHETIC_MODEL_URI, UPDATE_ACTIVE_INFERENCE_MODEL_URI, UPDATE_OBSERVATION_URI, UPDATE_POLICY_URI, UPDATE_SYNTHETIC_PROMPT_URI, UPLOAD_DATA_FILE_URI, UPLOAD_DATA_PROJECT_URI, UPLOAD_DATA_URI, UPLOAD_FILE_DATA_CONNECTORS, AVAILABLE_BATCH_SERVERS_URI, CREATE_TRIGGER_URI, DASHBOARD_LOGS_URI, DELETE_TRIGGER_URI, DUPLICATE_MONITORS_URI, EXECUTED_TRIGGER_URI, GENERATE_DASHBOARD_URI, GET_DASHBOARD_SCORE_URI, GET_DASHBOARD_URI, GET_EXECUTED_TRIGGER_INFO, GET_MODEL_TYPES_URI, GET_MODELS_URI, GET_MONITORS_ALERTS, GET_PROJECT_CONFIG, GET_TRIGGERS_URI, LIST_DATA_CONNECTORS, MODEL_PARAMETERS_URI, MODEL_PERFORMANCE_DASHBOARD_URI, UPLOAD_DATA_FILE_INFO_URI, UPLOAD_DATA_FILE_URI, UPLOAD_DATA_URI, UPLOAD_DATA_WITH_CHECK_URI, UPLOAD_FILE_DATA_CONNECTORS, UPLOAD_MODEL_URI, EXPLAINABILITY_SUMMARY, GET_TRIGGERS_DAYS_URI
+from lexsi_sdk.common.xai_uris import ALL_DATA_FILE_URI, AVAILABLE_BATCH_SERVERS_URI, AVAILABLE_SYNTHETIC_CUSTOM_SERVERS_URI, CASE_DTREE_URI, CASE_INFO_TEXT_URI, CASE_INFO_URI, CREATE_OBSERVATION_URI, CREATE_POLICY_URI, CREATE_SYNTHETIC_PROMPT_URI, DELETE_CASE_URI, DELETE_SYNTHETIC_MODEL_URI, DELETE_SYNTHETIC_TAG_URI, DOWNLOAD_DASHBOARD_LOGS_URI, DOWNLOAD_SYNTHETIC_DATA_URI, DOWNLOAD_TAG_DATA_URI, DUPLICATE_OBSERVATION_URI, DUPLICATE_POLICY_URI, GENERATE_DASHBOARD_URI, GET_CASES_URI, GET_DASHBOARD_SCORE_URI, GET_DATA_DIAGNOSIS_URI, GET_DATA_DRIFT_DIAGNOSIS_URI, GET_DATA_SUMMARY_URI, GET_FEATURE_IMPORTANCE_URI, GET_LABELS_URI, GET_MODELS_URI, GET_OBSERVATION_PARAMS_URI, GET_OBSERVATIONS_URI, GET_POLICIES_URI, GET_POLICY_PARAMS_URI, GET_PROJECT_CONFIG, GET_SYNTHETIC_DATA_TAGS_URI, GET_SYNTHETIC_MODEL_DETAILS_URI, GET_SYNTHETIC_MODEL_PARAMS_URI, GET_SYNTHETIC_MODELS_URI, GET_SYNTHETIC_PROMPT_URI, LIST_DATA_CONNECTORS, MODEL_INFERENCE_SETTINGS_URI, MODEL_INFERENCES_URI, MODEL_PARAMETERS_URI, MODEL_SUMMARY_URI, PROJECT_OVERVIEW_TEXT_URI, RUN_DATA_DRIFT_DIAGNOSIS_URI, RUN_MODEL_ON_DATA_URI, SEARCH_CASE_URI, TABULAR_ML, TEXT_MODEL_INFERENCE_SETTINGS_URI, TRAIN_MODEL_URI, TRAIN_SYNTHETIC_MODEL_URI, UPDATE_ACTIVE_INFERENCE_MODEL_URI, UPDATE_OBSERVATION_URI, UPDATE_POLICY_URI, UPDATE_SYNTHETIC_PROMPT_URI, UPLOAD_DATA_FILE_URI, UPLOAD_DATA_PROJECT_URI, UPLOAD_DATA_URI, UPLOAD_FILE_DATA_CONNECTORS, AVAILABLE_BATCH_SERVERS_URI, CREATE_TRIGGER_URI, DASHBOARD_LOGS_URI, DELETE_TRIGGER_URI, DUPLICATE_MONITORS_URI, EXECUTED_TRIGGER_URI, GENERATE_DASHBOARD_URI, GET_DASHBOARD_SCORE_URI, GET_DASHBOARD_URI, GET_EXECUTED_TRIGGER_INFO, GET_MODEL_TYPES_URI, GET_MODELS_URI, GET_MONITORS_ALERTS, GET_PROJECT_CONFIG, GET_TRIGGERS_URI, LIST_DATA_CONNECTORS, MODEL_PARAMETERS_URI, MODEL_PERFORMANCE_DASHBOARD_URI, UPLOAD_DATA_FILE_INFO_URI, UPLOAD_DATA_FILE_URI, UPLOAD_DATA_URI, UPLOAD_DATA_WITH_CHECK_URI, UPLOAD_FILE_DATA_CONNECTORS, UPLOAD_MODEL_URI, EXPLAINABILITY_SUMMARY, GET_TRIGGERS_DAYS_URI
 from lexsi_sdk.core.dashboard import DASHBOARD_TYPES, Dashboard
 from lexsi_sdk.core.project import Project, build_expression, generate_expression, validate_configuration
 from lexsi_sdk.core.synthetic import SyntheticDataTag, SyntheticModel, SyntheticPrompt
@@ -382,6 +382,26 @@ class TabularProject(Project):
                     "feature_encodings_feature",
                     list(feature_encodings.values()),
                     ["labelencode", "countencode", "onehotencode"],
+                )
+            custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
+            available_custom_batch_servers = custom_batch_servers.get("details", []) + custom_batch_servers.get("available_gpu_custom_servers", [])
+            
+            if config.get("model_name") and config.get("model_name") in ["TabPFN","TabICL","TabDPT","OrionMSP", "OrionBix","Mitra", "ContextTab"] and not compute_type:
+                valid_list = [
+                    server["instance_name"]
+                    for server in available_custom_batch_servers
+                ]
+                self.delete_file(uploaded_path)
+                raise Exception(f"For Foundational models compute_type is mandatory. select from \n {valid_list}")
+
+            if tunning_strategy != "inference" and compute_type and "gova" not in compute_type:
+                Validate.value_against_list(
+                    "pod",
+                    compute_type,
+                    [
+                        server["instance_name"]
+                        for server in available_custom_batch_servers
+                    ],
                 )
 
             payload = {
@@ -799,7 +819,7 @@ class TabularProject(Project):
 
         if xai_method:
             Validate.value_against_list(
-                "explainability_method", xai_method, ["shap", "lime"]
+                "explainability_method", xai_method, ["shap", "lime", "ig", "dlb"]
             )
 
         payload = {
@@ -3017,8 +3037,8 @@ class TabularProject(Project):
         {
             "compute_type": "2xlargeA10G",  # compute_type for running inference
             "custom_server_config": {
-                "start": "2026-01-20T14:00:00+05:30",  # Start time for custom server
-                "stop": "2026-01-20T14:00:00+05:30",    # Stop time for custom server
+                "start": "14:00+05:30" or "14:00",  # Start time ("HH:MM±HH:MM" or "HH:MM"; assumed UTC if no offset)
+                "stop": "15:00+05:30" or "15:00"",  # Stop time ("HH:MM±HH:MM" or "HH:MM"; assumed UTC if no offset)
                 "shutdown_after": 5,  # Operation hours for custom server
                 "op_hours": True / False  # Whether to restrict to business hours
                 "auto_start": True / False  # Automatically start the server when requested.
@@ -3028,13 +3048,32 @@ class TabularProject(Project):
         """
         if inference_compute.get("compute_type", None):
             inference_compute["instance_type"] = inference_compute["compute_type"]
+        server_config = inference_compute.get("custom_server_config", {})
+        server_config["start"] = normalize_time(server_config.get("start"))
+        server_config["stop"] = normalize_time(server_config.get("stop"))
+        if server_config["start"] and not server_config["stop"]:
+            raise ValueError("If start is provided, stop cannot be None.")
+
+        if server_config["stop"] and not server_config["start"]:
+            raise ValueError("If stop is provided, start cannot be None.")
+
+        if server_config["start"] and server_config["stop"]:
+            start_dt = datetime.fromisoformat(server_config["start"])
+            stop_dt = datetime.fromisoformat(server_config["stop"])
+
+            if stop_dt - start_dt < timedelta(minutes=15):
+                raise ValueError("Stop time must be at least 15 minutes greater than start time.")
+
+            if not server_config.get("op_hours") and server_config.get("auto_start"):
+                server_config["op_hours"] = True
+
         payload = {
             "model_name": model_name,
             "project_name": self.project_name,
             "inference_compute": inference_compute,
         }
 
-        res = self.api_client.post(f"{TEXT_MODEL_INFERENCE_SETTINGS_URI}", payload)
+        res = self.api_client.post(f"{MODEL_INFERENCE_SETTINGS_URI}", payload)
         if not res["success"]:
             raise Exception(res.get("details", "Failed to update inference settings"))
 

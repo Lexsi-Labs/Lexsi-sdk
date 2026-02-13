@@ -1,8 +1,11 @@
+from datetime import datetime, timedelta
 import pandas as pd
 from pydantic import BaseModel
 from typing import Optional
 from lexsi_sdk.client.client import APIClient
 from lexsi_sdk.common.enums import UserRole
+from lexsi_sdk.common.types import CustomServerConfig
+from lexsi_sdk.common.utils import normalize_time
 from lexsi_sdk.common.validation import Validate
 from lexsi_sdk.common.xai_uris import (
     AVAILABLE_CUSTOM_SERVERS_URI,
@@ -179,6 +182,7 @@ class Workspace(BaseModel):
         modality: str,
         project_type: str,
         server_type: Optional[str] = None,
+        server_config: Optional[CustomServerConfig] = CustomServerConfig()
     ) -> Project:
         """Create a new project within the workspace. Requires project_name, modality (e.g., tabular, text, image), project_type (e.g., classification), and optional project_sub_type and server_type. Returns the created Project object.
 
@@ -189,6 +193,17 @@ class Workspace(BaseModel):
             Eg:- classification, regression
         :param server_type: dedicated node to run workloads
             for all available nodes check lexsi.available_node_servers()
+        :param server_config: project server settings
+        {
+            "compute_type": "2xlargeA10G",  # compute_type for project
+            "custom_server_config": {
+                "start": "14:00+05:30" or "14:00",  # Start time ("HH:MM±HH:MM" or "HH:MM"; assumed UTC if no offset)
+                "stop": "15:00+05:30" or "15:00"",  # Stop time ("HH:MM±HH:MM" or "HH:MM"; assumed UTC if no offset)
+                "shutdown_after": 5,  # Operation hours for custom server
+                "op_hours": True / False  # Whether to restrict to business hours
+                "auto_start": True / False  # Automatically start the server when requested.
+            }
+        }
         :return: response
         """
         payload = {
@@ -210,7 +225,7 @@ class Workspace(BaseModel):
             )
 
             payload["instance_type"] = server_type
-            payload["server_config"] = {}
+            payload["server_config"] = server_config if server_config else {}
 
         res = self.api_client.post(CREATE_PROJECT_URI, payload)
 
@@ -291,7 +306,7 @@ class Workspace(BaseModel):
 
         return res["message"]
 
-    def update_server(self, server_type: str) -> str:
+    def update_server(self, server_type: str, server_config: Optional[CustomServerConfig] = CustomServerConfig()) -> str:
         """Change the compute instance type for the workspace by specifying a new server_type. Valid values depend on available custom servers.
         :param server_type: dedicated instance to run workloads
             for all available instances check lexsi.available_node_servers()
@@ -305,6 +320,25 @@ class Workspace(BaseModel):
             [server["name"] for server in custom_servers],
         )
 
+        server_config = server_config or {}
+        server_config["start"] = normalize_time(server_config.get("start"))
+        server_config["stop"] = normalize_time(server_config.get("stop"))
+        if server_config["start"] and not server_config["stop"]:
+            raise ValueError("If start is provided, stop cannot be None.")
+
+        if server_config["stop"] and not server_config["start"]:
+            raise ValueError("If stop is provided, start cannot be None.")
+
+        if server_config["start"] and server_config["stop"]:
+            start_dt = datetime.fromisoformat(server_config["start"])
+            stop_dt = datetime.fromisoformat(server_config["stop"])
+
+            if stop_dt - start_dt < timedelta(minutes=15):
+                raise ValueError("Stop time must be at least 15 minutes greater than start time.")
+
+            if not server_config.get("op_hours") and server_config.get("auto_start"):
+                server_config["op_hours"] = True
+        
         payload = {
             "workspace_name": self.workspace_name,
             "modify_req": {
@@ -312,7 +346,7 @@ class Workspace(BaseModel):
                     "workspace_name": self.user_workspace_name,
                     "instance_type": server_type,
                 },
-                "update_operational_hours": {},
+                "update_operational_hours": server_config if server_config else {},
             },
         }
 

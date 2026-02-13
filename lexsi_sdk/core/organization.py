@@ -13,7 +13,7 @@ from lexsi_sdk.common.xai_uris import (
     UPDATE_ORGANIZATION_URI,
 )
 from lexsi_sdk.core.workspace import Workspace
-from lexsi_sdk.common.types import GCSConfig, S3Config, GDriveConfig, SFTPConfig
+from lexsi_sdk.common.types import CustomServerConfig, GCSConfig, S3Config, GDriveConfig, SFTPConfig
 from lexsi_sdk.common.xai_uris import (
     AVAILABLE_CUSTOM_SERVERS_URI,
     CREATE_DATA_CONNECTORS,
@@ -163,7 +163,7 @@ class Organization(BaseModel):
         return workspace
 
     def create_workspace(
-        self, workspace_name: str, server_type: Optional[str] = None
+        self, workspace_name: str, server_type: Optional[str] = None, server_config: Optional[CustomServerConfig] = CustomServerConfig()
     ) -> Workspace:
         """Create a new workspace within the organization. Accepts a workspace name and an optional server_type to specify the compute instance. Returns a Workspace object for the newly created workspace.
 
@@ -171,6 +171,17 @@ class Organization(BaseModel):
         :param server_type: dedicated instance to run workloads
             for all available instances check lexsi.available_node_servers()
             defaults to local
+        :param server_config: workspace server settings
+        {
+            "compute_type": "2xlargeA10G",  # compute_type for workspace
+            "custom_server_config": {
+                "start": "14:00+05:30" or "14:00",  # Start time ("HH:MM±HH:MM" or "HH:MM"; assumed UTC if no offset)
+                "stop": "15:00+05:30" or "15:00"",  # Stop time ("HH:MM±HH:MM" or "HH:MM"; assumed UTC if no offset)
+                "shutdown_after": 5,  # Operation hours for custom server
+                "op_hours": True / False  # Whether to restrict to business hours
+                "auto_start": True / False  # Automatically start the server when requested.
+            }
+        }
         :return: response
         """
         payload = {"workspace_name": workspace_name}
@@ -184,7 +195,7 @@ class Organization(BaseModel):
             )
 
             payload["instance_type"] = server_type
-            payload["server_config"] = {}
+            payload["server_config"] = server_config if server_config else {}
 
         if self.organization_id:
             payload["organization_id"] = self.organization_id
