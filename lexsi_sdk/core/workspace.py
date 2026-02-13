@@ -225,6 +225,9 @@ class Workspace(BaseModel):
             )
 
             payload["instance_type"] = server_type
+            if server_config and server_config.get("start", None) and server_config.get("stop", None):
+                server_config["start"] = normalize_time(server_config.get("start"))
+                server_config["stop"] = normalize_time(server_config.get("stop"))
             payload["server_config"] = server_config if server_config else {}
 
         res = self.api_client.post(CREATE_PROJECT_URI, payload)
