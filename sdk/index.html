@@ -4935,11 +4935,11 @@ Stores configuration and prepares the object for use.</p>
 
                   <details class="mkdocstrings-source">
                     <summary>Source code in <code>lexsi_sdk/core/organization.py</code></summary>
-                    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">41</span>
-<span class="normal">42</span>
+                    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">42</span>
 <span class="normal">43</span>
 <span class="normal">44</span>
-<span class="normal">45</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="normal">45</span>
+<span class="normal">46</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Attach API client to the organization instance.</span>
 <span class="sd">    Stores configuration and prepares the object for use.&quot;&quot;&quot;</span>
     <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -5032,8 +5032,7 @@ Stores configuration and prepares the object for use.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/organization.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">47</span>
-<span class="normal">48</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">48</span>
 <span class="normal">49</span>
 <span class="normal">50</span>
 <span class="normal">51</span>
@@ -5047,7 +5046,8 @@ Stores configuration and prepares the object for use.</p>
 <span class="normal">59</span>
 <span class="normal">60</span>
 <span class="normal">61</span>
-<span class="normal">62</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">add_user_to_organization</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_email</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="normal">62</span>
+<span class="normal">63</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">add_user_to_organization</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_email</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Invite a user to join the organization by sending an invitation email. Requires the user’s email address and uses the organization ID internally to associate the user.</span>
 
 <span class="sd">    :param user_email: Email of user to be added to organization.</span>
@@ -5222,11 +5222,7 @@ For Dropbox, an authentication link will be generated during execution, and user
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/organization.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">227</span>
-<span class="normal">228</span>
-<span class="normal">229</span>
-<span class="normal">230</span>
-<span class="normal">231</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">231</span>
 <span class="normal">232</span>
 <span class="normal">233</span>
 <span class="normal">234</span>
@@ -5397,7 +5393,11 @@ For Dropbox, an authentication link will be generated during execution, and user
 <span class="normal">399</span>
 <span class="normal">400</span>
 <span class="normal">401</span>
-<span class="normal">402</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">create_data_connectors</span><span class="p">(</span>
+<span class="normal">402</span>
+<span class="normal">403</span>
+<span class="normal">404</span>
+<span class="normal">405</span>
+<span class="normal">406</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">create_data_connectors</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">data_connector_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">data_connector_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -5695,8 +5695,7 @@ defaults to local</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/organization.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">165</span>
-<span class="normal">166</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">166</span>
 <span class="normal">167</span>
 <span class="normal">168</span>
 <span class="normal">169</span>
@@ -5740,7 +5739,11 @@ defaults to local</p>
 <span class="normal">207</span>
 <span class="normal">208</span>
 <span class="normal">209</span>
-<span class="normal">210</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">create_workspace</span><span class="p">(</span>
+<span class="normal">210</span>
+<span class="normal">211</span>
+<span class="normal">212</span>
+<span class="normal">213</span>
+<span class="normal">214</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">create_workspace</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span> <span class="n">workspace_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">server_type</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">server_config</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">CustomServerConfig</span><span class="p">]</span> <span class="o">=</span> <span class="n">CustomServerConfig</span><span class="p">()</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Workspace</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a new workspace within the organization. Accepts a workspace name and an optional server_type to specify the compute instance. Returns a Workspace object for the newly created workspace.</span>
@@ -5773,6 +5776,9 @@ defaults to local</p>
         <span class="p">)</span>
 
         <span class="n">payload</span><span class="p">[</span><span class="s2">&quot;instance_type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">server_type</span>
+        <span class="k">if</span> <span class="n">server_config</span> <span class="ow">and</span> <span class="n">server_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;start&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="n">server_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;stop&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="n">server_config</span><span class="p">[</span><span class="s2">&quot;start&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">normalize_time</span><span class="p">(</span><span class="n">server_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;start&quot;</span><span class="p">))</span>
+            <span class="n">server_config</span><span class="p">[</span><span class="s2">&quot;stop&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">normalize_time</span><span class="p">(</span><span class="n">server_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;stop&quot;</span><span class="p">))</span>
         <span class="n">payload</span><span class="p">[</span><span class="s2">&quot;server_config&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">server_config</span> <span class="k">if</span> <span class="n">server_config</span> <span class="k">else</span> <span class="p">{}</span>
 
     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">organization_id</span><span class="p">:</span>
@@ -5810,13 +5816,13 @@ defaults to local</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/organization.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">535</span>
-<span class="normal">536</span>
-<span class="normal">537</span>
-<span class="normal">538</span>
-<span class="normal">539</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">539</span>
 <span class="normal">540</span>
-<span class="normal">541</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">credits</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="normal">541</span>
+<span class="normal">542</span>
+<span class="normal">543</span>
+<span class="normal">544</span>
+<span class="normal">545</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">credits</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return credit usage and quota information for the organization.&quot;&quot;&quot;</span>
     <span class="n">url</span> <span class="o">=</span> <span class="n">build_list_data_connector_url</span><span class="p">(</span>
         <span class="n">COMPUTE_CREDIT_URI</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">organization_id</span>
@@ -5878,11 +5884,7 @@ defaults to local</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/organization.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">419</span>
-<span class="normal">420</span>
-<span class="normal">421</span>
-<span class="normal">422</span>
-<span class="normal">423</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">423</span>
 <span class="normal">424</span>
 <span class="normal">425</span>
 <span class="normal">426</span>
@@ -5892,7 +5894,11 @@ defaults to local</p>
 <span class="normal">430</span>
 <span class="normal">431</span>
 <span class="normal">432</span>
-<span class="normal">433</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">delete_data_connectors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_connector_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="normal">433</span>
+<span class="normal">434</span>
+<span class="normal">435</span>
+<span class="normal">436</span>
+<span class="normal">437</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">delete_data_connectors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_connector_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Delete a data connector from the organization using its name. This removes the external data link and returns a confirmation message.</span>
 
 <span class="sd">    :param data_connector_name: name of the data connector to be deleted.</span>
@@ -5931,11 +5937,7 @@ defaults to local</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/organization.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">435</span>
-<span class="normal">436</span>
-<span class="normal">437</span>
-<span class="normal">438</span>
-<span class="normal">439</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">439</span>
 <span class="normal">440</span>
 <span class="normal">441</span>
 <span class="normal">442</span>
@@ -5954,7 +5956,11 @@ defaults to local</p>
 <span class="normal">455</span>
 <span class="normal">456</span>
 <span class="normal">457</span>
-<span class="normal">458</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">list_data_connectors</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="normal">458</span>
+<span class="normal">459</span>
+<span class="normal">460</span>
+<span class="normal">461</span>
+<span class="normal">462</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">list_data_connectors</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;List all data connectors configured in the organization. If successful, returns a DataFrame with details about each connector; otherwise returns an error message.&quot;&quot;&quot;</span>
     <span class="n">url</span> <span class="o">=</span> <span class="n">build_list_data_connector_url</span><span class="p">(</span>
         <span class="n">LIST_DATA_CONNECTORS</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">organization_id</span>
@@ -6033,11 +6039,7 @@ defaults to local</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/organization.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">460</span>
-<span class="normal">461</span>
-<span class="normal">462</span>
-<span class="normal">463</span>
-<span class="normal">464</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">464</span>
 <span class="normal">465</span>
 <span class="normal">466</span>
 <span class="normal">467</span>
@@ -6048,7 +6050,11 @@ defaults to local</p>
 <span class="normal">472</span>
 <span class="normal">473</span>
 <span class="normal">474</span>
-<span class="normal">475</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">list_data_connectors_buckets</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_connector_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">List</span><span class="p">:</span>
+<span class="normal">475</span>
+<span class="normal">476</span>
+<span class="normal">477</span>
+<span class="normal">478</span>
+<span class="normal">479</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">list_data_connectors_buckets</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_connector_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">List</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Retrieve the list of buckets (for S3 or GCS connectors) or similar container names for the specified data connector.</span>
 
 <span class="sd">    :param data_connector_name: name of the data connector</span>
@@ -6151,11 +6157,7 @@ defaults to local</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/organization.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">477</span>
-<span class="normal">478</span>
-<span class="normal">479</span>
-<span class="normal">480</span>
-<span class="normal">481</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">481</span>
 <span class="normal">482</span>
 <span class="normal">483</span>
 <span class="normal">484</span>
@@ -6207,7 +6209,11 @@ defaults to local</p>
 <span class="normal">530</span>
 <span class="normal">531</span>
 <span class="normal">532</span>
-<span class="normal">533</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">list_data_connectors_filepath</span><span class="p">(</span>
+<span class="normal">533</span>
+<span class="normal">534</span>
+<span class="normal">535</span>
+<span class="normal">536</span>
+<span class="normal">537</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">list_data_connectors_filepath</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">data_connector_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">bucket_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -6311,8 +6317,7 @@ defaults to local</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/organization.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 83</span>
-<span class="normal"> 84</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 84</span>
 <span class="normal"> 85</span>
 <span class="normal"> 86</span>
 <span class="normal"> 87</span>
@@ -6336,7 +6341,8 @@ defaults to local</p>
 <span class="normal">105</span>
 <span class="normal">106</span>
 <span class="normal">107</span>
-<span class="normal">108</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">member_details</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="normal">108</span>
+<span class="normal">109</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">member_details</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a DataFrame containing details about members of the organization, including their names, emails, roles (owner/admin), and creation dates.</span>
 
 <span class="sd">    :return: member details dataframe</span>
@@ -6440,8 +6446,7 @@ defaults to local</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/organization.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">64</span>
-<span class="normal">65</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">65</span>
 <span class="normal">66</span>
 <span class="normal">67</span>
 <span class="normal">68</span>
@@ -6457,7 +6462,8 @@ defaults to local</p>
 <span class="normal">78</span>
 <span class="normal">79</span>
 <span class="normal">80</span>
-<span class="normal">81</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">remove_user_from_organization</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_email</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="normal">81</span>
+<span class="normal">82</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">remove_user_from_organization</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_email</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Remove an existing user from the organization using their email address. Returns a confirmation message on success.</span>
 
 <span class="sd">    :param user_email: Email of user to be removed from organization.</span>
@@ -6530,11 +6536,7 @@ defaults to local</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/organization.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">404</span>
-<span class="normal">405</span>
-<span class="normal">406</span>
-<span class="normal">407</span>
-<span class="normal">408</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">408</span>
 <span class="normal">409</span>
 <span class="normal">410</span>
 <span class="normal">411</span>
@@ -6543,7 +6545,11 @@ defaults to local</p>
 <span class="normal">414</span>
 <span class="normal">415</span>
 <span class="normal">416</span>
-<span class="normal">417</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">test_data_connectors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_connector_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="normal">417</span>
+<span class="normal">418</span>
+<span class="normal">419</span>
+<span class="normal">420</span>
+<span class="normal">421</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">test_data_connectors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_connector_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Test the connection of an existing data connector to ensure credentials and connectivity are valid. Takes the connector name as input and returns the status of the connection test.</span>
 
 <span class="sd">    :param data_connector_name: name of the data connector to be tested.</span>
@@ -6651,11 +6657,7 @@ defaults to local</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/organization.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">543</span>
-<span class="normal">544</span>
-<span class="normal">545</span>
-<span class="normal">546</span>
-<span class="normal">547</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">547</span>
 <span class="normal">548</span>
 <span class="normal">549</span>
 <span class="normal">550</span>
@@ -6674,7 +6676,11 @@ defaults to local</p>
 <span class="normal">563</span>
 <span class="normal">564</span>
 <span class="normal">565</span>
-<span class="normal">566</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">update_user_access_for_organization</span><span class="p">(</span>
+<span class="normal">566</span>
+<span class="normal">567</span>
+<span class="normal">568</span>
+<span class="normal">569</span>
+<span class="normal">570</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">update_user_access_for_organization</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">user_email</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">access_type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;admin&quot;</span><span class="p">,</span> <span class="s2">&quot;user&quot;</span><span class="p">],</span>
@@ -6776,8 +6782,7 @@ defaults to local</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/organization.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">136</span>
-<span class="normal">137</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">137</span>
 <span class="normal">138</span>
 <span class="normal">139</span>
 <span class="normal">140</span>
@@ -6803,7 +6808,8 @@ defaults to local</p>
 <span class="normal">160</span>
 <span class="normal">161</span>
 <span class="normal">162</span>
-<span class="normal">163</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">workspace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">workspace_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Workspace</span><span class="p">:</span>
+<span class="normal">163</span>
+<span class="normal">164</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">workspace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">workspace_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Workspace</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Select a specific workspace by name within the organization and return a Workspace object for further operations.</span>
 
 <span class="sd">    :param workspace_name: Name of the workspace to be used</span>
@@ -6878,8 +6884,7 @@ defaults to local</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/organization.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">110</span>
-<span class="normal">111</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">111</span>
 <span class="normal">112</span>
 <span class="normal">113</span>
 <span class="normal">114</span>
@@ -6902,7 +6907,8 @@ defaults to local</p>
 <span class="normal">131</span>
 <span class="normal">132</span>
 <span class="normal">133</span>
-<span class="normal">134</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">workspaces</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="normal">134</span>
+<span class="normal">135</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">workspaces</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;List all workspaces associated with the organization. Returns a DataFrame with workspace names, access types, creator, and instance details.</span>
 
 <span class="sd">    :return: workspace details dataframe</span>
@@ -7232,10 +7238,7 @@ Stores configuration and prepares the object for use.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/workspace.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">265</span>
-<span class="normal">266</span>
-<span class="normal">267</span>
-<span class="normal">268</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">268</span>
 <span class="normal">269</span>
 <span class="normal">270</span>
 <span class="normal">271</span>
@@ -7245,7 +7248,10 @@ Stores configuration and prepares the object for use.</p>
 <span class="normal">275</span>
 <span class="normal">276</span>
 <span class="normal">277</span>
-<span class="normal">278</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">clear_notifications</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="normal">278</span>
+<span class="normal">279</span>
+<span class="normal">280</span>
+<span class="normal">281</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">clear_notifications</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Clear all notifications for the workspace. Sends a POST request and returns a confirmation message.</span>
 
 <span class="sd">    :raises Exception: _description_</span>
@@ -7477,7 +7483,10 @@ for all available nodes check lexsi.available_node_servers()</p>
 <span class="normal">239</span>
 <span class="normal">240</span>
 <span class="normal">241</span>
-<span class="normal">242</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">create_project</span><span class="p">(</span>
+<span class="normal">242</span>
+<span class="normal">243</span>
+<span class="normal">244</span>
+<span class="normal">245</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">create_project</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">project_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">modality</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -7526,6 +7535,9 @@ for all available nodes check lexsi.available_node_servers()</p>
         <span class="p">)</span>
 
         <span class="n">payload</span><span class="p">[</span><span class="s2">&quot;instance_type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">server_type</span>
+        <span class="k">if</span> <span class="n">server_config</span> <span class="ow">and</span> <span class="n">server_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;start&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="n">server_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;stop&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="n">server_config</span><span class="p">[</span><span class="s2">&quot;start&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">normalize_time</span><span class="p">(</span><span class="n">server_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;start&quot;</span><span class="p">))</span>
+            <span class="n">server_config</span><span class="p">[</span><span class="s2">&quot;stop&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">normalize_time</span><span class="p">(</span><span class="n">server_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;stop&quot;</span><span class="p">))</span>
         <span class="n">payload</span><span class="p">[</span><span class="s2">&quot;server_config&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">server_config</span> <span class="k">if</span> <span class="n">server_config</span> <span class="k">else</span> <span class="p">{}</span>
 
     <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">api_client</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="n">CREATE_PROJECT_URI</span><span class="p">,</span> <span class="n">payload</span><span class="p">)</span>
@@ -7654,10 +7666,7 @@ for all available nodes check lexsi.available_node_servers()</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/workspace.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">244</span>
-<span class="normal">245</span>
-<span class="normal">246</span>
-<span class="normal">247</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">247</span>
 <span class="normal">248</span>
 <span class="normal">249</span>
 <span class="normal">250</span>
@@ -7673,7 +7682,10 @@ for all available nodes check lexsi.available_node_servers()</p>
 <span class="normal">260</span>
 <span class="normal">261</span>
 <span class="normal">262</span>
-<span class="normal">263</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_notifications</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="normal">263</span>
+<span class="normal">264</span>
+<span class="normal">265</span>
+<span class="normal">266</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_notifications</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Get notifications specific to the workspace. Returns a DataFrame listing notifications including the project name, message, and timestamp.</span>
 
 <span class="sd">    :return: DataFrame</span>
@@ -8181,10 +8193,7 @@ for all available nodes check lexsi.available_node_servers()</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/workspace.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">280</span>
-<span class="normal">281</span>
-<span class="normal">282</span>
-<span class="normal">283</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">283</span>
 <span class="normal">284</span>
 <span class="normal">285</span>
 <span class="normal">286</span>
@@ -8194,7 +8203,10 @@ for all available nodes check lexsi.available_node_servers()</p>
 <span class="normal">290</span>
 <span class="normal">291</span>
 <span class="normal">292</span>
-<span class="normal">293</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">start_server</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="normal">293</span>
+<span class="normal">294</span>
+<span class="normal">295</span>
+<span class="normal">296</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">start_server</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Start a dedicated compute server for the workspace, enabling compute-intensive tasks.</span>
 
 <span class="sd">    :return: response</span>
@@ -8255,10 +8267,7 @@ for all available nodes check lexsi.available_node_servers()</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/workspace.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">295</span>
-<span class="normal">296</span>
-<span class="normal">297</span>
-<span class="normal">298</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">298</span>
 <span class="normal">299</span>
 <span class="normal">300</span>
 <span class="normal">301</span>
@@ -8267,7 +8276,10 @@ for all available nodes check lexsi.available_node_servers()</p>
 <span class="normal">304</span>
 <span class="normal">305</span>
 <span class="normal">306</span>
-<span class="normal">307</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">stop_server</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="normal">307</span>
+<span class="normal">308</span>
+<span class="normal">309</span>
+<span class="normal">310</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">stop_server</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Stop the dedicated compute server associated with the workspace.</span>
 
 <span class="sd">    :return: response</span>
@@ -8330,6 +8342,32 @@ for all available instances check lexsi.available_node_servers()</p>
                 <em>required</em>
             </td>
           </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>server_config</code>
+            </td>
+            <td>
+                  <code><span title="typing.Optional">Optional</span>[<a class="autorefs autorefs-internal" title="CustomServerConfig (lexsi_sdk.common.types.CustomServerConfig)" href="#lexsi_sdk.common.types.CustomServerConfig">CustomServerConfig</a>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>project server settings
+{
+    "compute_type": "2xlargeA10G",  # compute_type for workspace
+    "custom_server_config": {
+        "start": "14:00+05:30" or "14:00",  # Start time ("HH:MM±HH:MM" or "HH:MM"; assumed UTC if no offset)
+        "stop": "15:00+05:30" or "15:00"",  # Stop time ("HH:MM±HH:MM" or "HH:MM"; assumed UTC if no offset)
+        "shutdown_after": 5,  # Operation hours for custom server
+        "op_hours": True / False  # Whether to restrict to business hours
+        "auto_start": True / False  # Automatically start the server when requested.
+    }
+}</p>
+              </div>
+            </td>
+            <td>
+                  <code><a class="autorefs autorefs-internal" title="CustomServerConfig (lexsi_sdk.common.types.CustomServerConfig)" href="#lexsi_sdk.common.types.CustomServerConfig">CustomServerConfig</a>()</code>
+            </td>
+          </tr>
       </tbody>
     </table>
 
@@ -8359,10 +8397,7 @@ for all available instances check lexsi.available_node_servers()</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/workspace.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">309</span>
-<span class="normal">310</span>
-<span class="normal">311</span>
-<span class="normal">312</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">312</span>
 <span class="normal">313</span>
 <span class="normal">314</span>
 <span class="normal">315</span>
@@ -8408,11 +8443,36 @@ for all available instances check lexsi.available_node_servers()</p>
 <span class="normal">355</span>
 <span class="normal">356</span>
 <span class="normal">357</span>
-<span class="normal">358</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">update_server</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">server_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">server_config</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">CustomServerConfig</span><span class="p">]</span> <span class="o">=</span> <span class="n">CustomServerConfig</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="normal">358</span>
+<span class="normal">359</span>
+<span class="normal">360</span>
+<span class="normal">361</span>
+<span class="normal">362</span>
+<span class="normal">363</span>
+<span class="normal">364</span>
+<span class="normal">365</span>
+<span class="normal">366</span>
+<span class="normal">367</span>
+<span class="normal">368</span>
+<span class="normal">369</span>
+<span class="normal">370</span>
+<span class="normal">371</span>
+<span class="normal">372</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">update_server</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">server_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">server_config</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">CustomServerConfig</span><span class="p">]</span> <span class="o">=</span> <span class="n">CustomServerConfig</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Change the compute instance type for the workspace by specifying a new server_type. Valid values depend on available custom servers.</span>
 <span class="sd">    :param server_type: dedicated instance to run workloads</span>
 <span class="sd">        for all available instances check lexsi.available_node_servers()</span>
 
+<span class="sd">    :param server_config: project server settings</span>
+<span class="sd">    {</span>
+<span class="sd">        &quot;compute_type&quot;: &quot;2xlargeA10G&quot;,  # compute_type for workspace</span>
+<span class="sd">        &quot;custom_server_config&quot;: {</span>
+<span class="sd">            &quot;start&quot;: &quot;14:00+05:30&quot; or &quot;14:00&quot;,  # Start time (&quot;HH:MM±HH:MM&quot; or &quot;HH:MM&quot;; assumed UTC if no offset)</span>
+<span class="sd">            &quot;stop&quot;: &quot;15:00+05:30&quot; or &quot;15:00&quot;&quot;,  # Stop time (&quot;HH:MM±HH:MM&quot; or &quot;HH:MM&quot;; assumed UTC if no offset)</span>
+<span class="sd">            &quot;shutdown_after&quot;: 5,  # Operation hours for custom server</span>
+<span class="sd">            &quot;op_hours&quot;: True / False  # Whether to restrict to business hours</span>
+<span class="sd">            &quot;auto_start&quot;: True / False  # Automatically start the server when requested.</span>
+<span class="sd">        }</span>
+<span class="sd">    }</span>
 <span class="sd">    :return: response</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">custom_servers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">api_client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">AVAILABLE_CUSTOM_SERVERS_URI</span><span class="p">)</span>
@@ -10663,6 +10723,32 @@ for all available instances check lexsi.available_node_servers()</p>
             </td>
             <td>
                 <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>server_config</code>
+            </td>
+            <td>
+                  <code><span title="typing.Optional">Optional</span>[<a class="autorefs autorefs-internal" title="CustomServerConfig (lexsi_sdk.common.types.CustomServerConfig)" href="#lexsi_sdk.common.types.CustomServerConfig">CustomServerConfig</a>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>project server settings
+{
+    "compute_type": "2xlargeA10G",  # compute_type for workspace
+    "custom_server_config": {
+        "start": "14:00+05:30" or "14:00",  # Start time ("HH:MM±HH:MM" or "HH:MM"; assumed UTC if no offset)
+        "stop": "15:00+05:30" or "15:00"",  # Stop time ("HH:MM±HH:MM" or "HH:MM"; assumed UTC if no offset)
+        "shutdown_after": 5,  # Operation hours for custom server
+        "op_hours": True / False  # Whether to restrict to business hours
+        "auto_start": True / False  # Automatically start the server when requested.
+    }
+}</p>
+              </div>
+            </td>
+            <td>
+                  <code><a class="autorefs autorefs-internal" title="CustomServerConfig (lexsi_sdk.common.types.CustomServerConfig)" href="#lexsi_sdk.common.types.CustomServerConfig">CustomServerConfig</a>()</code>
             </td>
           </tr>
       </tbody>
