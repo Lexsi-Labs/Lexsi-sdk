@@ -206,6 +206,17 @@ class Project(BaseModel):
         :param server_type: dedicated instance to run workloads
             for all available instances check xai.available_custom_servers()
 
+        :param server_config: project server settings
+        {
+            "compute_type": "2xlargeA10G",  # compute_type for workspace
+            "custom_server_config": {
+                "start": "14:00+05:30" or "14:00",  # Start time ("HH:MM±HH:MM" or "HH:MM"; assumed UTC if no offset)
+                "stop": "15:00+05:30" or "15:00"",  # Stop time ("HH:MM±HH:MM" or "HH:MM"; assumed UTC if no offset)
+                "shutdown_after": 5,  # Operation hours for custom server
+                "op_hours": True / False  # Whether to restrict to business hours
+                "auto_start": True / False  # Automatically start the server when requested.
+            }
+        }
         :return: response
         """
         custom_servers = self.api_client.get(AVAILABLE_CUSTOM_SERVERS_URI)
