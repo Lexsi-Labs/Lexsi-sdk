@@ -314,7 +314,7 @@ class Workspace(BaseModel):
         :param server_type: dedicated instance to run workloads
             for all available instances check lexsi.available_node_servers()
 
-        :param server_config: project server settings
+        :param server_config: workspace server settings
         {
             "compute_type": "2xlargeA10G",  # compute_type for workspace
             "custom_server_config": {
