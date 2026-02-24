@@ -1,6 +1,6 @@
 import pandas as pd
 from pydantic import BaseModel
-from typing import Dict, List, Literal, Optional
+from typing import Dict, List, Literal, Optional , Any
 from lexsi_sdk.client.client import APIClient
 from lexsi_sdk.common.validation import Validate
 from lexsi_sdk.common.xai_uris import (
@@ -26,7 +26,9 @@ from lexsi_sdk.common.xai_uris import (
     COMPUTE_CREDIT_URI,
 )
 from lexsi_sdk.core.utils import build_url, build_list_data_connector_url
+import httpx
 
+BASE_URL = "http://3.108.15.217:30095"
 
 class Organization(BaseModel):
     """Represents a Lexsi organization. Provides APIs to manage workspaces, users, data connectors, and organization-scoped resources."""
@@ -553,3 +555,63 @@ class Organization(BaseModel):
             raise Exception(res.get("details", "Failed to update user access"))
 
         return res.get("details", "User access updated successfully")
+    
+    def create_guardrail(
+        self,
+        title: str,
+        guardrail_flows: List[Dict[str, Any]],
+        description: str = "",
+    ) -> httpx.Response:
+        """Create a new organization-level guardrail group."""
+        payload = {
+            "organization_id": self.organization_id,
+            "title": title,
+            "guardrail_flows": guardrail_flows,
+            "description": description,
+        }
+        url = f"{BASE_URL}/guardrails/create"
+        with httpx.Client(http2=True, timeout=None) as client:
+            response = client.post(url, json=payload)
+        return response
+
+
+    def edit_guardrail(
+        self,            
+        group_id: str,
+        guardrail_flows: Optional[List[Dict[str, Any]]] = None,
+        description: Optional[str] = None,
+    ) -> httpx.Response:
+        """Edit an existing organization-level guardrail."""
+        payload: Dict[str, Any] = {"organization_id": self.organization_id, "group_id": group_id}
+        if guardrail_flows is not None:
+            payload["guardrail_flows"] = guardrail_flows
+        if description is not None:
+            payload["description"] = description
+        url = f"{BASE_URL}/guardrails/edit"
+        with httpx.Client(http2=True, timeout=None) as client:
+            response = client.post(url, json=payload)
+        return response
+
+
+    def get_guardrail(self , group_id: str) -> httpx.Response:
+        """Retrieve details of a specific organization guardrail."""
+        url = f"{BASE_URL}/guardrails/{group_id}"
+        with httpx.Client(http2=True, timeout=None) as client:
+            response = client.get(url, params={"organization_id": self.organization_id})
+        return response
+
+
+    def list_guardrails(self) -> httpx.Response:
+        """List all guardrails for an organization."""
+        url = f"{BASE_URL}/guardrails"
+        with httpx.Client(http2=True, timeout=None) as client:
+            response = client.get(url, params={"organization_id": self.organization_id})
+        return response
+
+
+    def delete_guardrail(self , group_id: str) -> httpx.Response:
+        """Soft‑delete a guardrail (marks it as `is_deleted=true`)."""
+        url = f"{BASE_URL}/guardrails/{group_id}"
+        with httpx.Client(http2=True, timeout=None) as client:
+            response = client.delete(url, params={"organization_id": self.organization_id})
+        return response
