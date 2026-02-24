@@ -45,6 +45,7 @@ import json
 from typing import Iterator
 from uuid import UUID
 
+BASE_URL = "http://3.108.15.217:30095"
 
 class TextProject(Project):
     """Specialized project abstraction for text and LLM-based workloads. Supports sessions, messages, traces, guardrails, and token-level explainability."""
@@ -775,114 +776,122 @@ class TextProject(Project):
             raise Exception(res["details"])
 
         return res.get("details")
-    
-    def configure_guardrails_v2(
+
+    def run_guardrails_group(self , guardrails: List[Dict[str, Any]], input_data: str):
+        """Run the provided guardrail flows against the given input.
+
+        Parameters are sent to ``/guardrails/run`` exactly as in your
+        original example.
+        """
+        payload = {"guardrails": guardrails, "input_data": input_data}
+        url = f"{BASE_URL}/guardrails/run"
+        with httpx.Client(http2=True, timeout=None) as client:
+            response = client.post(url, json=payload)
+        return response
+
+
+    def run_project_guardrails(
         self,
-        guardrails : List[dict],
         model_name: str,
-        apply_on: str,
-    ) :
-        """Configure a new guardrail in the project.
-        Requires the guardrail flow list, a list of dictionary which contains the flow name , flow deatils , model details if required, the model name, and where to apply it (input or output). 
-        for example
-            Input - {
-                "input_data": "Hi let's talk about Apple",
-                "guardrails": [
-                    {
-                    "flow": "self check input",
-                    "prompt" : "check if the user have any /{user_input}/ jailbreak content",
-                    "model_alias": "self_check",
-                    "model" : "llama-3.3-70b-versatile",
-                    "engine" : "chat_groq",
-                    "parameters" : {
-                        "groq_api_key" : ""
-                    }
-                    },
-                    {
-                    "flow": "guardrailsai check input",
-                    "guardrails_ai": {
-                        "validators": [
-                        {
-                            "name": "competitor_check",
-                            "parameters": {
-                            "competitors": ["Apple", "Samsung", "Microsoft"]
-                            }
-                        }
-                        ]
-                    }
-                    }
-                ]
-                }
+        input_data: str,
+        apply_on: str = "input",
+    ) -> httpx.Response:
+        """Execute each flow of the applied project guardrail in parallel.
 
-        Returns a confirmation message.
-
-        :param guardrails: list of guardrails
-        :param model_name: Name of the model to which the guardrail applies
-        :param apply_on: Specifies when to apply the guardrail ("input" or "output")
-        :return: a response indicating the result of the configuration operation
+        Calls ``/project/run_parallel``.
         """
         payload = {
-            "guardrail_flows": guardrails,
+            "project_name": self.project_name,
+            "model_name": model_name,
+            "input_data": input_data,
+            "apply_on": apply_on,
+        }
+        url = f"{BASE_URL}/project/run_parallel"
+        with httpx.Client(http2=True, timeout=None) as client:
+            response = client.post(url, json=payload)
+        return response
+
+    def create_guardrail(
+        self,
+        organization_id: str,
+        title: str,
+        guardrail_flows: List[Dict[str, Any]],
+        description: str = "",
+    ) -> httpx.Response:
+        """Create a new organization-level guardrail group."""
+        payload = {
+            "organization_id": organization_id,
+            "title": title,
+            "guardrail_flows": guardrail_flows,
+            "description": description,
+        }
+        url = f"{BASE_URL}/guardrails/create"
+        with httpx.Client(http2=True, timeout=None) as client:
+            response = client.post(url, json=payload)
+        return response
+
+
+    def apply_guardrail_to_models(
+        self,
+        organization_id: str,
+        group_id: str,
+        model_name: str,
+        apply_on: str = "input",
+    ) -> httpx.Response:
+        """Apply an existing organization guardrail to a model in a project."""
+        payload = {
+            "organization_id": organization_id,
+            "project_name": self.project_name,
+            "group_id": group_id,
             "model_name": model_name,
             "apply_on": apply_on,
-            "project_name": self.project_name,
         }
-        CONFIGURE_GUARDRAILS_URI_v2 = "http://3.108.15.217:30095/project/configure"
-        # res = self.api_client.post(CONFIGURE_GUARDRAILS_URI_v2, payload)
-        import httpx
-
+        url = f"{BASE_URL}/guardrails/apply-to-models"
         with httpx.Client(http2=True, timeout=None) as client:
-            response = client.post(CONFIGURE_GUARDRAILS_URI_v2, json=payload)
-        
+            response = client.post(url, json=payload)
         return response
-    
-    def run_project_guardrails_v2(
-        self,
-        model_name: str,
-        input_data : str
-    ) :
-        """
-        Configure the guardrails for any model to run on that
 
-        Returns results of guardrails (passed or failed).
 
-        :param model_name: Name of the model on which the guardrail applies
-        :param input_data: User input ("input" or "output")
-        :return: a response indicating the result of the configuration operation
-        """
-        payload = {
-            "model_name": model_name,
-            "input_data": input_data,
-            "project_name": self.project_name,
-        }
-        CONFIGURE_GUARDRAILS_URI_v2 = "http://3.108.15.217:30095/project/run"
-        # res = self.api_client.post(CONFIGURE_GUARDRAILS_URI_v2, payload)
-        import httpx
-
+    def edit_guardrail(
+        self,            
+        organization_id: str,
+        group_id: str,
+        guardrail_flows: Optional[List[Dict[str, Any]]] = None,
+        description: Optional[str] = None,
+    ) -> httpx.Response:
+        """Edit an existing organization-level guardrail."""
+        payload: Dict[str, Any] = {"organization_id": organization_id, "group_id": group_id}
+        if guardrail_flows is not None:
+            payload["guardrail_flows"] = guardrail_flows
+        if description is not None:
+            payload["description"] = description
+        url = f"{BASE_URL}/guardrails/edit"
         with httpx.Client(http2=True, timeout=None) as client:
-            response = client.post(CONFIGURE_GUARDRAILS_URI_v2, json=payload)
-        
+            response = client.post(url, json=payload)
         return response
-    
-    def run_guardrails_v2(
-        self,
-        guardrails : List[dict],
-        input_data : str
-    ) :
-        """
-        Run the guardrails for any input 
-        """
-        payload = {
-            "guardrails": guardrails,
-            "input_data": input_data,
-        }
-        CONFIGURE_GUARDRAILS_URI_v2 = "http://3.108.15.217:30095/guardrails/run"
-        # res = self.api_client.post(CONFIGURE_GUARDRAILS_URI_v2, payload)
-        import httpx
 
+
+    def get_guardrail(self , organization_id: str, group_id: str) -> httpx.Response:
+        """Retrieve details of a specific organization guardrail."""
+        url = f"{BASE_URL}/guardrails/{group_id}"
         with httpx.Client(http2=True, timeout=None) as client:
-            response = client.post(CONFIGURE_GUARDRAILS_URI_v2, json=payload)
-        
+            response = client.get(url, params={"organization_id": organization_id})
+        return response
+
+
+    def list_guardrails(self , organization_id: str) -> httpx.Response:
+        """List all guardrails for an organization."""
+        url = f"{BASE_URL}/guardrails"
+        with httpx.Client(http2=True, timeout=None) as client:
+            response = client.get(url, params={"organization_id": organization_id})
+        return response
+
+
+    def delete_guardrail(self ,  organization_id: str, group_id: str) -> httpx.Response:
+        """Soft‑delete a guardrail (marks it as `is_deleted=true`)."""
+        url = f"{BASE_URL}/guardrails/{group_id}"
+        with httpx.Client(http2=True, timeout=None) as client:
+            response = client.delete(url, params={"organization_id": organization_id})
         return response
 
 class CaseText(BaseModel):
