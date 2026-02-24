@@ -777,14 +777,14 @@ class TextProject(Project):
 
         return res.get("details")
 
-    def run_guardrails_group(self , guardrails: List[Dict[str, Any]], input_data: str):
+    def run_guardrails(self , guardrails: List[Dict[str, Any]], input_data: str):
         """Run the provided guardrail flows against the given input.
 
         Parameters are sent to ``/guardrails/run`` exactly as in your
         original example.
         """
         payload = {"guardrails": guardrails, "input_data": input_data}
-        url = f"{BASE_URL}/guardrails/run"
+        url = f"{BASE_URL}/guardrails/run-parallel"
         with httpx.Client(http2=True, timeout=None) as client:
             response = client.post(url, json=payload)
         return response
