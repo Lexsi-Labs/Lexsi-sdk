@@ -787,7 +787,7 @@ class TextProject(Project):
         url = f"{BASE_URL}/guardrails/run-parallel"
         with httpx.Client(http2=True, timeout=None) as client:
             response = client.post(url, json=payload)
-        return response
+        return response.json()
 
 
     def run_project_guardrails(
@@ -809,18 +809,17 @@ class TextProject(Project):
         url = f"{BASE_URL}/project/run_parallel"
         with httpx.Client(http2=True, timeout=None) as client:
             response = client.post(url, json=payload)
-        return response
+        return response.json()
     
     def apply_guardrail_to_models(
         self,
-        organization_id: str,
         group_id: str,
         model_name: str,
         apply_on: str = "input",
     ) -> httpx.Response:
         """Apply an existing organization guardrail to a model in a project."""
         payload = {
-            "organization_id": organization_id,
+            "organization_id": self.organization_id,
             "project_name": self.project_name,
             "group_id": group_id,
             "model_name": model_name,
@@ -829,7 +828,7 @@ class TextProject(Project):
         url = f"{BASE_URL}/guardrails/apply-to-models"
         with httpx.Client(http2=True, timeout=None) as client:
             response = client.post(url, json=payload)
-        return response
+        return response.json()
 
 class CaseText(BaseModel):
     """Explainability view for text-based cases. Supports token-level importance, attention visualization, and LLM output analysis."""

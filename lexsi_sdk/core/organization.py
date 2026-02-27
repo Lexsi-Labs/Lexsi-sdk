@@ -572,7 +572,7 @@ class Organization(BaseModel):
         url = f"{BASE_URL}/guardrails/create"
         with httpx.Client(http2=True, timeout=None) as client:
             response = client.post(url, json=payload)
-        return response
+        return response.json()
 
 
     def edit_guardrail(
@@ -590,7 +590,7 @@ class Organization(BaseModel):
         url = f"{BASE_URL}/guardrails/edit"
         with httpx.Client(http2=True, timeout=None) as client:
             response = client.post(url, json=payload)
-        return response
+        return response.json()
 
 
     def get_guardrail(self , group_id: str) -> httpx.Response:
@@ -598,20 +598,29 @@ class Organization(BaseModel):
         url = f"{BASE_URL}/guardrails/{group_id}"
         with httpx.Client(http2=True, timeout=None) as client:
             response = client.get(url, params={"organization_id": self.organization_id})
-        return response
-
+        data = response.json()
+        try:
+            if data["details"]["guardrail"]:
+                return pd.DataFrame(data["details"]["guardrail"])
+        except:
+            return data
+        # return pd.DataFrame(data["details"]["guardrail"])
 
     def list_guardrails(self) -> httpx.Response:
         """List all guardrails for an organization."""
         url = f"{BASE_URL}/guardrails"
         with httpx.Client(http2=True, timeout=None) as client:
             response = client.get(url, params={"organization_id": self.organization_id})
-        return response
-
+        data = response.json()
+        try:
+            if data["details"]["guardrails"]:
+                return pd.DataFrame(data["details"]["guardrails"])
+        except:
+            return data
 
     def delete_guardrail(self , group_id: str) -> httpx.Response:
         """Soft‑delete a guardrail (marks it as `is_deleted=true`)."""
         url = f"{BASE_URL}/guardrails/{group_id}"
         with httpx.Client(http2=True, timeout=None) as client:
             response = client.delete(url, params={"organization_id": self.organization_id})
-        return response
+        return response.json()
