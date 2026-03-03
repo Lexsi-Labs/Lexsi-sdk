@@ -5,13 +5,14 @@ from pydantic import BaseModel
 from typing import Dict, List, Optional, Union
 from lexsi_sdk.client.client import APIClient
 from lexsi_sdk.common.types import (
+    CustomServerConfig,
     ProjectConfig,
     GCSConfig,
     S3Config,
     GDriveConfig,
     SFTPConfig,
 )
-from lexsi_sdk.common.utils import parse_datetime, parse_float, poll_events
+from lexsi_sdk.common.utils import normalize_time, parse_datetime, parse_float, poll_events
 from lexsi_sdk.common.validation import Validate
 import pandas as pd
 from lexsi_sdk.common.xai_uris import (
@@ -50,7 +51,7 @@ from lexsi_sdk.common.xai_uris import (
 import io
 from lexsi_sdk.core.alert import Alert
 from lexsi_sdk.core.dashboard import DASHBOARD_TYPES, Dashboard
-from datetime import datetime
+from datetime import datetime, timedelta
 from lexsi_sdk.core.model_summary import ModelSummary
 from lexsi_sdk.core.utils import build_url, build_list_data_connector_url
 
@@ -200,11 +201,22 @@ class Project(BaseModel):
 
         return res["message"]
 
-    def update_server(self, server_type: str) -> str:
+    def update_server(self, server_type: str, server_config: Optional[CustomServerConfig] = CustomServerConfig()) -> str:
         """Update the dedicated server for the project by specifying a new instance type.
         :param server_type: dedicated instance to run workloads
             for all available instances check lexsi.available_node_servers()
 
+        :param server_config: project server settings
+        {
+            "compute_type": "2xlargeA10G",  # compute_type for workspace
+            "custom_server_config": {
+                "start": "14:00+05:30" or "14:00",  # Start time ("HH:MM±HH:MM" or "HH:MM"; assumed UTC if no offset)
+                "stop": "15:00+05:30" or "15:00"",  # Stop time ("HH:MM±HH:MM" or "HH:MM"; assumed UTC if no offset)
+                "shutdown_after": 5,  # Operation hours for custom server
+                "op_hours": True / False  # Whether to restrict to business hours
+                "auto_start": True / False  # Automatically start the server when requested.
+            }
+        }
         :return: response
         """
         custom_servers = self.api_client.get(AVAILABLE_CUSTOM_SERVERS_URI)
@@ -214,6 +226,24 @@ class Project(BaseModel):
             [server["name"] for server in custom_servers],
         )
 
+        server_config = server_config or {}
+        server_config["start"] = normalize_time(server_config.get("start"))
+        server_config["stop"] = normalize_time(server_config.get("stop"))
+        if server_config["start"] and not server_config["stop"]:
+            raise ValueError("If start is provided, stop cannot be None.")
+
+        if server_config["stop"] and not server_config["start"]:
+            raise ValueError("If stop is provided, start cannot be None.")
+
+        if server_config["start"] and server_config["stop"]:
+            start_dt = datetime.fromisoformat(server_config["start"])
+            stop_dt = datetime.fromisoformat(server_config["stop"])
+
+            if stop_dt - start_dt < timedelta(minutes=15):
+                raise ValueError("Stop time must be at least 15 minutes greater than start time.")
+
+            if not server_config.get("op_hours") and server_config.get("auto_start"):
+                server_config["op_hours"] = True
         payload = {
             "project_name": self.project_name,
             "modify_req": {
@@ -221,7 +251,7 @@ class Project(BaseModel):
                     "project_name": self.user_project_name,
                     "instance_type": server_type,
                 },
-                "update_operational_hours": {},
+                "update_operational_hours": server_config if server_config else {},
             },
         }
 

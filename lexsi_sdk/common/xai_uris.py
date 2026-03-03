@@ -190,6 +190,7 @@ RUN_GUARDRAILS_URI = f"guardrails/run_guardrail"
 GET_AVAILABLE_TEXT_MODELS_URI = f"{API_VERSION_V2}/users/get_available_text_models"
 QUANTIZE_MODELS_URI = f"{API_VERSION_V2}/ai-models/run_quantization_on_model"
 INITIALIZE_TEXT_MODEL_URI = f"{API_VERSION_V2}/users/initalize_text_model"
+MODEL_INFERENCE_SETTINGS_URI = f"{API_VERSION_V2}/ai-models/update_inference_settings"
 TEXT_MODEL_INFERENCE_SETTINGS_URI = (
     f"{API_VERSION_V2}/ai-models/update_text_inference_settings"
 )
