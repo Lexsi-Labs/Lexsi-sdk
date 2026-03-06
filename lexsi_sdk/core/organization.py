@@ -576,6 +576,8 @@ class Organization(BaseModel):
         title: str,
         guardrail_flows: List[Dict[str, Any]],
         description: str = "",
+        is_async: bool = False,
+        block: bool = False
     ) -> httpx.Response:
         """Create a new organization-level guardrail group."""
         payload = {
@@ -583,6 +585,8 @@ class Organization(BaseModel):
             "title": title,
             "guardrail_flows": guardrail_flows,
             "description": description,
+            "is_async" : is_async,
+            "block" : block
         }
         url = f"{BASE_URL}/guardrails/create"
         with httpx.Client(http2=True, timeout=None) as client:
@@ -595,13 +599,22 @@ class Organization(BaseModel):
         group_id: str,
         guardrail_flows: Optional[List[Dict[str, Any]]] = None,
         description: Optional[str] = None,
+        is_async: bool = False,
+        block: bool = False
     ) -> httpx.Response:
         """Edit an existing organization-level guardrail."""
-        payload: Dict[str, Any] = {"organization_id": self.organization_id, "group_id": group_id}
+        payload: Dict[str, Any] = {
+            "organization_id": self.organization_id, 
+            "group_id": group_id, 
+        }
         if guardrail_flows is not None:
             payload["guardrail_flows"] = guardrail_flows
         if description is not None:
             payload["description"] = description
+        if is_async is not None:
+            payload["is_async"] = is_async
+        if block is not None:
+            payload["block"] = block
         url = f"{BASE_URL}/guardrails/edit"
         with httpx.Client(http2=True, timeout=None) as client:
             response = client.post(url, json=payload)

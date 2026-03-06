@@ -853,6 +853,8 @@ class TextProject(Project):
         group_id: str,
         model_name: str,
         apply_on: str = "input",
+        retry : bool = "false",
+        retry_attempts: int = 1
     ) -> httpx.Response:
         """Apply an existing organization guardrail to a model in a project."""
         payload = {
@@ -861,6 +863,8 @@ class TextProject(Project):
             "group_id": group_id,
             "model_name": model_name,
             "apply_on": apply_on,
+            "retry" : retry,
+            "retry_attempts" : retry_attempts
         }
         url = f"{BASE_URL}/guardrails/apply-to-models"
         with httpx.Client(http2=True, timeout=None) as client:
