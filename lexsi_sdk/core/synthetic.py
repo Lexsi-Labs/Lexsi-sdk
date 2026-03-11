@@ -177,21 +177,20 @@ class SyntheticModel(BaseModel):
     def generate_synthetic_data(
         self, num_of_datapoints: int, node: str
     ) -> str:
-        """Generate a specified number of synthetic data points using the model. Accepts the number of data points and an optional instance_type for compute resources. If instance_type is not shared, checks available servers and raises errors for invalid values.
+        """Generate a specified number of synthetic data points using the model. Accepts the number of data points and an optional instance_type for compute resources. If instance_type is not local, checks available servers and raises errors for invalid values.
 
         :param num_of_datapoints: total datapoints to generate
         :param node: type of node to run training
             for all available nodes check lexsi.available_node_servers()
         :return: Response message
         """
-        if node != "shared":
-            available_servers = self.api_client.get(
-                AVAILABLE_SYNTHETIC_CUSTOM_SERVERS_URI
-            )["details"]
-            servers = list(
-                map(lambda instance: instance["instance_name"], available_servers)
-            )
-            Validate.value_against_list("instance_type", node, servers)
+        available_servers = self.api_client.get(
+            AVAILABLE_SYNTHETIC_CUSTOM_SERVERS_URI
+        )["details"]
+        servers = list(
+            map(lambda instance: instance["instance_name"], available_servers)
+        )
+        Validate.value_against_list("instance_type", node, servers)
 
         payload = {
             "project_name": self.project_name,
@@ -229,14 +228,13 @@ class SyntheticModel(BaseModel):
 
         :return: Response message
         """
-        if node != "shared":
-            available_servers = self.api_client.get(
-                AVAILABLE_SYNTHETIC_CUSTOM_SERVERS_URI
-            )["details"]
-            servers = list(
-                map(lambda instance: instance["instance_name"], available_servers)
-            )
-            Validate.value_against_list("instance_type", node, servers)
+        available_servers = self.api_client.get(
+            AVAILABLE_SYNTHETIC_CUSTOM_SERVERS_URI
+        )["details"]
+        servers = list(
+            map(lambda instance: instance["instance_name"], available_servers)
+        )
+        Validate.value_against_list("instance_type", node, servers)
 
         if len(aux_columns) < 2:
             raise Exception("aux_columns requires minimum 2 columns.")
