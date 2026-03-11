@@ -262,7 +262,7 @@ class TabularProject(Project):
         :type peft_config: PEFTParams | None
 
         :param compute_type: Compute instance used for training.
-            Examples: ``"shared"``, ``"small"``, ``"medium"``, ``"large"``,
+            Examples: ``"local"``, ``"small"``, ``"medium"``, ``"large"``,
             ``"T4.small"``, ``"A10G.xmedium"``.
         :type compute_type: str | None
 
@@ -541,7 +541,7 @@ class TabularProject(Project):
         :type peft_config: PEFTParams | None
 
         :param compute_type: Compute instance used for training.
-            Examples: ``"shared"``, ``"small"``, ``"medium"``, ``"large"``,
+            Examples: ``"local"``, ``"small"``, ``"medium"``, ``"large"``,
             ``"T4.small"``, ``"A10G.xmedium"``.
         :type compute_type: str | None
         :return: response
@@ -3797,14 +3797,13 @@ class TabularProject(Project):
 
         project_config = project_config["metadata"]
 
-        if node != "shared":
-            available_servers = self.api_client.get(
-                AVAILABLE_SYNTHETIC_CUSTOM_SERVERS_URI
-            )["details"]
-            servers = list(
-                map(lambda instance: instance["instance_name"], available_servers)
-            )
-            Validate.value_against_list("instance_type", node, servers)
+        available_servers = self.api_client.get(
+            AVAILABLE_SYNTHETIC_CUSTOM_SERVERS_URI
+        )["details"]
+        servers = list(
+            map(lambda instance: instance["instance_name"], available_servers)
+        )
+        Validate.value_against_list("instance_type", node, servers)
 
         all_models_param = self.get_synthetic_model_params()
 
