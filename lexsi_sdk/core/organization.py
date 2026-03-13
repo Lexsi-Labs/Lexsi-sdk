@@ -617,7 +617,7 @@ class Organization(BaseModel):
             payload["block"] = block
         url = f"{BASE_URL}/guardrails/edit"
         with httpx.Client(http2=True, timeout=None) as client:
-            response = client.post(url, json=payload)
+            response = client.put(url, json=payload)
         return response.json()
 
 
@@ -648,7 +648,7 @@ class Organization(BaseModel):
 
     def delete_guardrail(self , group_id: str) -> httpx.Response:
         """Soft‑delete a guardrail (marks it as `is_deleted=true`)."""
-        url = f"{BASE_URL}/guardrails/{group_id}"
+        url = f"{BASE_URL}/guardrailsdelete/{group_id}"
         with httpx.Client(http2=True, timeout=None) as client:
             response = client.delete(url, params={"organization_id": self.organization_id})
         return response.json()
