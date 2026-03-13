@@ -45,6 +45,7 @@ import json
 from typing import Iterator
 from uuid import UUID
 
+BASE_URL = "http://3.108.15.217:30095"
 
 class TextProject(Project):
     """Specialized project abstraction for text and LLM-based workloads. Supports sessions, messages, traces, guardrails, and token-level explainability."""
@@ -813,6 +814,63 @@ class TextProject(Project):
 
         return res.get("details")
 
+    def run_guardrails(self , guardrails: List[Dict[str, Any]], input_data: str):
+        """Run the provided guardrail flows against the given input.
+
+        Parameters are sent to ``/guardrails/run`` exactly as in your
+        original example.
+        """
+        payload = {"guardrails": guardrails, "input_data": input_data}
+        url = f"{BASE_URL}/guardrails/run-parallel"
+        with httpx.Client(http2=True, timeout=None) as client:
+            response = client.post(url, json=payload)
+        return response.json()
+
+
+    def run_project_guardrails(
+        self,
+        model_name: str,
+        input_data: str,
+        apply_on: str = "input",
+    ) -> httpx.Response:
+        """Execute each flow of the applied project guardrail in parallel.
+
+        Calls ``/project/run_parallel``.
+        """
+        payload = {
+            "project_name": self.project_name,
+            "model_name": model_name,
+            "input_data": input_data,
+            "apply_on": apply_on,
+        }
+        url = f"{BASE_URL}/project/run_parallel"
+        with httpx.Client(http2=True, timeout=None) as client:
+            response = client.post(url, json=payload)
+        return response.json()
+    
+    def apply_guardrail_to_models(
+        self,
+        group_id: str,
+        model_name: str,
+        apply_on: str = "input",
+        retry : bool = "false",
+        retry_attempts: int = 1
+    ) -> httpx.Response:
+        """Apply an existing organization guardrail to a model in a project."""
+        payload = {
+            "organization_id": self.organization_id,
+            "project_name": self.project_name,
+            "group_id": group_id,
+            "model_name": model_name,
+            "apply_on": apply_on,
+            "retry" : retry,
+            "retry_attempts" : retry_attempts
+        }
+        url = f"{BASE_URL}/guardrails/apply-to-models"
+        with httpx.Client(http2=True, timeout=None) as client:
+            response = client.post(url, json=payload)
+        return response.json()
+
 class CaseText(BaseModel):
     """Explainability view for text-based cases. Supports token-level importance, attention visualization, and LLM output analysis."""
 
@@ -919,4 +977,3 @@ class CaseText(BaseModel):
         """Return audit details for the text case.
         Encapsulates a small unit of SDK logic and returns the computed result."""
         return self.audit_trail
-

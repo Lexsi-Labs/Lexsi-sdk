@@ -266,3 +266,12 @@ class LEXSI(BaseModel):
             res = res.json()
 
         return res["details"]
+
+    def guardrails_library(self) -> httpx.Response:
+        """List all guardrails for an organization."""
+        BASE_URL = "http://3.108.15.217:30095"
+        url = f"{BASE_URL}/guardrails/library"
+        with httpx.Client(http2=True, timeout=None) as client:
+            response = client.get(url)
+        data = response.json()
+        return pd.DataFrame(data["details"]["guardrails"])
