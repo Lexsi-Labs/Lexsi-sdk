@@ -20,6 +20,7 @@ from lexsi_sdk.common.xai_uris import (
     LOGIN_URI,
     UPLOAD_DATA_PROJECT_URI,
     USER_ORGANIZATION_URI,
+    GUARDRAILS_LIB
 )
 import getpass
 from lexsi_sdk.core.utils import split_cpu_gpu_servers
@@ -266,3 +267,11 @@ class LEXSI(BaseModel):
             res = res.json()
 
         return res["details"]
+
+    def guardrails_library(self) -> pd.DataFrame:
+        """List all guardrails for an organization."""
+        response = self.api_client.get(GUARDRAILS_LIB)
+        if not response["success"]:
+            raise Exception(response.get("details", "Failed to get guardrails library"))
+        data = response
+        return pd.DataFrame(data["details"]["guardrails"])

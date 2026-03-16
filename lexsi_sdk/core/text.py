@@ -35,7 +35,10 @@ from lexsi_sdk.common.xai_uris import (
     RUN_IMAGE_GENERATION,
     RUN_CREATE_EMBEDDING,
     RUN_COMPLETION,
-    GENERATE_TEXT_CASE_URI
+    GENERATE_TEXT_CASE_URI,
+    GUARDRAILS_APPLY_TO_MODEL,
+    GUARDRAILS_RUN,
+
 )
 from lexsi_sdk.core.project import Project
 import pandas as pd
@@ -44,7 +47,6 @@ from lexsi_sdk.core.utils import build_list_data_connector_url
 import json
 from typing import Iterator
 from uuid import UUID
-
 
 class TextProject(Project):
     """Specialized project abstraction for text and LLM-based workloads. Supports sessions, messages, traces, guardrails, and token-level explainability."""
@@ -162,16 +164,15 @@ class TextProject(Project):
         guardrail_config: dict,
         model_name: str,
         apply_on: str,
-    ) -> str:
+    ) -> dict:
         """Configure a new guardrail in the project.
         Requires the guardrail name, a configuration dictionary, the model name, and where to apply it (input or output).
-        Returns a confirmation message.
 
-        :param guardrail_name: Name of the guardrail
-        :param guardrail_config: Configuration dictionary for the guardrail
-        :param model_name: Name of the model to which the guardrail applies
-        :param apply_on: Specifies when to apply the guardrail ("input" or "output")
-        :return: a response indicating the result of the configuration operation
+        :param guardrail_name: Name of the guardrail.
+        :param guardrail_config: Configuration dictionary for the guardrail.
+        :param model_name: Name of the model to which the guardrail applies.
+        :param apply_on: Specifies when to apply the guardrail ("input" or "output").
+        :return: The response details from the API.
         """
         payload = {
             "name": guardrail_name,
@@ -813,6 +814,50 @@ class TextProject(Project):
 
         return res.get("details")
 
+    def run_guardrails(self, guardrails: List[Dict[str, Any]], input_data: str) -> dict:
+        """Run the provided guardrail flows against the given input.
+
+        :param guardrails: Guardrail flow definitions to execute.
+        :param input_data: Input text to validate against the guardrails.
+        :return: The API response data.
+        """
+        payload = {"guardrails": guardrails, "input_data": input_data}
+        res = self.api_client.post(GUARDRAILS_RUN, payload=payload)
+        if not res["success"]:
+            raise Exception(res["details"])
+        return dict(res["data"])
+    
+    def apply_guardrail_to_models(
+        self,
+        group_id: str,
+        model_name: str,
+        apply_on: str = "input",
+        retry: bool = False,
+        retry_attempts: int = 1,
+    ) -> dict:
+        """Apply an existing organization guardrail to a model in a project.
+
+        :param group_id: Identifier of the guardrail group to apply.
+        :param model_name: Name of the model to apply the guardrail to.
+        :param apply_on: Whether to apply the guardrail on "input" or "output".
+        :param retry: Whether to retry on failure.
+        :param retry_attempts: Number of retry attempts.
+        :return: The API response details.
+        """
+        payload = {
+            "organization_id": self.organization_id,
+            "project_name": self.project_name,
+            "group_id": group_id,
+            "model_name": model_name,
+            "apply_on": apply_on,
+            "retry": retry,
+            "retry_attempts": retry_attempts,
+        }
+        res = self.api_client.post(GUARDRAILS_APPLY_TO_MODEL, payload=payload)
+        if not res["success"]:
+            raise Exception(res["details"])
+        return dict(res["details"])
+
 class CaseText(BaseModel):
     """Explainability view for text-based cases. Supports token-level importance, attention visualization, and LLM output analysis."""
 
@@ -919,4 +964,3 @@ class CaseText(BaseModel):
         """Return audit details for the text case.
         Encapsulates a small unit of SDK logic and returns the computed result."""
         return self.audit_trail
-

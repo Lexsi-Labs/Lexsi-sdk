@@ -1,6 +1,6 @@
 import pandas as pd
 from pydantic import BaseModel
-from typing import Dict, List, Literal, Optional
+from typing import Dict, List, Literal, Optional , Any
 from lexsi_sdk.client.client import APIClient
 from lexsi_sdk.common.utils import normalize_time
 from lexsi_sdk.common.validation import Validate
@@ -11,7 +11,7 @@ from lexsi_sdk.common.xai_uris import (
     INVITE_USER_ORGANIZATION_URI,
     ORGANIZATION_MEMBERS_URI,
     REMOVE_USER_ORGANIZATION_URI,
-    UPDATE_ORGANIZATION_URI,
+    UPDATE_ORGANIZATION_URI
 )
 from lexsi_sdk.core.workspace import Workspace
 from lexsi_sdk.common.types import CustomServerConfig, GCSConfig, S3Config, GDriveConfig, SFTPConfig
@@ -26,7 +26,9 @@ from lexsi_sdk.common.xai_uris import (
     LIST_FILEPATHS,
     COMPUTE_CREDIT_URI,
 )
+from lexsi_sdk.common.xai_uris import *
 from lexsi_sdk.core.utils import build_url, build_list_data_connector_url
+import httpx
 
 
 class Organization(BaseModel):
@@ -568,3 +570,113 @@ class Organization(BaseModel):
             raise Exception(res.get("details", "Failed to update user access"))
 
         return res.get("details", "User access updated successfully")
+    
+    def create_guardrail(
+        self,
+        title: str,
+        guardrail_flows: List[Dict[str, Any]],
+        description: str = "",
+        is_async: bool = False,
+        block: bool = False
+    ) -> dict:
+        """Create a new organization-level guardrail group.
+
+        :param title: Title of the guardrail group.
+        :param guardrail_flows: List of guardrail flow definitions.
+        :param description: Optional description for the guardrail group.
+        :param is_async: Whether to execute the guardrail asynchronously.
+        :param block: Whether the guardrail should block on violations.
+        :return: The created guardrail group details.
+        """
+        payload = {
+            "organization_id": self.organization_id,
+            "title": title,
+            "guardrail_flows": guardrail_flows,
+            "description": description,
+            "is_async" : is_async,
+            "block" : block
+        }
+        res = self.api_client.post(GUARDRAILS_CREATE, payload=payload)
+        if not res["success"]:
+            raise Exception(res.get("details", "Failed to create guardrails"))
+        return dict(res["details"])
+
+
+    def edit_guardrail(
+        self,
+        group_id: str,
+        guardrail_flows: Optional[List[Dict[str, Any]]] = None,
+        description: Optional[str] = None,
+        is_async: bool = False,
+        block: bool = False
+    ) -> dict:
+        """Edit an existing organization-level guardrail.
+
+        :param group_id: Identifier of the guardrail group.
+        :param guardrail_flows: Updated list of guardrail flow definitions.
+        :param description: Updated description for the guardrail group.
+        :param is_async: Whether to execute the guardrail asynchronously.
+        :param block: Whether the guardrail should block on violations.
+        :return: The updated guardrail group details.
+        """
+        payload: Dict[str, Any] = {
+            "organization_id": self.organization_id, 
+            "group_id": group_id, 
+        }
+        if guardrail_flows is not None:
+            payload["guardrail_flows"] = guardrail_flows
+        if description is not None:
+            payload["description"] = description
+        if is_async is not None:
+            payload["is_async"] = is_async
+        if block is not None:
+            payload["block"] = block
+        res = self.api_client.put(GUARDRAILS_EDIT, payload=payload)
+        if not res["success"]:
+            raise Exception(res.get("details", "Failed to edit guardrails"))
+        
+        return dict(res["details"])
+
+
+    def get_guardrail(self, group_id: str) -> pd.DataFrame | dict:
+        """Retrieve details of a specific organization guardrail.
+
+        :param group_id: Identifier of the guardrail group.
+        :return: Guardrail details as a DataFrame when available, otherwise a dict.
+        """
+        response = self.api_client.get(f"{GUARDRAILS_GET}/{group_id}?organization_id={self.organization_id}")
+        data = response
+        if not response["success"]:
+            raise Exception(response.get("details", "Failed to get guardrails"))
+        try:
+            if data["details"]["guardrail"]:
+                return pd.DataFrame(data["details"]["guardrail"])
+        except:
+            return dict(data["details"])
+        # return pd.DataFrame(data["details"]["guardrail"])
+
+    def list_guardrails(self) -> pd.DataFrame | dict:
+        """List all guardrails for an organization.
+
+        :return: A DataFrame of guardrails when available, otherwise a dict.
+        """
+        response = self.api_client.get(f"{GUARDRAILS_LIST}?organization_id={self.organization_id}")
+        data = response
+        if not response["success"]:
+            raise Exception(response.get("details", "Failed to list guardrails"))
+        try:
+            if data["details"]["guardrails"]:
+                return pd.DataFrame(data["details"]["guardrails"])
+        except:
+            return dict(data["details"])
+
+    def delete_guardrail(self, group_id: str) -> str:
+        """Soft-delete a guardrail (marks it as `is_deleted=true`).
+
+        :param group_id: Identifier of the guardrail group to delete.
+        :return: Confirmation message from the API.
+        """
+        response = self.api_client.delete(f"{GUARDRAILS_DELETE}/{group_id}?organization_id={self.organization_id}")
+        if not response["success"]:
+            raise Exception(response.get("details", "Failed to delete guardrails"))
+        return str(response["details"])
