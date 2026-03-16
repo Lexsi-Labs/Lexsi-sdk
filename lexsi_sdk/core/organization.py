@@ -11,7 +11,7 @@ from lexsi_sdk.common.xai_uris import (
     INVITE_USER_ORGANIZATION_URI,
     ORGANIZATION_MEMBERS_URI,
     REMOVE_USER_ORGANIZATION_URI,
-    UPDATE_ORGANIZATION_URI,
+    UPDATE_ORGANIZATION_URI
 )
 from lexsi_sdk.core.workspace import Workspace
 from lexsi_sdk.common.types import CustomServerConfig, GCSConfig, S3Config, GDriveConfig, SFTPConfig
@@ -26,10 +26,10 @@ from lexsi_sdk.common.xai_uris import (
     LIST_FILEPATHS,
     COMPUTE_CREDIT_URI,
 )
+from lexsi_sdk.common.xai_uris import *
 from lexsi_sdk.core.utils import build_url, build_list_data_connector_url
 import httpx
 
-BASE_URL = "http://3.108.15.217:30095"
 
 class Organization(BaseModel):
     """Represents a Lexsi organization. Provides APIs to manage workspaces, users, data connectors, and organization-scoped resources."""
@@ -588,10 +588,8 @@ class Organization(BaseModel):
             "is_async" : is_async,
             "block" : block
         }
-        url = f"{BASE_URL}/guardrails/create"
-        with httpx.Client(http2=True, timeout=None) as client:
-            response = client.post(url, json=payload)
-        return response.json()
+        response = self.api_client.post(GUARDRAILS_CREATE, payload=payload)
+        return response
 
 
     def edit_guardrail(
@@ -615,18 +613,14 @@ class Organization(BaseModel):
             payload["is_async"] = is_async
         if block is not None:
             payload["block"] = block
-        url = f"{BASE_URL}/guardrails/edit"
-        with httpx.Client(http2=True, timeout=None) as client:
-            response = client.put(url, json=payload)
-        return response.json()
+        response = self.api_client.put(GUARDRAILS_EDIT, payload=payload)
+        return response
 
 
     def get_guardrail(self , group_id: str) -> httpx.Response:
         """Retrieve details of a specific organization guardrail."""
-        url = f"{BASE_URL}/guardrails/{group_id}"
-        with httpx.Client(http2=True, timeout=None) as client:
-            response = client.get(url, params={"organization_id": self.organization_id})
-        data = response.json()
+        response = self.api_client.get(f"{GUARDRAILS_GET}/{group_id}?organization_id={self.organization_id}")
+        data = response
         try:
             if data["details"]["guardrail"]:
                 return pd.DataFrame(data["details"]["guardrail"])
@@ -636,10 +630,8 @@ class Organization(BaseModel):
 
     def list_guardrails(self) -> httpx.Response:
         """List all guardrails for an organization."""
-        url = f"{BASE_URL}/guardrails"
-        with httpx.Client(http2=True, timeout=None) as client:
-            response = client.get(url, params={"organization_id": self.organization_id})
-        data = response.json()
+        response = self.api_client.get(f"{GUARDRAILS_LIST}?organization_id={self.organization_id}")
+        data = response
         try:
             if data["details"]["guardrails"]:
                 return pd.DataFrame(data["details"]["guardrails"])
@@ -648,7 +640,6 @@ class Organization(BaseModel):
 
     def delete_guardrail(self , group_id: str) -> httpx.Response:
         """Soft‑delete a guardrail (marks it as `is_deleted=true`)."""
-        url = f"{BASE_URL}/guardrailsdelete/{group_id}"
-        with httpx.Client(http2=True, timeout=None) as client:
-            response = client.delete(url, params={"organization_id": self.organization_id})
-        return response.json()
+        print(GUARDRAILS_DELETE)
+        response = self.api_client.delete(f"{GUARDRAILS_DELETE}/{group_id}?organization_id={self.organization_id}")
+        return response

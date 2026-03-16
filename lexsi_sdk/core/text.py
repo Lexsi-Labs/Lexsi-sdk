@@ -35,7 +35,10 @@ from lexsi_sdk.common.xai_uris import (
     RUN_IMAGE_GENERATION,
     RUN_CREATE_EMBEDDING,
     RUN_COMPLETION,
-    GENERATE_TEXT_CASE_URI
+    GENERATE_TEXT_CASE_URI,
+    GUARDRAILS_APPLY_TO_MODEL,
+    GUARDRAILS_RUN,
+
 )
 from lexsi_sdk.core.project import Project
 import pandas as pd
@@ -44,8 +47,6 @@ from lexsi_sdk.core.utils import build_list_data_connector_url
 import json
 from typing import Iterator
 from uuid import UUID
-
-BASE_URL = "http://3.108.15.217:30095"
 
 class TextProject(Project):
     """Specialized project abstraction for text and LLM-based workloads. Supports sessions, messages, traces, guardrails, and token-level explainability."""
@@ -821,32 +822,8 @@ class TextProject(Project):
         original example.
         """
         payload = {"guardrails": guardrails, "input_data": input_data}
-        url = f"{BASE_URL}/guardrails/run-parallel"
-        with httpx.Client(http2=True, timeout=None) as client:
-            response = client.post(url, json=payload)
-        return response.json()
-
-
-    def run_project_guardrails(
-        self,
-        model_name: str,
-        input_data: str,
-        apply_on: str = "input",
-    ) -> httpx.Response:
-        """Execute each flow of the applied project guardrail in parallel.
-
-        Calls ``/project/run_parallel``.
-        """
-        payload = {
-            "project_name": self.project_name,
-            "model_name": model_name,
-            "input_data": input_data,
-            "apply_on": apply_on,
-        }
-        url = f"{BASE_URL}/project/run_parallel"
-        with httpx.Client(http2=True, timeout=None) as client:
-            response = client.post(url, json=payload)
-        return response.json()
+        response = self.api_client.post(GUARDRAILS_RUN, payload=payload)
+        return response
     
     def apply_guardrail_to_models(
         self,
@@ -866,10 +843,8 @@ class TextProject(Project):
             "retry" : retry,
             "retry_attempts" : retry_attempts
         }
-        url = f"{BASE_URL}/guardrails/apply-to-models"
-        with httpx.Client(http2=True, timeout=None) as client:
-            response = client.post(url, json=payload)
-        return response.json()
+        response = self.api_client.post(GUARDRAILS_APPLY_TO_MODEL, payload=payload)
+        return response
 
 class CaseText(BaseModel):
     """Explainability view for text-based cases. Supports token-level importance, attention visualization, and LLM output analysis."""

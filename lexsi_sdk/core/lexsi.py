@@ -20,6 +20,7 @@ from lexsi_sdk.common.xai_uris import (
     LOGIN_URI,
     UPLOAD_DATA_PROJECT_URI,
     USER_ORGANIZATION_URI,
+    GUARDRAILS_LIB
 )
 import getpass
 from lexsi_sdk.core.utils import split_cpu_gpu_servers
@@ -269,9 +270,6 @@ class LEXSI(BaseModel):
 
     def guardrails_library(self) -> httpx.Response:
         """List all guardrails for an organization."""
-        BASE_URL = "http://3.108.15.217:30095"
-        url = f"{BASE_URL}/guardrails/library"
-        with httpx.Client(http2=True, timeout=None) as client:
-            response = client.get(url)
-        data = response.json()
+        response = self.api_client.get(GUARDRAILS_LIB)
+        data = response
         return pd.DataFrame(data["details"]["guardrails"])
