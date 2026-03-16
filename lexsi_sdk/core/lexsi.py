@@ -268,7 +268,7 @@ class LEXSI(BaseModel):
 
         return res["details"]
 
-    def guardrails_library(self) -> httpx.Response:
+    def guardrails_library(self) -> pd.DataFrame:
         """List all guardrails for an organization."""
         response = self.api_client.get(GUARDRAILS_LIB)
         if not response["success"]:

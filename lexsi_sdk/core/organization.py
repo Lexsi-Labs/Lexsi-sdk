@@ -578,8 +578,16 @@ class Organization(BaseModel):
         description: str = "",
         is_async: bool = False,
         block: bool = False
-    ) -> httpx.Response:
-        """Create a new organization-level guardrail group."""
+    ) -> dict:
+        """Create a new organization-level guardrail group.
+
+        :param title: Title of the guardrail group.
+        :param guardrail_flows: List of guardrail flow definitions.
+        :param description: Optional description for the guardrail group.
+        :param is_async: Whether to execute the guardrail asynchronously.
+        :param block: Whether the guardrail should block on violations.
+        :return: The created guardrail group details.
+        """
         payload = {
             "organization_id": self.organization_id,
             "title": title,
@@ -595,14 +603,22 @@ class Organization(BaseModel):
 
 
     def edit_guardrail(
-        self,            
+        self,
         group_id: str,
         guardrail_flows: Optional[List[Dict[str, Any]]] = None,
         description: Optional[str] = None,
         is_async: bool = False,
         block: bool = False
-    ) -> httpx.Response:
-        """Edit an existing organization-level guardrail."""
+    ) -> dict:
+        """Edit an existing organization-level guardrail.
+
+        :param group_id: Identifier of the guardrail group.
+        :param guardrail_flows: Updated list of guardrail flow definitions.
+        :param description: Updated description for the guardrail group.
+        :param is_async: Whether to execute the guardrail asynchronously.
+        :param block: Whether the guardrail should block on violations.
+        :return: The updated guardrail group details.
+        """
         payload: Dict[str, Any] = {
             "organization_id": self.organization_id, 
             "group_id": group_id, 
@@ -622,8 +638,12 @@ class Organization(BaseModel):
         return dict(res["details"])
 
 
-    def get_guardrail(self , group_id: str) -> httpx.Response:
-        """Retrieve details of a specific organization guardrail."""
+    def get_guardrail(self, group_id: str) -> pd.DataFrame | dict:
+        """Retrieve details of a specific organization guardrail.
+
+        :param group_id: Identifier of the guardrail group.
+        :return: Guardrail details as a DataFrame when available, otherwise a dict.
+        """
         response = self.api_client.get(f"{GUARDRAILS_GET}/{group_id}?organization_id={self.organization_id}")
         data = response
         if not response["success"]:
@@ -635,8 +655,11 @@ class Organization(BaseModel):
             return dict(data["details"])
         # return pd.DataFrame(data["details"]["guardrail"])
 
-    def list_guardrails(self) -> httpx.Response:
-        """List all guardrails for an organization."""
+    def list_guardrails(self) -> pd.DataFrame | dict:
+        """List all guardrails for an organization.
+
+        :return: A DataFrame of guardrails when available, otherwise a dict.
+        """
         response = self.api_client.get(f"{GUARDRAILS_LIST}?organization_id={self.organization_id}")
         data = response
         if not response["success"]:
@@ -647,9 +670,12 @@ class Organization(BaseModel):
         except:
             return dict(data["details"])
 
-    def delete_guardrail(self , group_id: str) -> httpx.Response:
-        """Soft‑delete a guardrail (marks it as `is_deleted=true`)."""
-        print(GUARDRAILS_DELETE)
+    def delete_guardrail(self, group_id: str) -> str:
+        """Soft-delete a guardrail (marks it as `is_deleted=true`).
+
+        :param group_id: Identifier of the guardrail group to delete.
+        :return: Confirmation message from the API.
+        """
         response = self.api_client.delete(f"{GUARDRAILS_DELETE}/{group_id}?organization_id={self.organization_id}")
         if not response["success"]:
             raise Exception(response.get("details", "Failed to delete guardrails"))
