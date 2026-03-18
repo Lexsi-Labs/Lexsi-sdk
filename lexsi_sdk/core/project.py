@@ -987,6 +987,10 @@ def build_expression(expression_string):
         "==": "_ISEQ",
         ">": "_GRT",
         "<": "_LST",
+        "in": "_ISIN",
+        "notin": "_NOTIN",
+        "contains": "_CONTAINS",
+        "notcontains": "_DOESNOTCONTAINS    "
     }
     logical_operators = {"and": "_AND", "or": "_OR"}
 
