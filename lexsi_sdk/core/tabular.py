@@ -2773,7 +2773,8 @@ class TabularProject(Project):
         explainability_method = (
             data_conf.get("explainability_method") 
             or data_conf.get("xai_method")
-            or project_config.get("metadata", {}).get("xai_method")
+            or project_config.get("metadata", {}).get("xai_method") 
+            or project_config.get("metadata", {}).get("explainability_method") 
         )
 
         tags = data_conf.get("tags") or project_config["metadata"]["tags"]
