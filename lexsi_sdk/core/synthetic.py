@@ -175,13 +175,13 @@ class SyntheticModel(BaseModel):
     '''
 
     def generate_synthetic_data(
-        self, num_of_datapoints: int, node: str
+        self, num_of_datapoints: int, pod: str
     ) -> str:
         """Generate a specified number of synthetic data points using the model. Accepts the number of data points and an optional instance_type for compute resources. If instance_type is not local, checks available servers and raises errors for invalid values.
 
         :param num_of_datapoints: total datapoints to generate
-        :param node: type of node to run training
-            for all available nodes check lexsi.available_node_servers()
+        :param pod: type of pod to run training
+            for all available pods check lexsi.available_pod_servers()
         :return: Response message
         """
         available_servers = self.api_client.get(
@@ -190,12 +190,12 @@ class SyntheticModel(BaseModel):
         servers = list(
             map(lambda instance: instance["instance_name"], available_servers)
         )
-        Validate.value_against_list("instance_type", node, servers)
+        Validate.value_against_list("instance_type", pod, servers)
 
         payload = {
             "project_name": self.project_name,
             "model_name": self.model_name,
-            "instance_type": node,
+            "instance_type": pod,
             "num_of_datapoints": num_of_datapoints,
         }
 
@@ -217,14 +217,14 @@ class SyntheticModel(BaseModel):
         self,
         aux_columns: List[str],
         control_tag: str,
-        node: str,
+        pod: str,
     ) -> str:
         """generate anonymity score
 
         :param aux_columns: list of features
         :param control_tag: tag
-        :param node: type of node to run training
-            for all available node check lexsi.available_node_servers(type="GPU")
+        :param pod: type of pod to run training
+            for all available node check lexsi.available_pod_servers(type="GPU")
 
         :return: Response message
         """
@@ -234,7 +234,7 @@ class SyntheticModel(BaseModel):
         servers = list(
             map(lambda instance: instance["instance_name"], available_servers)
         )
-        Validate.value_against_list("instance_type", node, servers)
+        Validate.value_against_list("instance_type", pod, servers)
 
         if len(aux_columns) < 2:
             raise Exception("aux_columns requires minimum 2 columns.")
@@ -254,7 +254,7 @@ class SyntheticModel(BaseModel):
             "control_tag": control_tag,
             "model_name": self.model_name,
             "project_name": self.project_name,
-            "instance_type": node,
+            "instance_type": pod,
         }
 
         res = self.api_client.post(GENERATE_ANONYMITY_SCORE_URI, payload)
@@ -280,7 +280,7 @@ class SyntheticModel(BaseModel):
 
         if not res["success"]:
             print(res["details"])
-            raise Exception("Error while getting anonymity score.")
+            raise Exception("Anonymity score not found. Please generate it to view the results.")
 
         print("metadata:")
         print(res["details"]["metadata"])

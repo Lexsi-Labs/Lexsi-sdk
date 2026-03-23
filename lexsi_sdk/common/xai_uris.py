@@ -176,6 +176,12 @@ IMAGE_DL = f"{API_VERSION_V2}/evals/"
 
 # Agents
 EXPLAINABILITY_SUMMARY = f"{API_VERSION_V2}/agents/explainability_summary"
+AGENT_DEPLOYMENTS_URI = f"{API_VERSION_V2}/project/agent_deployments"
+CREATE_AGENT_DEPLOYMENT_URI = f"{API_VERSION_V2}/project/create_agent_deployment"
+START_AGENT_DEPLOYMENTS_URI = f"{API_VERSION_V2}/project/start_agent_deployment"
+STOP_AGENT_DEPLOYMENTS_URI = f"{API_VERSION_V2}/project/stop_agent_deployment"
+DELETE_AGENT_DEPLOYMENT_URI = f"{API_VERSION_V2}/project/delete_agent_deployment"
+UPDATE_AGENT_DEPLOYMENT_URI = f"{API_VERSION_V2}/project/update_agent_deployment"
 
 # Text
 MESSAGES_URI = f"sessions/get_session_messages"
@@ -199,3 +205,13 @@ RUN_CHAT_COMPLETION = f"gateway/v1/chat/completions"
 RUN_IMAGE_GENERATION = f"gateway/v1/images/generations"
 RUN_CREATE_EMBEDDING = f"gateway/v1/embeddings"
 RUN_COMPLETION = f"gateway/v1/completions"
+
+GUARDRAILS_LIB = f"guardrails/library"
+GUARDRAILS_RUN = f"guardrails/run-parallel"
+GUARDRAILS_CREATE = f"guardrails/create"
+GUARDRAILS_APPLY_TO_MODEL = f"guardrails/apply-to-models"
+GUARDRAILS_LIST = f"guardrails"
+GUARDRAILS_UPDATE_STATUS = f"guardrails/update_guardrails_status"
+GUARDRAILS_DELETE = "guardrailsdelete"
+GUARDRAILS_EDIT = f"guardrails/edit"
+GUARDRAILS_GET = "guardrails/get_guardrail"

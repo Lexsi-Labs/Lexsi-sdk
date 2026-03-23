@@ -3752,7 +3752,7 @@ class TabularProject(Project):
     def train_synthetic_model(
         self,
         model_name: str,
-        node: str,
+        pod: str,
         data_config: Optional[SyntheticDataConfig] = {},
         hyper_params: Optional[SyntheticModelHyperParams] = {},
     ) -> str:
@@ -3785,8 +3785,8 @@ class TabularProject(Project):
                 "test_ratio": float [0, 1] defaults to 0.2
             }
             defaults to {}
-        :param node: type of node to run training
-            for all available GPU nodes check lexsi.available_node_servers(type="GPU")
+        :param pod: type of pod to run training
+            for all available GPU pods check lexsi.available_pod_servers(type="GPU")
 
         :return: response
         """
@@ -3804,7 +3804,7 @@ class TabularProject(Project):
         servers = list(
             map(lambda instance: instance["instance_name"], available_servers)
         )
-        Validate.value_against_list("instance_type", node, servers)
+        Validate.value_against_list("instance_type", pod, servers)
 
         all_models_param = self.get_synthetic_model_params()
 
@@ -3875,7 +3875,7 @@ class TabularProject(Project):
         payload = {
             "project_name": self.project_name,
             "model_name": model_name,
-            "instance_type": node,
+            "instance_type": pod,
             "metadata": {
                 "model_name": model_name,
                 "tags": tags,

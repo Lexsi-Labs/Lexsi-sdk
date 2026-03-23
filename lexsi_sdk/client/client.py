@@ -149,6 +149,30 @@ class APIClient(BaseModel):
         response = self.base_request("POST", uri, payload)
 
         return response.json()
+    def delete(self, uri, payload={}):
+        """makes post request to xai base service
+
+        :param uri: api uri
+        :raises Exception: Request exception
+        :return: JSON response
+        """
+
+        self.refresh_bearer_token()
+        response = self.base_request("DELETE", uri)
+
+        return response.json()
+    def put(self, uri, payload={}):
+        """makes post request to xai base service
+
+        :param uri: api uri
+        :raises Exception: Request exception
+        :return: JSON response
+        """
+
+        self.refresh_bearer_token()
+        response = self.base_request("put", uri , payload)
+
+        return response.json()
 
     def stream(self, uri, method, payload=None):
         """Server-Sent Events / line-streaming endpoint.
