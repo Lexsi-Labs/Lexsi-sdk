@@ -262,7 +262,7 @@ class TabularProject(Project):
         :type peft_config: PEFTParams | None
 
         :param compute_type: Compute instance used for training.
-            Examples: ``"shared"``, ``"small"``, ``"medium"``, ``"large"``,
+            Examples: ``"local"``, ``"small"``, ``"medium"``, ``"large"``,
             ``"T4.small"``, ``"A10G.xmedium"``.
         :type compute_type: str | None
 
@@ -541,7 +541,7 @@ class TabularProject(Project):
         :type peft_config: PEFTParams | None
 
         :param compute_type: Compute instance used for training.
-            Examples: ``"shared"``, ``"small"``, ``"medium"``, ``"large"``,
+            Examples: ``"local"``, ``"small"``, ``"medium"``, ``"large"``,
             ``"T4.small"``, ``"A10G.xmedium"``.
         :type compute_type: str | None
         :return: response
@@ -2773,7 +2773,8 @@ class TabularProject(Project):
         explainability_method = (
             data_conf.get("explainability_method") 
             or data_conf.get("xai_method")
-            or project_config.get("metadata", {}).get("xai_method")
+            or project_config.get("metadata", {}).get("xai_method") 
+            or project_config.get("metadata", {}).get("explainability_method") 
         )
 
         tags = data_conf.get("tags") or project_config["metadata"]["tags"]

@@ -177,7 +177,7 @@ class SyntheticModel(BaseModel):
     def generate_synthetic_data(
         self, num_of_datapoints: int, pod: str
     ) -> str:
-        """Generate a specified number of synthetic data points using the model. Accepts the number of data points and an optional instance_type for compute resources. If instance_type is not shared, checks available servers and raises errors for invalid values.
+        """Generate a specified number of synthetic data points using the model. Accepts the number of data points and an optional instance_type for compute resources. If instance_type is not local, checks available servers and raises errors for invalid values.
 
         :param num_of_datapoints: total datapoints to generate
         :param pod: type of pod to run training
