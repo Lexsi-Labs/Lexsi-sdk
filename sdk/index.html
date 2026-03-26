@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../assets/LexsiLogo.svg">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.5">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -13060,8 +13060,7 @@ Encapsulates a small unit of SDK logic and returns the computed result.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/tabular.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">3007</span>
-<span class="normal">3008</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">3008</span>
 <span class="normal">3009</span>
 <span class="normal">3010</span>
 <span class="normal">3011</span>
@@ -13082,7 +13081,8 @@ Encapsulates a small unit of SDK logic and returns the computed result.</p>
 <span class="normal">3026</span>
 <span class="normal">3027</span>
 <span class="normal">3028</span>
-<span class="normal">3029</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">available_models</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="normal">3029</span>
+<span class="normal">3030</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">available_models</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns all models which can be trained on Lexsi</span>
 
 <span class="sd">    :return: list of all models</span>
@@ -13281,8 +13281,7 @@ Eg:- ['shap', 'lime', 'dtree', 'ig', 'gradcam', 'dlb']</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/tabular.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">2904</span>
-<span class="normal">2905</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">2905</span>
 <span class="normal">2906</span>
 <span class="normal">2907</span>
 <span class="normal">2908</span>
@@ -13348,7 +13347,8 @@ Eg:- ['shap', 'lime', 'dtree', 'ig', 'gradcam', 'dlb']</p>
 <span class="normal">2968</span>
 <span class="normal">2969</span>
 <span class="normal">2970</span>
-<span class="normal">2971</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">case_predict</span><span class="p">(</span>
+<span class="normal">2971</span>
+<span class="normal">2972</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">case_predict</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">unique_identifier</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">case_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -13542,8 +13542,7 @@ Eg:- ['shap', 'lime', 'dtree', 'ig', 'gradcam', 'dlb']</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/tabular.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">2849</span>
-<span class="normal">2850</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">2850</span>
 <span class="normal">2851</span>
 <span class="normal">2852</span>
 <span class="normal">2853</span>
@@ -13595,7 +13594,8 @@ Eg:- ['shap', 'lime', 'dtree', 'ig', 'gradcam', 'dlb']</p>
 <span class="normal">2899</span>
 <span class="normal">2900</span>
 <span class="normal">2901</span>
-<span class="normal">2902</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">cases</span><span class="p">(</span>
+<span class="normal">2902</span>
+<span class="normal">2903</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">cases</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">unique_identifier</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">tag</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -14171,8 +14171,7 @@ Eg: The building type is {BldgType}
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/tabular.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">3249</span>
-<span class="normal">3250</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">3250</span>
 <span class="normal">3251</span>
 <span class="normal">3252</span>
 <span class="normal">3253</span>
@@ -14232,7 +14231,8 @@ Eg: The building type is {BldgType}
 <span class="normal">3307</span>
 <span class="normal">3308</span>
 <span class="normal">3309</span>
-<span class="normal">3310</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">create_observation</span><span class="p">(</span>
+<span class="normal">3310</span>
+<span class="normal">3311</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">create_observation</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">observation_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">expression</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -14477,8 +14477,7 @@ Eg: The building type is {BldgType}
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/tabular.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">3560</span>
-<span class="normal">3561</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">3561</span>
 <span class="normal">3562</span>
 <span class="normal">3563</span>
 <span class="normal">3564</span>
@@ -14540,7 +14539,8 @@ Eg: The building type is {BldgType}
 <span class="normal">3620</span>
 <span class="normal">3621</span>
 <span class="normal">3622</span>
-<span class="normal">3623</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">create_policy</span><span class="p">(</span>
+<span class="normal">3623</span>
+<span class="normal">3624</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">create_policy</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">policy_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">expression</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -15417,8 +15417,7 @@ If baseline_tags and current_tags are not provided, the previously executed data
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/tabular.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">2973</span>
-<span class="normal">2974</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">2974</span>
 <span class="normal">2975</span>
 <span class="normal">2976</span>
 <span class="normal">2977</span>
@@ -15449,7 +15448,8 @@ If baseline_tags and current_tags are not provided, the previously executed data
 <span class="normal">3002</span>
 <span class="normal">3003</span>
 <span class="normal">3004</span>
-<span class="normal">3005</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">delete_cases</span><span class="p">(</span>
+<span class="normal">3005</span>
+<span class="normal">3006</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">delete_cases</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">unique_identifier</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">start_date</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -15693,8 +15693,7 @@ If baseline_tags and current_tags are not provided, the previously executed data
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/tabular.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">3389</span>
-<span class="normal">3390</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">3390</span>
 <span class="normal">3391</span>
 <span class="normal">3392</span>
 <span class="normal">3393</span>
@@ -15717,7 +15716,8 @@ If baseline_tags and current_tags are not provided, the previously executed data
 <span class="normal">3410</span>
 <span class="normal">3411</span>
 <span class="normal">3412</span>
-<span class="normal">3413</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">delete_observation</span><span class="p">(</span>
+<span class="normal">3413</span>
+<span class="normal">3414</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">delete_observation</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">observation_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">observation_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -15836,8 +15836,7 @@ If baseline_tags and current_tags are not provided, the previously executed data
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/tabular.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">3718</span>
-<span class="normal">3719</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">3719</span>
 <span class="normal">3720</span>
 <span class="normal">3721</span>
 <span class="normal">3722</span>
@@ -15860,7 +15859,8 @@ If baseline_tags and current_tags are not provided, the previously executed data
 <span class="normal">3739</span>
 <span class="normal">3740</span>
 <span class="normal">3741</span>
-<span class="normal">3742</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">delete_policy</span><span class="p">(</span>
+<span class="normal">3742</span>
+<span class="normal">3743</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">delete_policy</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">policy_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">policy_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -16108,8 +16108,7 @@ Calls the backend duplication endpoint and returns the server response message.<
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/tabular.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">3232</span>
-<span class="normal">3233</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">3233</span>
 <span class="normal">3234</span>
 <span class="normal">3235</span>
 <span class="normal">3236</span>
@@ -16123,7 +16122,8 @@ Calls the backend duplication endpoint and returns the server response message.<
 <span class="normal">3244</span>
 <span class="normal">3245</span>
 <span class="normal">3246</span>
-<span class="normal">3247</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">duplicate_observation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observation_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">new_observation_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="normal">3247</span>
+<span class="normal">3248</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">duplicate_observation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observation_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">new_observation_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Duplicate an existing observation under a new name.</span>
 <span class="sd">    Calls the backend duplication endpoint and returns the server response message.</span>
 
@@ -16232,8 +16232,7 @@ Calls the backend duplication endpoint and returns the server response message.<
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/tabular.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">3543</span>
-<span class="normal">3544</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">3544</span>
 <span class="normal">3545</span>
 <span class="normal">3546</span>
 <span class="normal">3547</span>
@@ -16247,7 +16246,8 @@ Calls the backend duplication endpoint and returns the server response message.<
 <span class="normal">3555</span>
 <span class="normal">3556</span>
 <span class="normal">3557</span>
-<span class="normal">3558</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">duplicate_policy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">policy_name</span><span class="p">,</span> <span class="n">new_policy_name</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="normal">3558</span>
+<span class="normal">3559</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">duplicate_policy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">policy_name</span><span class="p">,</span> <span class="n">new_policy_name</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Duplicate an existing policy under a new name.</span>
 <span class="sd">    Calls the backend duplication endpoint and returns the server response message.</span>
 
@@ -19252,12 +19252,12 @@ defaults to None</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/tabular.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">3744</span>
-<span class="normal">3745</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">3745</span>
 <span class="normal">3746</span>
 <span class="normal">3747</span>
 <span class="normal">3748</span>
-<span class="normal">3749</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_synthetic_model_params</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="normal">3749</span>
+<span class="normal">3750</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_synthetic_model_params</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;get hyper parameters of synthetic models</span>
 
 <span class="sd">    :return: hyper params</span>
@@ -20115,8 +20115,7 @@ key values for payload:
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/tabular.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">3053</span>
-<span class="normal">3054</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">3054</span>
 <span class="normal">3055</span>
 <span class="normal">3056</span>
 <span class="normal">3057</span>
@@ -20163,7 +20162,8 @@ key values for payload:
 <span class="normal">3098</span>
 <span class="normal">3099</span>
 <span class="normal">3100</span>
-<span class="normal">3101</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">model_inference_settings</span><span class="p">(</span>
+<span class="normal">3101</span>
+<span class="normal">3102</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">model_inference_settings</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span> <span class="n">model_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">inference_compute</span><span class="p">:</span> <span class="n">InferenceCompute</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Update Model Inference Settings</span>
@@ -20495,8 +20495,7 @@ key values for payload:
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/tabular.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">3155</span>
-<span class="normal">3156</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">3156</span>
 <span class="normal">3157</span>
 <span class="normal">3158</span>
 <span class="normal">3159</span>
@@ -20570,7 +20569,8 @@ key values for payload:
 <span class="normal">3227</span>
 <span class="normal">3228</span>
 <span class="normal">3229</span>
-<span class="normal">3230</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">observation_trail</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="normal">3230</span>
+<span class="normal">3231</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">observation_trail</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;List of Observation Trail</span>
 
 <span class="sd">    :return: observation trail details dataframe</span>
@@ -20693,8 +20693,7 @@ key values for payload:
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/tabular.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">3103</span>
-<span class="normal">3104</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">3104</span>
 <span class="normal">3105</span>
 <span class="normal">3106</span>
 <span class="normal">3107</span>
@@ -20743,7 +20742,8 @@ key values for payload:
 <span class="normal">3150</span>
 <span class="normal">3151</span>
 <span class="normal">3152</span>
-<span class="normal">3153</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">observations</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="normal">3153</span>
+<span class="normal">3154</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">observations</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;List of Observations</span>
 
 <span class="sd">    :return: observation details dataframe</span>
@@ -20841,8 +20841,7 @@ key values for payload:
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/tabular.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">3415</span>
-<span class="normal">3416</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">3416</span>
 <span class="normal">3417</span>
 <span class="normal">3418</span>
 <span class="normal">3419</span>
@@ -20890,7 +20889,8 @@ key values for payload:
 <span class="normal">3461</span>
 <span class="normal">3462</span>
 <span class="normal">3463</span>
-<span class="normal">3464</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">policies</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="normal">3464</span>
+<span class="normal">3465</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">policies</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;List of Policies</span>
 
 <span class="sd">    :return: policy details dataframe</span>
@@ -20987,8 +20987,7 @@ key values for payload:
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/tabular.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">3466</span>
-<span class="normal">3467</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">3467</span>
 <span class="normal">3468</span>
 <span class="normal">3469</span>
 <span class="normal">3470</span>
@@ -21062,7 +21061,8 @@ key values for payload:
 <span class="normal">3538</span>
 <span class="normal">3539</span>
 <span class="normal">3540</span>
-<span class="normal">3541</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">policy_trail</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="normal">3541</span>
+<span class="normal">3542</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">policy_trail</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;List of Policy Trail</span>
 
 <span class="sd">    :return: observation details dataframe</span>
@@ -23370,7 +23370,8 @@ See :class:<code>lexsi_sdk.common.types.PEFTParams</code>.</p>
 <span class="normal">2843</span>
 <span class="normal">2844</span>
 <span class="normal">2845</span>
-<span class="normal">2846</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">train_model</span><span class="p">(</span>
+<span class="normal">2846</span>
+<span class="normal">2847</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">train_model</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">model_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">compute_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -23722,7 +23723,8 @@ See :class:<code>lexsi_sdk.common.types.PEFTParams</code>.</p>
     <span class="n">explainability_method</span> <span class="o">=</span> <span class="p">(</span>
         <span class="n">data_conf</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;explainability_method&quot;</span><span class="p">)</span> 
         <span class="ow">or</span> <span class="n">data_conf</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;xai_method&quot;</span><span class="p">)</span>
-        <span class="ow">or</span> <span class="n">project_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;metadata&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;xai_method&quot;</span><span class="p">)</span>
+        <span class="ow">or</span> <span class="n">project_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;metadata&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;xai_method&quot;</span><span class="p">)</span> 
+        <span class="ow">or</span> <span class="n">project_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;metadata&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;explainability_method&quot;</span><span class="p">)</span> 
     <span class="p">)</span>
 
     <span class="n">tags</span> <span class="o">=</span> <span class="n">data_conf</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;tags&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">project_config</span><span class="p">[</span><span class="s2">&quot;metadata&quot;</span><span class="p">][</span><span class="s2">&quot;tags&quot;</span><span class="p">]</span>
@@ -23807,7 +23809,7 @@ See :class:<code>lexsi_sdk.common.types.PEFTParams</code>.</p>
 
 
 <a href="#lexsi_sdk.core.tabular.TabularProject.train_synthetic_model" class="headerlink" title="Permanent link">&para;</a></h3>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">train_synthetic_model</span><span class="p">(</span><span class="n">model_name</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">data_config</span><span class="o">=</span><span class="p">{},</span> <span class="n">hyper_params</span><span class="o">=</span><span class="p">{})</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">train_synthetic_model</span><span class="p">(</span><span class="n">model_name</span><span class="p">,</span> <span class="n">pod</span><span class="p">,</span> <span class="n">data_config</span><span class="o">=</span><span class="p">{},</span> <span class="n">hyper_params</span><span class="o">=</span><span class="p">{})</span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -23900,15 +23902,15 @@ defaults to {}</p>
           </tr>
           <tr class="doc-section-item">
             <td>
-                <code>node</code>
+                <code>pod</code>
             </td>
             <td>
                   <code><span title="str">str</span></code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>type of node to run training
-for all available GPU nodes check lexsi.available_node_servers(type="GPU")</p>
+                <p>type of pod to run training
+for all available GPU pods check lexsi.available_pod_servers(type="GPU")</p>
               </div>
             </td>
             <td>
@@ -23944,8 +23946,7 @@ for all available GPU nodes check lexsi.available_node_servers(type="GPU")</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/tabular.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">3751</span>
-<span class="normal">3752</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">3752</span>
 <span class="normal">3753</span>
 <span class="normal">3754</span>
 <span class="normal">3755</span>
@@ -24092,7 +24093,7 @@ for all available GPU nodes check lexsi.available_node_servers(type="GPU")</p>
 <span class="normal">3896</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">train_synthetic_model</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">model_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-    <span class="n">node</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">pod</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">data_config</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SyntheticDataConfig</span><span class="p">]</span> <span class="o">=</span> <span class="p">{},</span>
     <span class="n">hyper_params</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SyntheticModelHyperParams</span><span class="p">]</span> <span class="o">=</span> <span class="p">{},</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
@@ -24125,8 +24126,8 @@ for all available GPU nodes check lexsi.available_node_servers(type="GPU")</p>
 <span class="sd">            &quot;test_ratio&quot;: float [0, 1] defaults to 0.2</span>
 <span class="sd">        }</span>
 <span class="sd">        defaults to {}</span>
-<span class="sd">    :param node: type of node to run training</span>
-<span class="sd">        for all available GPU nodes check lexsi.available_node_servers(type=&quot;GPU&quot;)</span>
+<span class="sd">    :param pod: type of pod to run training</span>
+<span class="sd">        for all available GPU pods check lexsi.available_pod_servers(type=&quot;GPU&quot;)</span>
 
 <span class="sd">    :return: response</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -24138,14 +24139,13 @@ for all available GPU nodes check lexsi.available_node_servers(type="GPU")</p>
 
     <span class="n">project_config</span> <span class="o">=</span> <span class="n">project_config</span><span class="p">[</span><span class="s2">&quot;metadata&quot;</span><span class="p">]</span>
 
-    <span class="k">if</span> <span class="n">node</span> <span class="o">!=</span> <span class="s2">&quot;shared&quot;</span><span class="p">:</span>
-        <span class="n">available_servers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">api_client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
-            <span class="n">AVAILABLE_SYNTHETIC_CUSTOM_SERVERS_URI</span>
-        <span class="p">)[</span><span class="s2">&quot;details&quot;</span><span class="p">]</span>
-        <span class="n">servers</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
-            <span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">instance</span><span class="p">:</span> <span class="n">instance</span><span class="p">[</span><span class="s2">&quot;instance_name&quot;</span><span class="p">],</span> <span class="n">available_servers</span><span class="p">)</span>
-        <span class="p">)</span>
-        <span class="n">Validate</span><span class="o">.</span><span class="n">value_against_list</span><span class="p">(</span><span class="s2">&quot;instance_type&quot;</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">servers</span><span class="p">)</span>
+    <span class="n">available_servers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">api_client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+        <span class="n">AVAILABLE_SYNTHETIC_CUSTOM_SERVERS_URI</span>
+    <span class="p">)[</span><span class="s2">&quot;details&quot;</span><span class="p">]</span>
+    <span class="n">servers</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
+        <span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">instance</span><span class="p">:</span> <span class="n">instance</span><span class="p">[</span><span class="s2">&quot;instance_name&quot;</span><span class="p">],</span> <span class="n">available_servers</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">Validate</span><span class="o">.</span><span class="n">value_against_list</span><span class="p">(</span><span class="s2">&quot;instance_type&quot;</span><span class="p">,</span> <span class="n">pod</span><span class="p">,</span> <span class="n">servers</span><span class="p">)</span>
 
     <span class="n">all_models_param</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_synthetic_model_params</span><span class="p">()</span>
 
@@ -24216,7 +24216,7 @@ for all available GPU nodes check lexsi.available_node_servers(type="GPU")</p>
     <span class="n">payload</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;project_name&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">project_name</span><span class="p">,</span>
         <span class="s2">&quot;model_name&quot;</span><span class="p">:</span> <span class="n">model_name</span><span class="p">,</span>
-        <span class="s2">&quot;instance_type&quot;</span><span class="p">:</span> <span class="n">node</span><span class="p">,</span>
+        <span class="s2">&quot;instance_type&quot;</span><span class="p">:</span> <span class="n">pod</span><span class="p">,</span>
         <span class="s2">&quot;metadata&quot;</span><span class="p">:</span> <span class="p">{</span>
             <span class="s2">&quot;model_name&quot;</span><span class="p">:</span> <span class="n">model_name</span><span class="p">,</span>
             <span class="s2">&quot;tags&quot;</span><span class="p">:</span> <span class="n">tags</span><span class="p">,</span>
@@ -24331,8 +24331,7 @@ for all available GPU nodes check lexsi.available_node_servers(type="GPU")</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/tabular.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">3031</span>
-<span class="normal">3032</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">3032</span>
 <span class="normal">3033</span>
 <span class="normal">3034</span>
 <span class="normal">3035</span>
@@ -24351,7 +24350,8 @@ for all available GPU nodes check lexsi.available_node_servers(type="GPU")</p>
 <span class="normal">3048</span>
 <span class="normal">3049</span>
 <span class="normal">3050</span>
-<span class="normal">3051</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">update_inference_model_status</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">activate</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="normal">3051</span>
+<span class="normal">3052</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">update_inference_model_status</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">activate</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Sets the provided model to active for inferencing</span>
 
 <span class="sd">    :param model_name: name of the model</span>
@@ -24539,8 +24539,7 @@ Eg: The building type is {BldgType}
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/tabular.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">3312</span>
-<span class="normal">3313</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">3313</span>
 <span class="normal">3314</span>
 <span class="normal">3315</span>
 <span class="normal">3316</span>
@@ -24614,7 +24613,8 @@ Eg: The building type is {BldgType}
 <span class="normal">3384</span>
 <span class="normal">3385</span>
 <span class="normal">3386</span>
-<span class="normal">3387</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">update_observation</span><span class="p">(</span>
+<span class="normal">3387</span>
+<span class="normal">3388</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">update_observation</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">observation_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">observation_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -24905,8 +24905,7 @@ Eg: The building type is {BldgType}
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/tabular.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">3625</span>
-<span class="normal">3626</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">3626</span>
 <span class="normal">3627</span>
 <span class="normal">3628</span>
 <span class="normal">3629</span>
@@ -24996,7 +24995,8 @@ Eg: The building type is {BldgType}
 <span class="normal">3713</span>
 <span class="normal">3714</span>
 <span class="normal">3715</span>
-<span class="normal">3716</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">update_policy</span><span class="p">(</span>
+<span class="normal">3716</span>
+<span class="normal">3717</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">update_policy</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">policy_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">policy_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -25481,7 +25481,7 @@ Must match the chosen model family.</p>
             <td>
               <div class="doc-md-description">
                 <p>Compute instance used for training.
-Examples: <code>"shared"</code>, <code>"small"</code>, <code>"medium"</code>, <code>"large"</code>,
+Examples: <code>"local"</code>, <code>"small"</code>, <code>"medium"</code>, <code>"large"</code>,
 <code>"T4.small"</code>, <code>"A10G.xmedium"</code>.</p>
               </div>
             </td>
@@ -25870,7 +25870,7 @@ Examples: <code>"shared"</code>, <code>"small"</code>, <code>"medium"</code>, <c
 <span class="sd">    :type peft_config: PEFTParams | None</span>
 
 <span class="sd">    :param compute_type: Compute instance used for training.</span>
-<span class="sd">        Examples: ``&quot;shared&quot;``, ``&quot;small&quot;``, ``&quot;medium&quot;``, ``&quot;large&quot;``,</span>
+<span class="sd">        Examples: ``&quot;local&quot;``, ``&quot;small&quot;``, ``&quot;medium&quot;``, ``&quot;large&quot;``,</span>
 <span class="sd">        ``&quot;T4.small&quot;``, ``&quot;A10G.xmedium&quot;``.</span>
 <span class="sd">    :type compute_type: str | None</span>
 
@@ -26327,7 +26327,7 @@ Must match the chosen model family.</p>
             <td>
               <div class="doc-md-description">
                 <p>Compute instance used for training.
-Examples: <code>"shared"</code>, <code>"small"</code>, <code>"medium"</code>, <code>"large"</code>,
+Examples: <code>"local"</code>, <code>"small"</code>, <code>"medium"</code>, <code>"large"</code>,
 <code>"T4.small"</code>, <code>"A10G.xmedium"</code>.</p>
               </div>
             </td>
@@ -26707,7 +26707,7 @@ Examples: <code>"shared"</code>, <code>"small"</code>, <code>"medium"</code>, <c
 <span class="sd">    :type peft_config: PEFTParams | None</span>
 
 <span class="sd">    :param compute_type: Compute instance used for training.</span>
-<span class="sd">        Examples: ``&quot;shared&quot;``, ``&quot;small&quot;``, ``&quot;medium&quot;``, ``&quot;large&quot;``,</span>
+<span class="sd">        Examples: ``&quot;local&quot;``, ``&quot;small&quot;``, ``&quot;medium&quot;``, ``&quot;large&quot;``,</span>
 <span class="sd">        ``&quot;T4.small&quot;``, ``&quot;A10G.xmedium&quot;``.</span>
 <span class="sd">    :type compute_type: str | None</span>
 <span class="sd">    :return: response</span>
@@ -43052,7 +43052,9 @@ Stores configuration and prepares the object for use.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/synthetic.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">271</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">269</span>
+<span class="normal">270</span>
+<span class="normal">271</span>
 <span class="normal">272</span>
 <span class="normal">273</span>
 <span class="normal">274</span>
@@ -43070,9 +43072,7 @@ Stores configuration and prepares the object for use.</p>
 <span class="normal">286</span>
 <span class="normal">287</span>
 <span class="normal">288</span>
-<span class="normal">289</span>
-<span class="normal">290</span>
-<span class="normal">291</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">anonymity_score</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="normal">289</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">anonymity_score</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;get anonymity score</span>
 <span class="sd">    :return: anonymity score dataframe</span>
 <span class="sd">    :raises Exception: _description_</span>
@@ -43086,7 +43086,7 @@ Stores configuration and prepares the object for use.</p>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="n">res</span><span class="p">[</span><span class="s2">&quot;success&quot;</span><span class="p">]:</span>
         <span class="nb">print</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="s2">&quot;details&quot;</span><span class="p">])</span>
-        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Error while getting anonymity score.&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Anonymity score not found. Please generate it to view the results.&quot;</span><span class="p">)</span>
 
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;metadata:&quot;</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="s2">&quot;details&quot;</span><span class="p">][</span><span class="s2">&quot;metadata&quot;</span><span class="p">])</span>
@@ -43107,7 +43107,7 @@ Stores configuration and prepares the object for use.</p>
 
 
 <a href="#lexsi_sdk.core.synthetic.SyntheticModel.generate_anonymity_score" class="headerlink" title="Permanent link">&para;</a></h3>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">generate_anonymity_score</span><span class="p">(</span><span class="n">aux_columns</span><span class="p">,</span> <span class="n">control_tag</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">generate_anonymity_score</span><span class="p">(</span><span class="n">aux_columns</span><span class="p">,</span> <span class="n">control_tag</span><span class="p">,</span> <span class="n">pod</span><span class="p">)</span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -43160,15 +43160,15 @@ Stores configuration and prepares the object for use.</p>
           </tr>
           <tr class="doc-section-item">
             <td>
-                <code>node</code>
+                <code>pod</code>
             </td>
             <td>
                   <code><span title="str">str</span></code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>type of node to run training
-for all available node check lexsi.available_node_servers(type="GPU")</p>
+                <p>type of pod to run training
+for all available node check lexsi.available_pod_servers(type="GPU")</p>
               </div>
             </td>
             <td>
@@ -43204,7 +43204,8 @@ for all available node check lexsi.available_node_servers(type="GPU")</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/synthetic.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">217</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">216</span>
+<span class="normal">217</span>
 <span class="normal">218</span>
 <span class="normal">219</span>
 <span class="normal">220</span>
@@ -43254,31 +43255,28 @@ for all available node check lexsi.available_node_servers(type="GPU")</p>
 <span class="normal">264</span>
 <span class="normal">265</span>
 <span class="normal">266</span>
-<span class="normal">267</span>
-<span class="normal">268</span>
-<span class="normal">269</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">generate_anonymity_score</span><span class="p">(</span>
+<span class="normal">267</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">generate_anonymity_score</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">aux_columns</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
     <span class="n">control_tag</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-    <span class="n">node</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">pod</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;generate anonymity score</span>
 
 <span class="sd">    :param aux_columns: list of features</span>
 <span class="sd">    :param control_tag: tag</span>
-<span class="sd">    :param node: type of node to run training</span>
-<span class="sd">        for all available node check lexsi.available_node_servers(type=&quot;GPU&quot;)</span>
+<span class="sd">    :param pod: type of pod to run training</span>
+<span class="sd">        for all available node check lexsi.available_pod_servers(type=&quot;GPU&quot;)</span>
 
 <span class="sd">    :return: Response message</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">node</span> <span class="o">!=</span> <span class="s2">&quot;shared&quot;</span><span class="p">:</span>
-        <span class="n">available_servers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">api_client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
-            <span class="n">AVAILABLE_SYNTHETIC_CUSTOM_SERVERS_URI</span>
-        <span class="p">)[</span><span class="s2">&quot;details&quot;</span><span class="p">]</span>
-        <span class="n">servers</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
-            <span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">instance</span><span class="p">:</span> <span class="n">instance</span><span class="p">[</span><span class="s2">&quot;instance_name&quot;</span><span class="p">],</span> <span class="n">available_servers</span><span class="p">)</span>
-        <span class="p">)</span>
-        <span class="n">Validate</span><span class="o">.</span><span class="n">value_against_list</span><span class="p">(</span><span class="s2">&quot;instance_type&quot;</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">servers</span><span class="p">)</span>
+    <span class="n">available_servers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">api_client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+        <span class="n">AVAILABLE_SYNTHETIC_CUSTOM_SERVERS_URI</span>
+    <span class="p">)[</span><span class="s2">&quot;details&quot;</span><span class="p">]</span>
+    <span class="n">servers</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
+        <span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">instance</span><span class="p">:</span> <span class="n">instance</span><span class="p">[</span><span class="s2">&quot;instance_name&quot;</span><span class="p">],</span> <span class="n">available_servers</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">Validate</span><span class="o">.</span><span class="n">value_against_list</span><span class="p">(</span><span class="s2">&quot;instance_type&quot;</span><span class="p">,</span> <span class="n">pod</span><span class="p">,</span> <span class="n">servers</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">aux_columns</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;aux_columns requires minimum 2 columns.&quot;</span><span class="p">)</span>
@@ -43298,7 +43296,7 @@ for all available node check lexsi.available_node_servers(type="GPU")</p>
         <span class="s2">&quot;control_tag&quot;</span><span class="p">:</span> <span class="n">control_tag</span><span class="p">,</span>
         <span class="s2">&quot;model_name&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_name</span><span class="p">,</span>
         <span class="s2">&quot;project_name&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">project_name</span><span class="p">,</span>
-        <span class="s2">&quot;instance_type&quot;</span><span class="p">:</span> <span class="n">node</span><span class="p">,</span>
+        <span class="s2">&quot;instance_type&quot;</span><span class="p">:</span> <span class="n">pod</span><span class="p">,</span>
     <span class="p">}</span>
 
     <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">api_client</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="n">GENERATE_ANONYMITY_SCORE_URI</span><span class="p">,</span> <span class="n">payload</span><span class="p">)</span>
@@ -43323,12 +43321,12 @@ for all available node check lexsi.available_node_servers(type="GPU")</p>
 
 
 <a href="#lexsi_sdk.core.synthetic.SyntheticModel.generate_synthetic_data" class="headerlink" title="Permanent link">&para;</a></h3>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">generate_synthetic_data</span><span class="p">(</span><span class="n">num_of_datapoints</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">generate_synthetic_data</span><span class="p">(</span><span class="n">num_of_datapoints</span><span class="p">,</span> <span class="n">pod</span><span class="p">)</span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
 
-        <p>Generate a specified number of synthetic data points using the model. Accepts the number of data points and an optional instance_type for compute resources. If instance_type is not shared, checks available servers and raises errors for invalid values.</p>
+        <p>Generate a specified number of synthetic data points using the model. Accepts the number of data points and an optional instance_type for compute resources. If instance_type is not local, checks available servers and raises errors for invalid values.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -43360,15 +43358,15 @@ for all available node check lexsi.available_node_servers(type="GPU")</p>
           </tr>
           <tr class="doc-section-item">
             <td>
-                <code>node</code>
+                <code>pod</code>
             </td>
             <td>
                   <code><span title="str">str</span></code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>type of node to run training
-for all available nodes check lexsi.available_node_servers()</p>
+                <p>type of pod to run training
+for all available pods check lexsi.available_pod_servers()</p>
               </div>
             </td>
             <td>
@@ -43441,30 +43439,28 @@ for all available nodes check lexsi.available_node_servers()</p>
 <span class="normal">211</span>
 <span class="normal">212</span>
 <span class="normal">213</span>
-<span class="normal">214</span>
-<span class="normal">215</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">generate_synthetic_data</span><span class="p">(</span>
-    <span class="bp">self</span><span class="p">,</span> <span class="n">num_of_datapoints</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="nb">str</span>
+<span class="normal">214</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">generate_synthetic_data</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span> <span class="n">num_of_datapoints</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">pod</span><span class="p">:</span> <span class="nb">str</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate a specified number of synthetic data points using the model. Accepts the number of data points and an optional instance_type for compute resources. If instance_type is not shared, checks available servers and raises errors for invalid values.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate a specified number of synthetic data points using the model. Accepts the number of data points and an optional instance_type for compute resources. If instance_type is not local, checks available servers and raises errors for invalid values.</span>
 
 <span class="sd">    :param num_of_datapoints: total datapoints to generate</span>
-<span class="sd">    :param node: type of node to run training</span>
-<span class="sd">        for all available nodes check lexsi.available_node_servers()</span>
+<span class="sd">    :param pod: type of pod to run training</span>
+<span class="sd">        for all available pods check lexsi.available_pod_servers()</span>
 <span class="sd">    :return: Response message</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">node</span> <span class="o">!=</span> <span class="s2">&quot;shared&quot;</span><span class="p">:</span>
-        <span class="n">available_servers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">api_client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
-            <span class="n">AVAILABLE_SYNTHETIC_CUSTOM_SERVERS_URI</span>
-        <span class="p">)[</span><span class="s2">&quot;details&quot;</span><span class="p">]</span>
-        <span class="n">servers</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
-            <span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">instance</span><span class="p">:</span> <span class="n">instance</span><span class="p">[</span><span class="s2">&quot;instance_name&quot;</span><span class="p">],</span> <span class="n">available_servers</span><span class="p">)</span>
-        <span class="p">)</span>
-        <span class="n">Validate</span><span class="o">.</span><span class="n">value_against_list</span><span class="p">(</span><span class="s2">&quot;instance_type&quot;</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">servers</span><span class="p">)</span>
+    <span class="n">available_servers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">api_client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+        <span class="n">AVAILABLE_SYNTHETIC_CUSTOM_SERVERS_URI</span>
+    <span class="p">)[</span><span class="s2">&quot;details&quot;</span><span class="p">]</span>
+    <span class="n">servers</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
+        <span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">instance</span><span class="p">:</span> <span class="n">instance</span><span class="p">[</span><span class="s2">&quot;instance_name&quot;</span><span class="p">],</span> <span class="n">available_servers</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">Validate</span><span class="o">.</span><span class="n">value_against_list</span><span class="p">(</span><span class="s2">&quot;instance_type&quot;</span><span class="p">,</span> <span class="n">pod</span><span class="p">,</span> <span class="n">servers</span><span class="p">)</span>
 
     <span class="n">payload</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;project_name&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">project_name</span><span class="p">,</span>
         <span class="s2">&quot;model_name&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_name</span><span class="p">,</span>
-        <span class="s2">&quot;instance_type&quot;</span><span class="p">:</span> <span class="n">node</span><span class="p">,</span>
+        <span class="s2">&quot;instance_type&quot;</span><span class="p">:</span> <span class="n">pod</span><span class="p">,</span>
         <span class="s2">&quot;num_of_datapoints&quot;</span><span class="p">:</span> <span class="n">num_of_datapoints</span><span class="p">,</span>
     <span class="p">}</span>
 
@@ -43744,11 +43740,11 @@ Stores configuration and prepares the object for use.</p>
 
                   <details class="mkdocstrings-source">
                     <summary>Source code in <code>lexsi_sdk/core/synthetic.py</code></summary>
-                    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">328</span>
+                    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">326</span>
+<span class="normal">327</span>
+<span class="normal">328</span>
 <span class="normal">329</span>
-<span class="normal">330</span>
-<span class="normal">331</span>
-<span class="normal">332</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="normal">330</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Bind API client reference for prompt actions.</span>
 <span class="sd">    Stores configuration and prepares the object for use.&quot;&quot;&quot;</span>
     <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -43810,12 +43806,12 @@ Stores configuration and prepares the object for use.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/synthetic.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">354</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">352</span>
+<span class="normal">353</span>
+<span class="normal">354</span>
 <span class="normal">355</span>
 <span class="normal">356</span>
-<span class="normal">357</span>
-<span class="normal">358</span>
-<span class="normal">359</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_config</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+<span class="normal">357</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_config</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the stored configuration list for the synthetic prompt.</span>
 
 <span class="sd">    :return: prompt configuration</span>
@@ -43868,7 +43864,9 @@ Stores configuration and prepares the object for use.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>lexsi_sdk/core/synthetic.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">334</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">332</span>
+<span class="normal">333</span>
+<span class="normal">334</span>
 <span class="normal">335</span>
 <span class="normal">336</span>
 <span class="normal">337</span>
@@ -43884,9 +43882,7 @@ Stores configuration and prepares the object for use.</p>
 <span class="normal">347</span>
 <span class="normal">348</span>
 <span class="normal">349</span>
-<span class="normal">350</span>
-<span class="normal">351</span>
-<span class="normal">352</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_expression</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="normal">350</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_expression</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Construct the textual expression for the synthetic prompt by concatenating conditional expressions defined in its metadata.</span>
 
 <span class="sd">    :return: prompt expression</span>
