@@ -329,12 +329,12 @@ class TabularProject(Project):
                 )
 
             Validate.check_for_missing_keys(
-                config, ["project_type", "unique_identifier", "true_label"]
+                config, ["unique_identifier", "true_label"]
             )
 
-            Validate.value_against_list(
-                "project_type", config, ["classification", "regression"]
-            )
+            # Validate.value_against_list(
+            #     "project_type", config, ["classification", "regression"]
+            # )
 
             uploaded_path = upload_file_and_return_path(data, "data", tag)
 
