@@ -406,7 +406,6 @@ class TabularProject(Project):
 
             payload = {
                 "project_name": self.project_name,
-                "project_type": config["project_type"],
                 "unique_identifier": config["unique_identifier"],
                 "true_label": config["true_label"],
                 "pred_label": config.get("pred_label"),
@@ -428,6 +427,8 @@ class TabularProject(Project):
                 "instance_type": compute_type,
                 "sample_percentage": config.get("sample_percentage", None),
             }
+            if config.get("project_type"):
+                payload["project_type"] = config.get("project_type")
             if config.get("model_name"):
                 payload["metadata"]["model_name"] = config.get("model_name")
 
@@ -699,7 +700,6 @@ class TabularProject(Project):
 
             payload = {
                 "project_name": self.project_name,
-                "project_type": config["project_type"],
                 "unique_identifier": config["unique_identifier"],
                 "true_label": config["true_label"],
                 "pred_label": config.get("pred_label"),
@@ -716,6 +716,8 @@ class TabularProject(Project):
                 },
                 "instance_type": compute_type
             }
+            if config.get("project_type"):
+                payload["project_type"] = config.get("project_type")
             if config.get("model_name"):
                 payload["metadata"]["model_name"] = config.get("model_name")
             if model_config:
@@ -2794,7 +2796,6 @@ class TabularProject(Project):
 
         payload = {
             "project_name": self.project_name,
-            "project_type": project_config["project_type"],
             "unique_identifier": project_config["unique_identifier"],
             "true_label": project_config["true_label"],
             "metadata": {
@@ -2819,6 +2820,8 @@ class TabularProject(Project):
             )
         }
 
+        if project_config.get("project_type"):
+            payload["metadata"]["project_type"] = project_config["project_type"]
         if tunning_config:
             payload["metadata"]["tunning_parameters"] = tunning_config
         if peft_config:
