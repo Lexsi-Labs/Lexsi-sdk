@@ -278,7 +278,7 @@ class TextProject(Project):
             "inference_settings": inference_settings,
             "assets": assets
         }
-        if inference_compute:
+        if inference_compute and inference_compute.get("custom_server_config", {}):
             server_config = inference_compute.get("custom_server_config", {})
             server_config["start"] = normalize_time(server_config.get("start"))
             server_config["stop"] = normalize_time(server_config.get("stop"))
