@@ -278,25 +278,26 @@ class TextProject(Project):
             "inference_settings": inference_settings,
             "assets": assets
         }
-        if inference_compute and inference_compute.get("custom_server_config", {}):
-            server_config = inference_compute.get("custom_server_config", {})
-            server_config["start"] = normalize_time(server_config.get("start"))
-            server_config["stop"] = normalize_time(server_config.get("stop"))
-            if server_config["start"] and not server_config["stop"]:
-                raise ValueError("If start is provided, stop cannot be None.")
+        if inference_compute:
+            if inference_compute.get("custom_server_config", {}):
+                server_config = inference_compute.get("custom_server_config", {})
+                server_config["start"] = normalize_time(server_config.get("start"))
+                server_config["stop"] = normalize_time(server_config.get("stop"))
+                if server_config["start"] and not server_config["stop"]:
+                    raise ValueError("If start is provided, stop cannot be None.")
 
-            if server_config["stop"] and not server_config["start"]:
-                raise ValueError("If stop is provided, start cannot be None.")
+                if server_config["stop"] and not server_config["start"]:
+                    raise ValueError("If stop is provided, start cannot be None.")
 
-            if server_config["start"] and server_config["stop"]:
-                start_dt = datetime.fromisoformat(server_config["start"])
-                stop_dt = datetime.fromisoformat(server_config["stop"])
+                if server_config["start"] and server_config["stop"]:
+                    start_dt = datetime.fromisoformat(server_config["start"])
+                    stop_dt = datetime.fromisoformat(server_config["stop"])
 
-                if stop_dt - start_dt < timedelta(minutes=15):
-                    raise ValueError("Stop time must be at least 15 minutes greater than start time.")
+                    if stop_dt - start_dt < timedelta(minutes=15):
+                        raise ValueError("Stop time must be at least 15 minutes greater than start time.")
 
-                if not server_config.get("op_hours") and server_config.get("auto_start"):
-                    server_config["op_hours"] = True
+                    if not server_config.get("op_hours") and server_config.get("auto_start"):
+                        server_config["op_hours"] = True
             data["inference_compute"] = {**inference_compute, "instance_type": inference_compute.get("compute_type")}
 
         payload ={
