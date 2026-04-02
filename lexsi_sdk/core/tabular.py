@@ -427,8 +427,6 @@ class TabularProject(Project):
                 "instance_type": compute_type,
                 "sample_percentage": config.get("sample_percentage", None),
             }
-            if config.get("project_type"):
-                payload["project_type"] = config.get("project_type")
             if config.get("model_name"):
                 payload["metadata"]["model_name"] = config.get("model_name")
 
@@ -716,8 +714,6 @@ class TabularProject(Project):
                 },
                 "instance_type": compute_type
             }
-            if config.get("project_type"):
-                payload["project_type"] = config.get("project_type")
             if config.get("model_name"):
                 payload["metadata"]["model_name"] = config.get("model_name")
             if model_config:
