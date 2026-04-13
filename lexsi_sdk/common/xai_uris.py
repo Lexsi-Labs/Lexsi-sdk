@@ -205,6 +205,7 @@ RUN_CHAT_COMPLETION = f"gateway/v1/chat/completions"
 RUN_IMAGE_GENERATION = f"gateway/v1/images/generations"
 RUN_CREATE_EMBEDDING = f"gateway/v1/embeddings"
 RUN_COMPLETION = f"gateway/v1/completions"
+FINETUNE_MODEL_URI = f"{API_VERSION_V2}/ai-models/run_fine_tuning"
 
 GUARDRAILS_LIB = f"guardrails/library"
 GUARDRAILS_RUN = f"guardrails/run-parallel"
