@@ -1,5 +1,5 @@
 from __future__ import annotations
-from datetime import datetime
+from datetime import datetime, timedelta
 import io
 import json
 from typing import Dict, List, Union, Optional
@@ -9,10 +9,10 @@ import pandas as pd
 import plotly.graph_objects as go
 from lexsi_sdk.common.constants import MODEL_PERF_DASHBOARD_REQUIRED_FIELDS, MODEL_TYPES
 from lexsi_sdk.common.monitoring import ImageDashboardPayload, ModelPerformancePayload
-from lexsi_sdk.common.types import CatBoostParams, FoundationalModelParams, LightGBMParams, PEFTParams, ProcessorParams, ProjectConfig, RandomForestParams, TuningParams, XGBoostParams
-from lexsi_sdk.common.utils import poll_events
+from lexsi_sdk.common.types import CatBoostParams, FoundationalModelParams, InferenceCompute, LightGBMParams, PEFTParams, ProcessorParams, ProjectConfig, RandomForestParams, TuningParams, XGBoostParams
+from lexsi_sdk.common.utils import normalize_time, poll_events
 from lexsi_sdk.common.validation import Validate
-from lexsi_sdk.common.xai_uris import ALL_DATA_FILE_URI, AVAILABLE_BATCH_SERVERS_URI, CASE_INFO_URI, CREATE_TRIGGER_URI, DASHBOARD_LOGS_URI, DELETE_CASE_URI, DELETE_TRIGGER_URI, DOWNLOAD_TAG_DATA_URI, DUPLICATE_MONITORS_URI, EXECUTED_TRIGGER_URI, GENERATE_DASHBOARD_URI, GET_CASES_URI, GET_DASHBOARD_SCORE_URI, GET_DASHBOARD_URI, GET_EXECUTED_TRIGGER_INFO, GET_MODEL_TYPES_URI, GET_MODELS_URI, GET_MONITORS_ALERTS, GET_PROJECT_CONFIG, GET_TRIGGERS_URI, GET_TRIGGERS_DAYS_URI, LIST_DATA_CONNECTORS, MODEL_INFERENCES_URI, MODEL_PARAMETERS_URI, MODEL_PERFORMANCE_DASHBOARD_URI, RUN_MODEL_ON_DATA_URI, SEARCH_CASE_URI, UPDATE_ACTIVE_INFERENCE_MODEL_URI, UPLOAD_DATA_FILE_INFO_URI, UPLOAD_DATA_FILE_URI, UPLOAD_DATA_PROJECT_URI, UPLOAD_DATA_URI, UPLOAD_DATA_WITH_CHECK_URI, UPLOAD_FILE_DATA_CONNECTORS, UPLOAD_MODEL_URI
+from lexsi_sdk.common.xai_uris import ALL_DATA_FILE_URI, AVAILABLE_BATCH_SERVERS_URI, CASE_INFO_URI, CREATE_TRIGGER_URI, DASHBOARD_LOGS_URI, DELETE_CASE_URI, DELETE_TRIGGER_URI, DOWNLOAD_TAG_DATA_URI, DUPLICATE_MONITORS_URI, EXECUTED_TRIGGER_URI, GENERATE_DASHBOARD_URI, GET_CASES_URI, GET_DASHBOARD_SCORE_URI, GET_DASHBOARD_URI, GET_EXECUTED_TRIGGER_INFO, GET_MODEL_TYPES_URI, GET_MODELS_URI, GET_MONITORS_ALERTS, GET_PROJECT_CONFIG, GET_TRIGGERS_URI, GET_TRIGGERS_DAYS_URI, LIST_DATA_CONNECTORS, MODEL_INFERENCE_SETTINGS_URI, MODEL_INFERENCES_URI, MODEL_PARAMETERS_URI, MODEL_PERFORMANCE_DASHBOARD_URI, RUN_MODEL_ON_DATA_URI, SEARCH_CASE_URI, UPDATE_ACTIVE_INFERENCE_MODEL_URI, UPLOAD_DATA_FILE_INFO_URI, UPLOAD_DATA_FILE_URI, UPLOAD_DATA_PROJECT_URI, UPLOAD_DATA_URI, UPLOAD_DATA_WITH_CHECK_URI, UPLOAD_FILE_DATA_CONNECTORS, UPLOAD_MODEL_URI
 from lexsi_sdk.core.alert import Alert
 from lexsi_sdk.core.dashboard import DASHBOARD_TYPES, Dashboard
 from lexsi_sdk.core.project import Project
@@ -678,6 +678,55 @@ class ImageProject(Project):
 
         return model_inference_df
 
+    def model_inference_settings(
+        self, model_name: str, inference_compute: InferenceCompute
+    ) -> str:
+        """Update Model Inference Settings
+
+        :param model_name: name of the model to update inference settings
+        :param inference_compute: inference compute settings
+        {
+            "compute_type": "2xlargeA10G",  # compute_type for running inference
+            "custom_server_config": {
+                "start": "14:00+05:30" or "14:00",  # Start time ("HH:MM±HH:MM" or "HH:MM"; assumed UTC if no offset)
+                "stop": "15:00+05:30" or "15:00"",  # Stop time ("HH:MM±HH:MM" or "HH:MM"; assumed UTC if no offset)
+                "shutdown_after": 5,  # Operation hours for custom server
+                "op_hours": True / False  # Whether to restrict to business hours
+                "auto_start": True / False  # Automatically start the server when requested.
+            }
+        }
+        :return: response
+        """
+        if inference_compute.get("compute_type", None):
+            inference_compute["instance_type"] = inference_compute["compute_type"]
+        server_config = inference_compute.get("custom_server_config", {})
+        server_config["start"] = normalize_time(server_config.get("start"))
+        server_config["stop"] = normalize_time(server_config.get("stop"))
+        if server_config["start"] and not server_config["stop"]:
+            raise ValueError("If start is provided, stop cannot be None.")
+
+        if server_config["stop"] and not server_config["start"]:
+            raise ValueError("If stop is provided, start cannot be None.")
+
+        if server_config["start"] and server_config["stop"]:
+            start_dt = datetime.fromisoformat(server_config["start"])
+            stop_dt = datetime.fromisoformat(server_config["stop"])
+
+            if stop_dt - start_dt < timedelta(minutes=15):
+                raise ValueError("Stop time must be at least 15 minutes greater than start time.")
+
+            if not server_config.get("op_hours") and server_config.get("auto_start"):
+                server_config["op_hours"] = True
+
+        payload = {
+            "model_name": model_name,
+            "project_name": self.project_name,
+            "inference_compute": inference_compute,
+        }
+
+        res = self.api_client.post(f"{MODEL_INFERENCE_SETTINGS_URI}", payload)
+        if not res["success"]:
+            raise Exception(res.get("details", "Failed to update inference settings"))
 
     def cases(
         self,
