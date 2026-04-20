@@ -1115,8 +1115,13 @@ class ImageProject(Project):
             "frequency",
             "trigger_name",
         ]
-
+        if payload.get("trigger_type") == "Model Performance":
+            required_payload_keys.append("model_name")
         Validate.check_for_missing_keys(payload, required_payload_keys)
+        if payload.get("trigger_type") == "Model Performance":
+            models = self.models()
+            available_models = models["model_name"].to_list()
+            Validate.value_against_list("model_name", payload.get("model_name"), available_models)
         if payload.get("pod", None):
             payload["instance_type"] = payload["pod"]
         payload = {
