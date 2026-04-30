@@ -692,11 +692,12 @@ class Organization(BaseModel):
             raise Exception(response.get("details", "Failed to delete guardrails"))
         return str(response["details"])
     
-    def duplicate_guardrail(self, group_id: str, new_title: str) -> dict:
+    def duplicate_guardrail(self, group_id: str, new_title: str, description: Optional[str] = None) -> dict:
         """Duplicate an existing guardrail with a new title.
 
         :param group_id: Identifier of the guardrail group to duplicate.
         :param title: Title for the new duplicated guardrail group.
+        :param description: Description for the new duplicated guardrail group.
         :return: The duplicated guardrail group details.
         """
         payload = {
@@ -705,6 +706,8 @@ class Organization(BaseModel):
         }
         if self.organization_id:
             payload["organization_id"] = self.organization_id
+        if description is not None:
+            payload["description"] = description
         res = self.api_client.post(GUARDRAILS_DUPLICATE, payload=payload)
         if not res["success"]:
             raise Exception(res.get("details", "Failed to duplicate guardrail"))

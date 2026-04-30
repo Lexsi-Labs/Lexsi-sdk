@@ -879,7 +879,7 @@ class TextProject(Project):
         res = self.api_client.post(GUARDRAILS_REMOVE_FROM_MODEL, payload=payload)
         if not res["success"]:
             raise Exception(res.get("details", "Failed to remove guardrail from model"))
-        return str(res["details"])
+        return dict(res["details"])
 
 class CaseText(BaseModel):
     """Explainability view for text-based cases. Supports token-level importance, attention visualization, and LLM output analysis."""
