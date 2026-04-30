@@ -707,7 +707,25 @@ class Organization(BaseModel):
         }
         if self.organization_id:
             payload["organization_id"] = self.organization_id
-        res = self.api_client.post(GUARDRAILS_REMOVE_FROM_MODEL, payload=payload)
+        res = self.api_client.post("http://localhost:30095/guardrails/remove-from-model", payload=payload)
         if not res["success"]:
             raise Exception(res.get("details", "Failed to remove guardrail from model"))
-        return str(res["details"])
+        return dict(res["details"])
+    
+    def duplicate_guardrail(self, group_id: str, new_title: str) -> dict:
+        """Duplicate an existing guardrail with a new title.
+
+        :param group_id: Identifier of the guardrail group to duplicate.
+        :param title: Title for the new duplicated guardrail group.
+        :return: The duplicated guardrail group details.
+        """
+        payload = {
+            "group_id": group_id,
+            "new_title": new_title
+        }
+        if self.organization_id:
+            payload["organization_id"] = self.organization_id
+        res = self.api_client.post(GUARDRAILS_DUPLICATE, payload=payload)
+        if not res["success"]:
+            raise Exception(res.get("details", "Failed to duplicate guardrail"))
+        return dict(res["details"])

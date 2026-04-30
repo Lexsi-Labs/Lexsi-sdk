@@ -81,7 +81,7 @@ class APIClient(BaseModel):
         :raises Exception: Request exception
         :return: JSON response
         """
-        url = f"{self.base_url}/{uri}"
+        url = uri if uri.startswith("http") else f"{self.base_url}/{uri}"
         try:
             # response = requests.request(
             #     method,
