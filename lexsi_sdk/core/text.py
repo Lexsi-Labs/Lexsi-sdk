@@ -38,6 +38,7 @@ from lexsi_sdk.common.xai_uris import (
     GENERATE_TEXT_CASE_URI,
     GUARDRAILS_APPLY_TO_MODEL,
     GUARDRAILS_RUN,
+    GUARDRAILS_REMOVE_FROM_MODEL,
 
 )
 from lexsi_sdk.core.project import Project
@@ -860,6 +861,25 @@ class TextProject(Project):
         if not res["success"]:
             raise Exception(res["details"])
         return dict(res["details"])
+
+    def remove_guardrail_from_model(self, model_name: str, apply_on: str = "input") -> str:
+        """Remove a guardrail from a specific model.
+
+        :param model_name: Name of the model to remove the guardrail from.
+        :param apply_on: Whether the guardrail is applied on 'input' or 'output'.
+        :return: Confirmation message from the API.
+        """
+        payload = {
+            "project_name": self.project_name,
+            "model_name": model_name,
+            "apply_on": apply_on,
+        }
+        if self.organization_id:
+            payload["organization_id"] = self.organization_id
+        res = self.api_client.post(GUARDRAILS_REMOVE_FROM_MODEL, payload=payload)
+        if not res["success"]:
+            raise Exception(res.get("details", "Failed to remove guardrail from model"))
+        return str(res["details"])
 
 class CaseText(BaseModel):
     """Explainability view for text-based cases. Supports token-level importance, attention visualization, and LLM output analysis."""

@@ -692,26 +692,6 @@ class Organization(BaseModel):
             raise Exception(response.get("details", "Failed to delete guardrails"))
         return str(response["details"])
     
-    def remove_guardrail_from_model(self, project_name: str, model_name: str, apply_on: str = "input") -> str:
-        """Remove a guardrail from a specific model.
-
-        :param project_name: Name of the project containing the model.
-        :param model_name: Name of the model to remove the guardrail from.
-        :param apply_on: Whether the guardrail is applied on 'input' or 'output'.
-        :return: Confirmation message from the API.
-        """
-        payload = {
-            "project_name": project_name,
-            "model_name": model_name,
-            "apply_on": apply_on
-        }
-        if self.organization_id:
-            payload["organization_id"] = self.organization_id
-        res = self.api_client.post(GUARDRAILS_REMOVE_FROM_MODEL, payload=payload)
-        if not res["success"]:
-            raise Exception(res.get("details", "Failed to remove guardrail from model"))
-        return dict(res["details"])
-    
     def duplicate_guardrail(self, group_id: str, new_title: str) -> dict:
         """Duplicate an existing guardrail with a new title.
 
