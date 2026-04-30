@@ -707,7 +707,7 @@ class Organization(BaseModel):
         }
         if self.organization_id:
             payload["organization_id"] = self.organization_id
-        res = self.api_client.post("http://localhost:30095/guardrails/remove-from-model", payload=payload)
+        res = self.api_client.post(GUARDRAILS_REMOVE_FROM_MODEL, payload=payload)
         if not res["success"]:
             raise Exception(res.get("details", "Failed to remove guardrail from model"))
         return dict(res["details"])
