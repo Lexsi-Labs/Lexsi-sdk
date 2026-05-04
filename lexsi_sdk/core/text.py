@@ -874,8 +874,6 @@ class TextProject(Project):
             "model_name": model_name,
             "apply_on": apply_on,
         }
-        if self.organization_id:
-            payload["organization_id"] = self.organization_id
         res = self.api_client.post(GUARDRAILS_REMOVE_FROM_MODEL, payload=payload)
         if not res["success"]:
             raise Exception(res.get("details", "Failed to remove guardrail from model"))
