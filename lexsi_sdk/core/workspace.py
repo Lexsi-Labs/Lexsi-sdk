@@ -180,7 +180,7 @@ class Workspace(BaseModel):
         self,
         project_name: str,
         modality: str,
-        project_type: str,
+        project_type: Optional[str] = '',
         server_type: Optional[str] = None,
         server_config: Optional[CustomServerConfig] = CustomServerConfig()
     ) -> Project:
@@ -209,12 +209,14 @@ class Workspace(BaseModel):
         payload = {
             "project_name": project_name,
             "modality": modality,
-            "project_type": project_type,
             "workspace_name": self.workspace_name,
         }
 
         if self.organization_id:
             payload["organization_id"] = self.organization_id
+
+        if project_type:
+            payload["project_type"] = project_type
 
         if server_type:
             custom_servers = self.api_client.get(AVAILABLE_CUSTOM_SERVERS_URI)

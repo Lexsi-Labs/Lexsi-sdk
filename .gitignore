@@ -28,3 +28,5 @@ _templates
 lexsi_sdk/version.py
 /workingtest/
 site/
+
+*.ipynb
