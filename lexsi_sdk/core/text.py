@@ -5,7 +5,7 @@ from io import BytesIO
 from typing import Optional, List, Dict, Any, Union, Literal
 
 import httpx
-from lexsi_sdk.common.types import InferenceCompute, InferenceSettings
+from lexsi_sdk.common.types import DedicatedGPUNodeValues, InferenceCompute, InferenceSettings
 from pydantic import BaseModel
 from pydantic import BaseModel
 import plotly.graph_objects as go
@@ -17,6 +17,7 @@ from lexsi_sdk.common.xai_uris import (
     AVAILABLE_GUARDRAILS_URI,
     CONFIGURE_GUARDRAILS_URI,
     DELETE_GUARDRAILS_URI,
+    FINETUNE_MODEL_URI,
     GET_AVAILABLE_TEXT_MODELS_URI,
     GET_GUARDRAILS_URI,
     INITIALIZE_TEXT_MODEL_URI,
@@ -861,6 +862,39 @@ class TextProject(Project):
         if not res["success"]:
             raise Exception(res["details"])
         return dict(res["details"])
+    
+
+    def finetune_model(
+        self,
+        model_name: str,
+        node: DedicatedGPUNodeValues,
+        assets: Optional[dict] = None,
+        config: Optional[dict] = None,
+    ) -> str:
+        """Fine-tune a model using the provided training data and settings.
+
+        :param model_name: Name of the new fine-tuned model.
+        :param node: Dedicated GPU node configuration for fine-tuning.
+        :param assets: Assets required for fine-tuning, such as hugging face secrets.
+        :param config: Configuration settings for fine-tuning, including hyperparameters, training settings,
+        :return: response with fine-tuning details.
+        """
+        
+        payload  = {
+            "project_name": self.project_name,
+            "model_name": model_name,
+            "assets": assets,
+            "config": config,
+            "compute": {
+                "node": node
+            }
+        }
+        res = self.api_client.post(FINETUNE_MODEL_URI, payload)
+        
+        if not res["success"]:
+            raise Exception(res.get("details", "Model Fine-tuning Failed"))
+        
+        poll_events(self.api_client, self.project_name, res["event_id"])
 
     def remove_guardrail_from_model(self, model_name: str, apply_on: str = "input") -> str:
         """Remove a guardrail from a specific model.
