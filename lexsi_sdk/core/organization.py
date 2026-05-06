@@ -589,13 +589,14 @@ class Organization(BaseModel):
         :return: The created guardrail group details.
         """
         payload = {
-            "organization_id": self.organization_id,
             "title": title,
             "guardrail_flows": guardrail_flows,
             "description": description,
-            "is_async" : is_async,
-            "block" : block
+            "is_async": is_async,
+            "block": block,
         }
+        if self.organization_id:
+            payload["organization_id"] = self.organization_id
         res = self.api_client.post(GUARDRAILS_CREATE, payload=payload)
         if not res["success"]:
             raise Exception(res.get("details", "Failed to create guardrails"))
@@ -620,9 +621,10 @@ class Organization(BaseModel):
         :return: The updated guardrail group details.
         """
         payload: Dict[str, Any] = {
-            "organization_id": self.organization_id, 
-            "group_id": group_id, 
+            "group_id": group_id,
         }
+        if self.organization_id:
+            payload["organization_id"] = self.organization_id
         if guardrail_flows is not None:
             payload["guardrail_flows"] = guardrail_flows
         if description is not None:
@@ -644,7 +646,10 @@ class Organization(BaseModel):
         :param group_id: Identifier of the guardrail group.
         :return: Guardrail details as a DataFrame when available, otherwise a dict.
         """
-        response = self.api_client.get(f"{GUARDRAILS_GET}/{group_id}?organization_id={self.organization_id}")
+        url = f"{GUARDRAILS_GET}/{group_id}"
+        if self.organization_id:
+            url += f"?organization_id={self.organization_id}"
+        response = self.api_client.get(url)
         data = response
         if not response["success"]:
             raise Exception(response.get("details", "Failed to get guardrails"))
@@ -660,7 +665,10 @@ class Organization(BaseModel):
 
         :return: A DataFrame of guardrails when available, otherwise a dict.
         """
-        response = self.api_client.get(f"{GUARDRAILS_LIST}?organization_id={self.organization_id}")
+        url = GUARDRAILS_LIST
+        if self.organization_id:
+            url += f"?organization_id={self.organization_id}"
+        response = self.api_client.get(url)
         data = response
         if not response["success"]:
             raise Exception(response.get("details", "Failed to list guardrails"))
@@ -676,7 +684,31 @@ class Organization(BaseModel):
         :param group_id: Identifier of the guardrail group to delete.
         :return: Confirmation message from the API.
         """
-        response = self.api_client.delete(f"{GUARDRAILS_DELETE}/{group_id}?organization_id={self.organization_id}")
+        url = f"{GUARDRAILS_DELETE}/{group_id}"
+        if self.organization_id:
+            url += f"?organization_id={self.organization_id}"
+        response = self.api_client.delete(url)
         if not response["success"]:
             raise Exception(response.get("details", "Failed to delete guardrails"))
         return str(response["details"])
+    
+    def duplicate_guardrail(self, group_id: str, new_title: str, description: Optional[str] = None) -> dict:
+        """Duplicate an existing guardrail with a new title.
+
+        :param group_id: Identifier of the guardrail group to duplicate.
+        :param title: Title for the new duplicated guardrail group.
+        :param description: Description for the new duplicated guardrail group.
+        :return: The duplicated guardrail group details.
+        """
+        payload = {
+            "group_id": group_id,
+            "new_title": new_title
+        }
+        if self.organization_id:
+            payload["organization_id"] = self.organization_id
+        if description is not None:
+            payload["description"] = description
+        res = self.api_client.post(GUARDRAILS_DUPLICATE, payload=payload)
+        if not res["success"]:
+            raise Exception(res.get("details", "Failed to duplicate guardrail"))
+        return dict(res["details"])

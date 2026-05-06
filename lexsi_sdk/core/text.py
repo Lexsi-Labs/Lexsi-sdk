@@ -2,7 +2,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 import io
 from io import BytesIO
-from typing import Optional, List, Dict, Any, Union
+from typing import Optional, List, Dict, Any, Union, Literal
 
 import httpx
 from lexsi_sdk.common.types import InferenceCompute, InferenceSettings
@@ -38,6 +38,7 @@ from lexsi_sdk.common.xai_uris import (
     GENERATE_TEXT_CASE_URI,
     GUARDRAILS_APPLY_TO_MODEL,
     GUARDRAILS_RUN,
+    GUARDRAILS_REMOVE_FROM_MODEL,
 
 )
 from lexsi_sdk.core.project import Project
@@ -109,20 +110,21 @@ class TextProject(Project):
 
         return pd.DataFrame(res.get("details"))
 
-    def update_guardrail_status(self, guardrail_id: str, status: bool) -> str:
+    def update_guardrail_status(self, group_id: str, status: Literal["active", "inactive"]) -> str:
         """Update the status (active or inactive) of a specified guardrail.
         Requires the guardrail_id and a boolean status value.
 
-        :param guardrail_id: ID of the guardrail
-        :param status: Boolean value indicating whether the guardrail should be active (True) or inactive (False)
+        :param group_id: ID of the guardrail group
+        :param status: Status of the guardrail ("active" or "inactive")
         :return: a response indicating the result of the update operation
         """
 
         payload = {
-            "project_name": self.project_name,
-            "guardrail_id": guardrail_id,
+            "group_id": group_id,
             "status": status,
         }
+        if self.organization_id:
+            payload["organization_id"] = self.organization_id
         res = self.api_client.post(UPDATE_GUARDRAILS_STATUS_URI, payload=payload)
         if not res["success"]:
             raise Exception(res.get("details"))
@@ -846,7 +848,6 @@ class TextProject(Project):
         :return: The API response details.
         """
         payload = {
-            "organization_id": self.organization_id,
             "project_name": self.project_name,
             "group_id": group_id,
             "model_name": model_name,
@@ -854,9 +855,28 @@ class TextProject(Project):
             "retry": retry,
             "retry_attempts": retry_attempts,
         }
+        if self.organization_id:
+            payload["organization_id"] = self.organization_id
         res = self.api_client.post(GUARDRAILS_APPLY_TO_MODEL, payload=payload)
         if not res["success"]:
             raise Exception(res["details"])
+        return dict(res["details"])
+
+    def remove_guardrail_from_model(self, model_name: str, apply_on: str = "input") -> str:
+        """Remove a guardrail from a specific model.
+
+        :param model_name: Name of the model to remove the guardrail from.
+        :param apply_on: Whether the guardrail is applied on 'input' or 'output'.
+        :return: Confirmation message from the API.
+        """
+        payload = {
+            "project_name": self.project_name,
+            "model_name": model_name,
+            "apply_on": apply_on,
+        }
+        res = self.api_client.post(GUARDRAILS_REMOVE_FROM_MODEL, payload=payload)
+        if not res["success"]:
+            raise Exception(res.get("details", "Failed to remove guardrail from model"))
         return dict(res["details"])
 
 class CaseText(BaseModel):
