@@ -47,6 +47,7 @@ from lexsi_sdk.core.utils import build_list_data_connector_url
 import json
 from typing import Iterator
 from uuid import UUID
+from IPython.display import SVG, display
 
 class TextProject(Project):
     """Specialized project abstraction for text and LLM-based workloads. Supports sessions, messages, traces, guardrails, and token-level explainability."""
@@ -947,8 +948,8 @@ class CaseText(BaseModel):
         base64_str = network_graph_data
         try:
             img_bytes = base64.b64decode(base64_str)
-            image = Image.open(BytesIO(img_bytes))
-            return image
+            svg_str = img_bytes.decode("utf-8")
+            display(SVG(svg_str))
         except Exception as e:
             print(f"Error decoding base64 image: {e}")
             return None
