@@ -2347,24 +2347,20 @@ class TabularProject(Project):
             or models.loc[models["status"] == "active"]["model_name"].values[0]
         )
 
-        if pod and self.metadata.get("modality") == "tabular":
+        if pod is not None:
             custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
-            available_custom_batch_servers = custom_batch_servers.get("details", []) + custom_batch_servers.get("available_gpu_custom_servers", [])
+            available_custom_batch_servers = custom_batch_servers.get("details", [])
+            if self.metadata.get("modality") == "tabular":
+                available_custom_batch_servers = (
+                    available_custom_batch_servers
+                    + custom_batch_servers.get("available_gpu_custom_servers", [])
+                )
             Validate.value_against_list(
                 "pod",
                 pod,
                 [
                     server["instance_name"]
                     for server in available_custom_batch_servers
-                ],
-            )
-        else:
-            Validate.value_against_list(
-                "pod",
-                pod,
-                [
-                    server["instance_name"]
-                    for server in custom_batch_servers.get("details", [])
                 ],
             )
 
