@@ -1,16 +1,12 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any, Callable, Dict, List, Optional, TypedDict, Union
-from lexsi_sdk.common.xai_uris import RUN_GUARDRAILS_URI, RUN_GUARDRAILS_PARALLEL_URI
+from lexsi_sdk.common.xai_uris import GUARDRAILS_GET, GUARDRAILS_RUN
 from lexsi_sdk.core.project import Project
 from opentelemetry import trace
-import time
 import asyncio
-import requests
-from .guard_template import Guard
-from dataclasses import dataclass
 
 from agents import (
     Agent,
@@ -21,78 +17,52 @@ from agents import (
     ModelSettings,
     ModelTracing,
 )
+from dataclasses import dataclass
 
 
 @dataclass
 class GuardrailFunctionOutput:
-    """Dataclass representing the output of a single guardrail execution, including decision and metadata."""
+    """Output of a single guardrail execution."""
 
     output_info: Any
-    """
-    Optional information about the guardrail's output. For example, the guardrail could include
-    information about the checks it performed and granular results.
-    """
-
     tripwire_triggered: bool
-    """
-    Whether the tripwire was triggered. If triggered, the agent's execution will be halted.
-    """
-
     sanitized_content: str
 
 
-class GuardrailRunResult(TypedDict, total=False):
-    """Typed dictionary aggregating the results of running one or more guardrails."""
-
-    success: bool
-    details: Dict[str, Any]
-    validated_output: Any
-    validation_passed: bool
-    sanitized_output: Any
-    duration: float
-    latency: str
-    on_fail_action: str
-    retry_count: int
-    max_retries: int
-    start_time: str
-    end_time: str
-
-
 class OpenAIAgentsGuardrail:
-    """Decorator-style guardrail utility for OpenAI Agents. Supports adhoc and configured guard execution."""
+    """Decorator-style guardrail utility for OpenAI Agents."""
 
     def __init__(
         self,
         project: Optional[Project],
         model: Optional[Any] = None,
+        max_retries: int = 2,
     ) -> None:
-        """Initialize OpenAI Agents guardrail helper with project and model context.
-        Stores configuration and prepares the object for use."""
         if project is not None:
             self.client = project.api_client
             self.project_name = project.project_name
+            self.organization_id = getattr(project, "organization_id", None)
 
         self.logs: List[Dict[str, Any]] = []
-        self.max_retries = 2
+        self.max_retries = max_retries
         self.retry_delay = 1.0
         self.tracer = trace.get_tracer(__name__)
         self.model = model
 
     def create_input_guardrail(
         self,
-        guards: Union[List[str], List[Dict[str, Any]], str, Dict[str, Any]],
+        guardrail_group_id: str,
         action: str = "block",
         name: str = "input_guardrail",
     ) -> Callable:
-        """Create a guardrail function that wraps agent input processing. Accepts parameters to specify the guardrail name, configuration, and what action to take (block, retry, warn) when a violation occurs.
+        """Create an input guardrail function backed by the guardrail group
+        identified by ``guardrail_group_id``.
 
-        :param guards: List of guard specifications or single guard.
+        :param guardrail_group_id: ID of the organization guardrail group.
         :param action: 'block' | 'retry' | 'warn'.
         :param name: Name for the guardrail function.
         :return: Callable suitable for OpenAI Agents guardrail hook.
         """
-        if isinstance(guards, (str, dict)):
-            guards = [guards]
 
         @input_guardrail
         async def guardrail_function(
@@ -100,26 +70,18 @@ class OpenAIAgentsGuardrail:
             agent: Agent,
             input: str | list[TResponseInputItem],
         ) -> GuardrailFunctionOutput:
-            """Run configured input guardrails for an agent invocation.
-            Encapsulates a small unit of SDK logic and returns the computed result."""
-            # Convert input to string for processing
             if isinstance(input, list):
-                # Handle list of input items (messages)
-                input_text = ""
-                for item in input:
-                    if hasattr(item, "content"):
-                        input_text += str(item.content) + " "
-                    else:
-                        input_text += str(item) + " "
-                input_text = input_text.strip()
+                input_text = " ".join(
+                    str(item.content) if hasattr(item, "content") else str(item)
+                    for item in input
+                ).strip()
             else:
                 input_text = str(input)
 
-            # Process through all guards in parallel
             current_content, tripwire_triggered, output_info = (
-                await self._apply_guardrail_parallel(
+                await self._apply_guardrail_group(
                     content=input_text,
-                    guards=guards,
+                    guardrail_group_id=guardrail_group_id,
                     guardrail_type="input",
                     action=action,
                     agent_name=agent.name,
@@ -132,33 +94,28 @@ class OpenAIAgentsGuardrail:
                 sanitized_content=current_content if action == "retry" else input_text,
             )
 
-        # Set function name for debugging
         guardrail_function.__name__ = name
         return guardrail_function
 
     def create_output_guardrail(
         self,
-        guards: Union[List[str], List[Dict[str, Any]], str, Dict[str, Any]],
+        guardrail_group_id: str,
         action: str = "block",
         name: str = "output_guardrail",
     ) -> Callable:
-        """Create a guardrail function that wraps agent output processing. Similar to create_input_guardrail but applied to agent responses.
+        """Create an output guardrail function backed by the guardrail group
+        identified by ``guardrail_group_id``.
 
-        :param guards: List of guard specifications or single guard.
+        :param guardrail_group_id: ID of the organization guardrail group.
         :param action: 'block' | 'retry' | 'warn'.
         :param name: Name for the guardrail function.
         :return: Callable suitable for OpenAI Agents guardrail hook.
         """
-        if isinstance(guards, (str, dict)):
-            guards = [guards]
 
         @output_guardrail
         async def guardrail_function(
             ctx: RunContextWrapper, agent: Agent, output: Any
         ) -> GuardrailFunctionOutput:
-            """Run configured output guardrails for an agent response.
-            Encapsulates a small unit of SDK logic and returns the computed result."""
-            # Extract text content from output
             if hasattr(output, "response"):
                 output_text = str(output.response)
             elif hasattr(output, "content"):
@@ -166,11 +123,10 @@ class OpenAIAgentsGuardrail:
             else:
                 output_text = str(output)
 
-            # Process through all guards in parallel
             current_content, tripwire_triggered, output_info = (
-                await self._apply_guardrail_parallel(
+                await self._apply_guardrail_group(
                     content=output_text,
-                    guards=guards,
+                    guardrail_group_id=guardrail_group_id,
                     guardrail_type="output",
                     action=action,
                     agent_name=agent.name,
@@ -183,26 +139,23 @@ class OpenAIAgentsGuardrail:
                 sanitized_content=current_content if action == "retry" else output_text,
             )
 
-        # Set function name for debugging
         guardrail_function.__name__ = name
         return guardrail_function
 
-    async def _apply_guardrail_parallel(
+    async def _apply_guardrail_group(
         self,
         content: Any,
-        guards: List[Union[str, Dict[str, Any]]],
+        guardrail_group_id: str,
         guardrail_type: str,
         action: str,
         agent_name: str,
     ) -> tuple[Any, bool, Dict[str, Any]]:
-        """Internal method that applies multiple guardrails in parallel to agent input or output and returns aggregated results.
-
-        Returns:
-            tuple: (processed_content, tripwire_triggered, output_info)
+        """Fetch the guardrail group, run all its flows in parallel, and return
+        (processed_content, tripwire_triggered, output_info).
         """
         current_content = content
         tripwire_triggered = False
-        output_info = {}
+        output_info: Dict[str, Any] = {}
         retry_count = 0
 
         try:
@@ -216,92 +169,82 @@ class OpenAIAgentsGuardrail:
                     parent_gr_span.set_attribute("content_type", guardrail_type)
 
                     while retry_count <= self.max_retries:
-                        # Prepare payload for parallel guardrail execution
-                        guard_specs = [
-                            guard if isinstance(guard, dict) else {"name": guard}
-                            for guard in guards
-                        ]
-                        payload = {"input_data": current_content, "guards": guard_specs}
+                        guardrail_flows = self._fetch_guardrail_group(guardrail_group_id)
+                        payload = {"input_data": current_content, "guardrails": guardrail_flows}
 
-                        # Call parallel guardrail endpoint
                         start_time = datetime.now()
-                        response = self.client.post(
-                            RUN_GUARDRAILS_PARALLEL_URI,
-                            payload=payload,
-                        )
+                        response = self.client.post(GUARDRAILS_RUN, payload=payload)
                         end_time = datetime.now()
-                        parallel_result = response
 
-                        # Add timing information
-                        parallel_result.update(
-                            {
-                                "start_time": start_time.isoformat(),
-                                "end_time": end_time.isoformat(),
-                                "duration": (end_time - start_time).total_seconds(),
-                            }
-                        )
+                        response["start_time"] = start_time.isoformat()
+                        response["end_time"] = end_time.isoformat()
+                        response["duration"] = (end_time - start_time).total_seconds()
 
-                        parent_gr_span.set_attribute(
-                            "start_time", str(parallel_result.get("start_time", ""))
-                        )
-                        parent_gr_span.set_attribute(
-                            "end_time", str(parallel_result.get("end_time", ""))
-                        )
-                        parent_gr_span.set_attribute(
-                            "duration", float(parallel_result.get("duration", 0.0))
-                        )
-
-                        if not parallel_result.get("success", False):
-                            output_info["parallel_execution_error"] = (
-                                parallel_result.get("details", {})
-                            )
+                        if not response.get("success", False):
+                            output_info["execution_error"] = response.get("details", {})
                             return current_content, tripwire_triggered, output_info
 
-                        # Process each guardrail result
-                        detected_issue = False
-                        for guard_result in parallel_result.get("details", []):
-                            guard_name = guard_result.get("name", "unknown")
-                            run_result: GuardrailRunResult = {
-                                "success": parallel_result.get("success"),
-                                "details": guard_result,
-                                "validated_output": guard_result.get(
-                                    "validated_output"
-                                ),
-                                "validation_passed": guard_result.get(
-                                    "validation_passed", False
-                                ),
-                                "sanitized_output": guard_result.get(
-                                    "sanitized_output", current_content
-                                ),
-                                "duration": guard_result.get("duration", 0.0),
-                                "latency": guard_result.get("latency", "0 ms"),
-                                "start_time": parallel_result.get("start_time", ""),
-                                "end_time": parallel_result.get("end_time", ""),
-                                "retry_count": retry_count,
-                                "max_retries": self.max_retries,
-                            }
-                            run_result["response"] = guard_result
-                            run_result["input"] = current_content
+                        data = response.get("data", {})
+                        flow_summaries = data.get("flow_summaries", [])
+                        total_tokens_all = sum(f.get("total_tokens", 0) for f in flow_summaries)
 
-                            # Log and handle each guard result
-                            current_content, is_triggered = await self._handle_action(
-                                original=current_content,
-                                run_result=run_result,
-                                action=(
-                                    f"retry_{retry_count}"
-                                    if retry_count > 0
-                                    else action
-                                ),
+                        parent_gr_span.set_attribute("start_time", start_time.isoformat())
+                        parent_gr_span.set_attribute("end_time", end_time.isoformat())
+                        parent_gr_span.set_attribute("duration", response["duration"])
+                        parent_gr_span.set_attribute("input.value", self._safe_str(current_content))
+                        parent_gr_span.set_attribute("llm.token_count.total", total_tokens_all)
+
+                        detected_issue = False
+                        for flow_summary in flow_summaries:
+                            flow_name = flow_summary.get("flow_name", "unknown")
+                            passed = flow_summary.get("passed", False)
+                            is_issue = not passed
+
+                            flow_duration = flow_summary.get("duration", 0.0)
+                            flow_start_iso = start_time.isoformat()
+                            flow_end_iso = (start_time + timedelta(seconds=flow_duration)).isoformat()
+
+                            individual = flow_summary.get("individual_results", [])
+                            prompt_tokens = sum(r.get("prompt_tokens", 0) for r in individual)
+                            completion_tokens = sum(r.get("completion_tokens", 0) for r in individual)
+                            total_tokens = flow_summary.get("total_tokens", prompt_tokens + completion_tokens)
+
+                            with self.tracer.start_as_current_span(
+                                f"guardrail: {flow_name}",
+                                context=trace.set_span_in_context(parent_gr_span),
+                            ) as flow_span:
+                                flow_span.set_attribute("component", str(agent_name))
+                                flow_span.set_attribute("guard", flow_name)
+                                flow_span.set_attribute("content_type", guardrail_type)
+                                flow_span.set_attribute("detected", is_issue)
+                                flow_span.set_attribute("action", action)
+                                flow_span.set_attribute("input.value", self._safe_str(current_content))
+                                flow_span.set_attribute("output.value", json.dumps({
+                                    "passed": flow_summary.get("passed"),
+                                    "status": flow_summary.get("status"),
+                                    "individual_results": individual,
+                                }))
+                                flow_span.set_attribute("start_time", flow_start_iso)
+                                flow_span.set_attribute("end_time", flow_end_iso)
+                                flow_span.set_attribute("duration", flow_duration)
+                                flow_span.set_attribute("llm.token_count.prompt", prompt_tokens)
+                                flow_span.set_attribute("llm.token_count.completion", completion_tokens)
+                                flow_span.set_attribute("llm.token_count.total", total_tokens)
+
+                            self._log_flow_result(
+                                flow_name=flow_name,
+                                flow_summary=flow_summary,
+                                action=action,
                                 agent_name=agent_name,
                                 guardrail_type=guardrail_type,
-                                guard_name=guard_name,
-                                parent_span=parent_gr_span,
                             )
 
-                            if is_triggered:
+                            if is_issue:
                                 detected_issue = True
-                                tripwire_triggered = True
-                                output_info[f"guard_{guard_name}"] = run_result
+                                output_info[f"flow_{flow_name}"] = flow_summary
+                                if action == "block":
+                                    tripwire_triggered = True
+                                    return current_content, tripwire_triggered, output_info
 
                         if (
                             detected_issue
@@ -309,228 +252,80 @@ class OpenAIAgentsGuardrail:
                             and self.model is not None
                             and retry_count < self.max_retries
                         ):
-                            # Sanitize content using LLM
-                            prompt = self._build_sanitize_prompt(
-                                "combined", current_content, guardrail_type
-                            )
+                            prompt = self._build_sanitize_prompt("combined", current_content, guardrail_type)
                             try:
-                                sanitized = await self._invoke_llm(prompt)
-                                current_content = sanitized
+                                current_content = await self._invoke_llm(prompt)
                             except Exception:
-                                pass  # Keep original content if sanitization fails
+                                pass
                             retry_count += 1
-                            await self._async_sleep(self.retry_delay)
+                            await asyncio.sleep(self.retry_delay)
                             continue
                         else:
-                            # No issues or no retries left
+                            # Only trigger tripwire for retry when retries are exhausted
+                            if detected_issue and action == "retry" and retry_count >= self.max_retries:
+                                tripwire_triggered = True
                             output_info["retry_count"] = retry_count
                             output_info["final_content"] = current_content
                             return current_content, tripwire_triggered, output_info
 
-            # Fallback if no parent span
             output_info["retry_count"] = retry_count
             output_info["final_content"] = current_content
             return current_content, tripwire_triggered, output_info
 
         except Exception as e:
-            output_info["error"] = f"Parallel guardrail execution failed: {str(e)}"
+            output_info["error"] = f"Guardrail group execution failed: {str(e)}"
             return current_content, tripwire_triggered, output_info
 
-    async def _handle_action(
+    # --------- Group fetch ---------
+
+    def _fetch_guardrail_group(self, guardrail_group_id: str) -> List[Dict[str, Any]]:
+        url = f"{GUARDRAILS_GET}/{guardrail_group_id}"
+        if getattr(self, "organization_id", None):
+            url += f"?organization_id={self.organization_id}"
+        response = self.client.get(url)
+        if not response.get("success", False):
+            raise ValueError(f"Failed to fetch guardrail group '{guardrail_group_id}'")
+        details = response.get("details", {})
+        if "guardrail" in details and isinstance(details["guardrail"], dict):
+            return details["guardrail"].get("guardrail_flows", [])
+        return details.get("guardrail_flows", [])
+
+    # --------- Logging / helpers ---------
+
+    def _log_flow_result(
         self,
-        original: Any,
-        run_result: GuardrailRunResult,
+        flow_name: str,
+        flow_summary: Dict[str, Any],
         action: str,
         agent_name: str,
         guardrail_type: str,
-        guard_name: str,
-        parent_span: Optional[Any],
-    ) -> tuple[Any, bool]:
-        """Internal method that processes the result of a guardrail check for agent content and determines the next action (block, warn, retry).
-
-        Returns:
-            tuple: (processed_content, is_triggered)
-        """
-        validation_passed = bool(run_result.get("validation_passed", True))
-        detected_issue = not validation_passed or not run_result.get("success", True)
-
-        if parent_span is not None:
-            try:
-                with self.tracer.start_as_current_span(
-                    f"guard:{guard_name}",
-                    context=trace.set_span_in_context(parent_span),
-                ) as gr_span:
-                    gr_span.set_attribute("component", str(agent_name))
-                    gr_span.set_attribute("guard", str(guard_name))
-                    gr_span.set_attribute("content_type", guardrail_type)
-                    gr_span.set_attribute("detected", detected_issue)
-                    gr_span.set_attribute("action", action)
-                    gr_span.set_attribute(
-                        "input.value", self._safe_str(run_result.get("input"))
-                    )
-                    gr_span.set_attribute(
-                        "output.value", json.dumps(run_result.get("response"))
-                    )
-                    gr_span.set_attribute(
-                        "start_time", str(run_result.get("start_time", ""))
-                    )
-                    gr_span.set_attribute(
-                        "end_time", str(run_result.get("end_time", ""))
-                    )
-                    gr_span.set_attribute(
-                        "duration", float(run_result.get("duration", 0.0))
-                    )
-            except Exception:
-                pass
-
-        # Log guardrail result without creating a new span
-        self._log_guardrail_result(
-            run_result=run_result,
-            action=action,
-            agent_name=agent_name,
-            guardrail_type=guardrail_type,
-            guard_name=guard_name,
-        )
-
-        if detected_issue:
-            if action == "block":
-                return original, True
-            elif "retry" in action:
-                return run_result.get("sanitized_output", original), True
-            else:  # warn
-                return original, False
-        return original, False
-
-    async def _call_run_guardrail(
-        self, input_data: Any, guard: Dict[str, Any], guardrail_type: str
-    ) -> GuardrailRunResult:
-        """Internal method that calls the guardrail run endpoint to evaluate content against guardrails."""
-        uri = RUN_GUARDRAILS_URI
-        input_text = str(input_data)
-
-        start_time = datetime.now()
-        try:
-            body = {"input_data": input_text, "guard": guard}
-            data = self.client.post(uri, body)
-
-            end_time = datetime.now()
-
-            details = data.get("details", {}) if isinstance(data, dict) else {}
-            result: GuardrailRunResult = {
-                "success": (
-                    bool(data.get("success", False))
-                    if isinstance(data, dict)
-                    else False
-                ),
-                "details": details if isinstance(details, dict) else {},
-                "start_time": start_time.isoformat(),
-                "end_time": end_time.isoformat(),
-            }
-
-            if "duration" not in details:
-                result["duration"] = (end_time - start_time).total_seconds()
-
-            if isinstance(details, dict):
-                if "validated_output" in details:
-                    result["validated_output"] = details["validated_output"]
-                if "validation_passed" in details:
-                    result["validation_passed"] = details["validation_passed"]
-                if "sanitized_output" in details:
-                    result["sanitized_output"] = details["sanitized_output"]
-                if "duration" in details:
-                    result["duration"] = details["duration"]
-                if "latency" in details:
-                    result["latency"] = details["latency"]
-
-            result["retry_count"] = 0
-            result["max_retries"] = self.max_retries
-            result["response"] = data
-            result["input"] = input_text
-
-            return result
-
-        except Exception as exc:
-            end_time = datetime.now()
-            raise exc
-
-    def _log_guardrail_result(
-        self,
-        run_result: GuardrailRunResult,
-        action: str,
-        agent_name: str,
-        guardrail_type: str,
-        guard_name: str,
     ) -> None:
-        """Log guardrail results without creating a new span
-        Encapsulates a small unit of SDK logic and returns the computed result."""
-        validation_passed = bool(run_result.get("validation_passed", True))
-        detected_issue = not validation_passed or not run_result.get("success", True)
-
-        # Append to logs list instead of creating a new span
-        log_entry = {
-            "guard_name": guard_name,
+        self.logs.append({
+            "flow_name": flow_name,
             "guardrail_type": guardrail_type,
             "agent_name": agent_name,
             "action": action,
-            "detected_issue": detected_issue,
-            "start_time": run_result.get("start_time", ""),
-            "end_time": run_result.get("end_time", ""),
-            "duration": float(run_result.get("duration", 0.0)),
-            "input": self._safe_str(run_result.get("input")),
-            "output": self._safe_str(run_result.get("response")),
-        }
-        self.logs.append(log_entry)
+            "detected_issue": not flow_summary.get("passed", False),
+            "status": flow_summary.get("status", ""),
+            "duration": float(flow_summary.get("duration", 0.0)),
+        })
 
     def _build_sanitize_prompt(
         self, guard_name: str, content: Any, guardrail_type: str
     ) -> str:
-        """Internal method to assemble a sanitization prompt used to clean or modify content according to guardrail directives."""
         instructions = {
             "Detect PII": "Sanitize the following text by removing or masking any personally identifiable information (PII). Do not change anything else.",
-            "NSFW Text": "Sanitize the following text by removing or masking any not safe for work (NSFW) content. Do not change anything else.",
-            "Ban List": "Sanitize the following text by removing or masking any banned words. Do not change anything else.",
-            "Bias Check": "Sanitize the following text by removing or masking any biased language. Do not change anything else.",
-            "Competitor Check": "Sanitize the following text by removing or masking any competitor names. Do not change anything else.",
-            "Correct Language": "Sanitize the following text by correcting the language to the expected language. Do not change anything else.",
-            "Gibberish Text": "Sanitize the following text by removing or correcting any gibberish. Do not change anything else.",
-            "Profanity Free": "Sanitize the following text by removing or masking any profanity. Do not change anything else.",
-            "Secrets Present": "Sanitize the following text by removing or masking any secrets. Do not change anything else.",
             "Toxic Language": "Sanitize the following text by removing or masking any toxic language. Do not change anything else.",
-            "Contains String": "Sanitize the following text by removing or masking the specified substring. Do not change anything else.",
-            "Detect Jailbreak": "Sanitize the following text by removing or masking any jailbreak attempts. Do not change anything else.",
-            "Endpoint Is Reachable": "Sanitize the following text by ensuring any mentioned endpoints are reachable. Do not change anything else.",
-            "Ends With": "Sanitize the following text by ensuring it ends with the specified string. Do not change anything else.",
-            "Has Url": "Sanitize the following text by removing or masking any URLs. Do not change anything else.",
-            "Lower Case": "Sanitize the following text by converting it to lower case. Do not change anything else.",
-            "Mentions Drugs": "Sanitize the following text by removing or masking any mentions of drugs. Do not change anything else.",
-            "One Line": "Sanitize the following text by ensuring it is a single line. Do not change anything else.",
-            "Reading Time": "Sanitize the following text by ensuring its reading time matches the specified value. Do not change anything else.",
-            "Redundant Sentences": "Sanitize the following text by removing redundant sentences. Do not change anything else.",
-            "Regex Match": "Sanitize the following text by ensuring it matches the specified regex. Do not change anything else.",
-            "Sql Column Presence": "Sanitize the following text by ensuring specified SQL columns are present. Do not change anything else.",
-            "Two Words": "Sanitize the following text by ensuring it contains only two words. Do not change anything else.",
-            "Upper Case": "Sanitize the following text by converting it to upper case. Do not change anything else.",
-            "Valid Choices": "Sanitize the following text by ensuring it matches one of the valid choices. Do not change anything else.",
-            "Valid Json": "Sanitize the following text by ensuring it is valid JSON. Do not change anything else.",
-            "Valid Length": "Sanitize the following text by ensuring its length is valid. Do not change anything else.",
-            "Valid Range": "Sanitize the following text by ensuring its value is within the valid range. Do not change anything else.",
-            "Valid URL": "Sanitize the following text by ensuring it is a valid URL. Do not change anything else.",
-            "Web Sanitization": "Sanitize the following text by removing any unsafe web content. Do not change anything else.",
         }
-
         instruction = instructions.get(
             guard_name,
             "Sanitize the following text according to the guardrail requirements. Do not change anything else.",
         )
-        prompt = f"{instruction}\n\nContent:\n{content}"
-        return prompt
+        return f"{instruction}\n\nContent:\n{content}"
 
     async def _invoke_llm(self, prompt: str) -> str:
-        """Invoke the LLM for content sanitization
-        Encapsulates a small unit of SDK logic and returns the computed result."""
         if self.model is None:
-            return prompt  # Return original if no LLM available
-
+            return prompt
         try:
             data = await self.model.get_response(
                 system_instructions="Based on the input you have to provide the best and accurate results",
@@ -544,29 +339,17 @@ class OpenAIAgentsGuardrail:
             )
             return str(data.output[0].content[0].text)
         except Exception:
-            return prompt  # Return original on error
-
-    async def _async_sleep(self, seconds: float) -> None:
-        """Async sleep utility
-        Encapsulates a small unit of SDK logic and returns the computed result."""
-        await asyncio.sleep(seconds)
+            return prompt
 
     @staticmethod
     def _safe_str(value: Any) -> str:
-        """Safely convert any value to string for logging
-        Encapsulates a small unit of SDK logic and returns the computed result."""
         try:
             if isinstance(value, (str, int, float, bool)) or value is None:
                 return str(value)
             if hasattr(value, "content"):
                 return str(getattr(value, "content", ""))
-
             if isinstance(value, (list, tuple)):
-                parts = []
-                for item in value:
-                    parts.append(OpenAIAgentsGuardrail._safe_str(item))
-                return ", ".join(parts)
-
+                return ", ".join(OpenAIAgentsGuardrail._safe_str(item) for item in value)
             if isinstance(value, dict):
                 safe_dict: Dict[str, Any] = {}
                 for k, v in value.items():
@@ -578,7 +361,6 @@ class OpenAIAgentsGuardrail:
                     else:
                         safe_dict[key] = str(v)
                 return json.dumps(safe_dict, ensure_ascii=False)
-
             return str(value)
         except Exception:
             return "<unserializable>"
@@ -587,6 +369,5 @@ class OpenAIAgentsGuardrail:
 def create_guardrail(
     project: Project, model: Optional[Any] = None
 ) -> OpenAIAgentsGuardrail:
-    """Quick factory function to create a guardrail instance with a project
-    Builds a new object or request payload and returns the created result."""
+    """Quick factory function to create a guardrail instance with a project."""
     return OpenAIAgentsGuardrail(project=project, model=model)
