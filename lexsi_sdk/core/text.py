@@ -49,6 +49,7 @@ from lexsi_sdk.core.utils import build_list_data_connector_url
 import json
 from typing import Iterator
 from uuid import UUID
+from IPython.display import SVG, display
 
 class TextProject(Project):
     """Specialized project abstraction for text and LLM-based workloads. Supports sessions, messages, traces, guardrails, and token-level explainability."""
@@ -761,12 +762,13 @@ class TextProject(Project):
         self,
         model: str,
         prompt: str,
-        XAI_pods: Optional[str] = "xlarge",
-        # explainability_method: List[str] = ["DLB"],
-        XAI: bool = False,
         session_id: Optional[UUID] = None,
         min_tokens: int = 100,
         max_tokens: int = 1024,
+        explain_tokens: Optional[int] = None,
+        temperature: Optional[float] = None,
+        top_p: Optional[float] = 1.0,
+        top_k: Optional[int] = 0,
     ) -> dict :
         """Generate an explainable text case using a hosted Lexsi model.
 
@@ -777,6 +779,10 @@ class TextProject(Project):
         :param session_id: Optional existing session id.
         :param min_tokens: Minimum tokens to generate.
         :param max_tokens: Maximum tokens to generate.
+        :param explain_tokens: Number of tokens to explain.
+        :param temperature: Temperature for text generation.
+        :param top_p: Top-p sampling parameter.
+        :param top_k: Top-k sampling parameter.
         :return: API response with generation details.
         """
         payload = {
@@ -784,11 +790,13 @@ class TextProject(Project):
             "project_name": self.project_name,
             "model": model,
             "prompt": prompt,
-            "XAI_pods": XAI_pods,
             "provider" : "Lexsi",
-            "XAI": XAI,
             "max_tokens": max_tokens,
             "min_tokens": min_tokens,
+            "explain_tokens": explain_tokens,
+            "temperature": temperature,
+            "top_p": top_p,
+            "top_k": top_k,
         }
     
         res = self.api_client.post(GENERATE_TEXT_CASE_URI, payload)
@@ -994,8 +1002,8 @@ class CaseText(BaseModel):
         base64_str = network_graph_data
         try:
             img_bytes = base64.b64decode(base64_str)
-            image = Image.open(BytesIO(img_bytes))
-            return image
+            svg_str = img_bytes.decode("utf-8")
+            display(SVG(svg_str))
         except Exception as e:
             print(f"Error decoding base64 image: {e}")
             return None
