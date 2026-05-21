@@ -23,6 +23,7 @@ from lexsi_sdk.common.xai_uris import (
     INITIALIZE_TEXT_MODEL_URI,
     LIST_DATA_CONNECTORS,
     MESSAGES_URI,
+    MODEL_LOGS_URI,
     QUANTIZE_MODELS_URI,
     SESSIONS_URI,
     TEXT_MODEL_INFERENCE_SETTINGS_URI,
@@ -920,6 +921,17 @@ class TextProject(Project):
         if not res["success"]:
             raise Exception(res.get("details", "Failed to remove guardrail from model"))
         return dict(res["details"])
+    
+    def model_logs(self, model_name: str) -> str:
+        """Fetch and return logs for a specific finetuned and quantized model.
+
+        :param model_name: Name of the model to retrieve logs for.
+        :return: Logs data as a string.
+        """
+        res = self.api_client.get(f"{MODEL_LOGS_URI}?project_name={self.project_name}&model_name={model_name}")
+        if not res["success"]:
+            raise Exception(res.get("details", "Failed to fetch model logs"))
+        return res.get("details", "No logs found for the model").get("logs", "")
 
 class CaseText(BaseModel):
     """Explainability view for text-based cases. Supports token-level importance, attention visualization, and LLM output analysis."""
