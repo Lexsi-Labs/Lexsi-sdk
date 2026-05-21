@@ -922,12 +922,12 @@ class TextProject(Project):
             raise Exception(res.get("details", "Failed to remove guardrail from model"))
         return dict(res["details"])
     
-    def model_logs(self, model_name: str, return_logs: Optional[bool] = False) -> str:
+    def model_logs(self, model_name: str, return_logs: Optional[bool] = False) -> str | None:
         """Fetch and return logs for a specific finetuned and quantized model.
 
         :param model_name: Name of the model to retrieve logs for.
         :param return_logs: Whether to return the logs as a string. If False, logs will be printed line by line. If True, logs will be returned as a single string.
-        :return: Logs data as a string.
+        :return: Logs data as a string or None.
         """
         res = self.api_client.get(f"{MODEL_LOGS_URI}?project_name={self.project_name}&model_name={model_name}")
         if not res["success"]:
