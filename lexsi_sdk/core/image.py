@@ -617,16 +617,6 @@ class ImageProject(Project):
             model_name
             or models.loc[models["status"] == "active"]["model_name"].values[0]
         )
-        
-        custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
-        Validate.value_against_list(
-            "pod",
-            pod,
-            [
-                server["instance_name"]
-                for server in custom_batch_servers.get("details", [])
-            ],
-        )
 
         run_model_payload = {
             "project_name": self.project_name,

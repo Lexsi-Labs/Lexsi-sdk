@@ -81,7 +81,8 @@ class APIClient(BaseModel):
         :raises Exception: Request exception
         :return: JSON response
         """
-        url = f"{self.base_url}/{uri}"
+        # url = f"{self.base_url}/{uri}"
+        url = f"http://localhost:30050/{uri}"
         try:
             # response = requests.request(
             #     method,
