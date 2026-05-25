@@ -328,10 +328,6 @@ class TabularProject(Project):
                     f"Project Config is required, since no config is set for project \n {json.dumps(config,indent=1)}"
                 )
 
-            Validate.check_for_missing_keys(
-                config, ["unique_identifier", "true_label"]
-            )
-
             # Validate.value_against_list(
             #     "project_type", config, ["classification", "regression"]
             # )
