@@ -353,17 +353,6 @@ class TabularProject(Project):
             ]
 
             feature_encodings = config.get("feature_encodings", {})
-            if feature_encodings:
-                Validate.value_against_list(
-                    "feature_encodings_feature",
-                    list(feature_encodings.keys()),
-                    column_names,
-                )
-                Validate.value_against_list(
-                    "feature_encodings_feature",
-                    list(feature_encodings.values()),
-                    ["labelencode", "countencode", "onehotencode"],
-                )
             custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
             available_custom_batch_servers = custom_batch_servers.get("details", []) + custom_batch_servers.get("available_gpu_custom_servers", [])
             
