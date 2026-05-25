@@ -340,13 +340,6 @@ class TabularProject(Project):
 
             column_names = file_info.get("details").get("column_names")
 
-            Validate.value_against_list(
-                "unique_identifier",
-                config["unique_identifier"],
-                column_names,
-                lambda: self.delete_file(uploaded_path),
-            )
-
             if config.get("feature_exclude"):
                 Validate.value_against_list(
                     "feature_exclude",
