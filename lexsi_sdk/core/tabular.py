@@ -364,16 +364,6 @@ class TabularProject(Project):
                 self.delete_file(uploaded_path)
                 raise Exception(f"For Foundational models compute_type is mandatory. select from \n {valid_list}")
 
-            if tunning_strategy != "inference" and compute_type and "gova" not in compute_type:
-                Validate.value_against_list(
-                    "pod",
-                    compute_type,
-                    [
-                        server["instance_name"]
-                        for server in available_custom_batch_servers
-                    ],
-                )
-
             payload = {
                 "project_name": self.project_name,
                 "unique_identifier": config["unique_identifier"],
