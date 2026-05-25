@@ -355,14 +355,6 @@ class TabularProject(Project):
             feature_encodings = config.get("feature_encodings", {})
             custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
             available_custom_batch_servers = custom_batch_servers.get("details", []) + custom_batch_servers.get("available_gpu_custom_servers", [])
-            
-            if config.get("model_name") and config.get("model_name") in ["TabPFN","TabICL","TabDPT","OrionMSP", "OrionBix","Mitra", "ContextTab"] and not compute_type:
-                valid_list = [
-                    server["instance_name"]
-                    for server in available_custom_batch_servers
-                ]
-                self.delete_file(uploaded_path)
-                raise Exception(f"For Foundational models compute_type is mandatory. select from \n {valid_list}")
 
             payload = {
                 "project_name": self.project_name,
