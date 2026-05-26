@@ -701,12 +701,6 @@ class TabularProject(Project):
 
             return uploaded_path
 
-        tags = self.tags()
-        Validate.value_against_list("model_train", model_train, tags)
-
-        if model_test:
-            Validate.value_against_list("model_test", model_test, tags)
-
         uploaded_path = upload_file_and_return_path()
 
         if pod:
