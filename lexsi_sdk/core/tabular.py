@@ -1661,25 +1661,6 @@ class TabularProject(Project):
 
         payload["project_name"] = self.project_name
 
-        # validate required fields
-        Validate.check_for_missing_keys(payload, DATA_DRIFT_DASHBOARD_REQUIRED_FIELDS)
-
-        # validate tags and labels
-        tags_info = self.available_tags()
-        all_tags = tags_info["alltags"]
-
-        Validate.value_against_list("base_line_tag", payload["base_line_tag"], all_tags)
-        Validate.value_against_list("current_tag", payload["current_tag"], all_tags)
-
-        Validate.validate_date_feature_val(payload, tags_info["alldatetimefeatures"])
-
-        if payload.get("features_to_use"):
-            Validate.value_against_list(
-                "features_to_use",
-                payload.get("features_to_use", []),
-                tags_info["alluniquefeatures"],
-            )
-
         Validate.value_against_list(
             "stat_test_name", payload["stat_test_name"], DATA_DRIFT_STAT_TESTS
         )
