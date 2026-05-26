@@ -701,15 +701,6 @@ class TabularProject(Project):
 
             return uploaded_path
 
-        model_types = self.api_client.get(GET_MODEL_TYPES_URI)
-        valid_model_architecture = model_types.get("model_architecture").keys()
-        Validate.value_against_list(
-            "model_achitecture", model_architecture, valid_model_architecture
-        )
-
-        valid_model_types = model_types.get("model_architecture")[model_architecture]
-        Validate.value_against_list("model_type", model_type, valid_model_types)
-
         tags = self.tags()
         Validate.value_against_list("model_train", model_train, tags)
 
