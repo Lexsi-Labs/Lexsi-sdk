@@ -911,11 +911,6 @@ class TabularProject(Project):
             - print_config(): Pretty-print the dashboard configuration
         :rtype: Dashboard
         """
-        Validate.value_against_list(
-            "type",
-            type,
-            DASHBOARD_TYPES,
-        )
 
         res = self.api_client.get(
             f"{GET_DASHBOARD_URI}?type={type}&project_name={self.project_name}&dashboard_id={dashboard_id}"
@@ -941,11 +936,6 @@ class TabularProject(Project):
             - print_config(): Pretty-print the dashboard configuration
         :rtype: Dashboard
         """
-        Validate.value_against_list(
-            "type",
-            type,
-            DASHBOARD_TYPES,
-        )
 
         res = self.api_client.get(
             f"{GET_DASHBOARD_URI}?type={type}&project_name={self.project_name}&dashboard_id={dashboard_id}"
