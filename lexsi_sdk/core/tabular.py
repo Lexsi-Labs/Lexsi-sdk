@@ -1061,7 +1061,7 @@ class TabularProject(Project):
         :return: response
         """
         payload["project_name"] = self.project_name
-        
+
         if payload.get("pod", None):
             payload["instance_type"] = payload["pod"]
         payload = {
@@ -1503,7 +1503,7 @@ class TabularProject(Project):
             raise Exception("Data summary not available, please upload data first.")
 
         if tag not in valid_tags:
-            raise Exception(f"Not a vaild tag. Pick a valid tag from {valid_tags}")
+            raise Exception(f"Not a valid tag. Pick a valid tag from {valid_tags}")
 
         data = {
             "Total Data Volume": res["data"]["overview"]["Total Data Volumn"],
@@ -1560,21 +1560,6 @@ class TabularProject(Project):
         """
 
         if baseline_tags and current_tags:
-            if pod not in [
-                "small",
-                "xsmall",
-                "2xsmall",
-                "3xsmall",
-                "medium",
-                "xmedium",
-                "2xmedium",
-                "3xmedium",
-                "large",
-                "xlarge",
-                "2xlarge",
-                "3xlarge",
-            ]:
-                return "pod is not valid. Valid types are small, xsmall, 2xsmall, 3xsmall, medium, xmedium, 2xmedium, 3xmedium, large, xlarge, 2xlarge, 3xlarge"
 
             payload = {
                 "project_name": self.project_name,
