@@ -315,7 +315,6 @@ class TabularProject(Project):
         if project_config == "Not Found":
             if not config:
                 config = {
-                    "project_type": "",
                     "unique_identifier": "",
                     "true_label": "",
                     "pred_label": "",
@@ -327,10 +326,6 @@ class TabularProject(Project):
                 raise Exception(
                     f"Project Config is required, since no config is set for project \n {json.dumps(config,indent=1)}"
                 )
-
-            # Validate.value_against_list(
-            #     "project_type", config, ["classification", "regression"]
-            # )
 
             uploaded_path = upload_file_and_return_path(data, "data", tag)
 
@@ -451,7 +446,6 @@ class TabularProject(Project):
         :param file_path: filepath from the bucket for the data to read
         :param config: project config
                 {
-                    "project_type": "",
                     "unique_identifier": "",
                     "true_label": "",
                     "pred_label": "",
@@ -555,11 +549,8 @@ class TabularProject(Project):
         project_config = self.config()
 
         if project_config == "Not Found":
-            if not config.get("project_type"):
-                config["project_type"] = self.metadata.get("project_type")
             if not config:
                 config = {
-                    "project_type": "",
                     "unique_identifier": "",
                     "true_label": "",
                     "pred_label": "",
@@ -573,10 +564,6 @@ class TabularProject(Project):
 
             Validate.check_for_missing_keys(
                 config, ["project_type", "unique_identifier", "true_label"]
-            )
-
-            Validate.value_against_list(
-                "project_type", config, ["classification", "regression"]
             )
 
             uploaded_path = upload_file_and_return_path(file_path, "data", tag)

@@ -162,9 +162,6 @@ class ProjectConfig(TypedDict):
     """
     Configuration keys required to describe a project.
 
-    :param project_type: Project type identifier.
-    :type project_type: Optional[str]
-
     :param model_name: Model name associated with the project.
     :type model_name: Optional[str]
 
