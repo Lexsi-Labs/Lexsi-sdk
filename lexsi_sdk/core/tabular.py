@@ -703,17 +703,6 @@ class TabularProject(Project):
 
         uploaded_path = upload_file_and_return_path()
 
-        if pod:
-            custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
-            Validate.value_against_list(
-                "pod",
-                pod,
-                [
-                    server["instance_name"]
-                    for server in custom_batch_servers.get("details", [])
-                ],
-            )
-
         if xai_method:
             Validate.value_against_list(
                 "explainability_method", xai_method, ["shap", "lime", "ig", "dlb"]
