@@ -1061,16 +1061,7 @@ class TabularProject(Project):
         :return: response
         """
         payload["project_name"] = self.project_name
-
-        required_payload_keys = [
-            "trigger_type",
-            "priority",
-            "mail_list",
-            "frequency",
-            "trigger_name",
-        ]
-
-        Validate.check_for_missing_keys(payload, required_payload_keys)
+        
         if payload.get("pod", None):
             payload["instance_type"] = payload["pod"]
         payload = {
