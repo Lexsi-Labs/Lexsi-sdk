@@ -872,12 +872,6 @@ class TabularProject(Project):
         :return: Result DataFrame
         """
 
-        Validate.value_against_list(
-            "type",
-            type,
-            DASHBOARD_TYPES,
-        )
-
         res = self.api_client.get(
             f"{DASHBOARD_LOGS_URI}?project_name={self.project_name}&type={type}&page={page}",
         )
