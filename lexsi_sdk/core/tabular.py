@@ -703,11 +703,6 @@ class TabularProject(Project):
 
         uploaded_path = upload_file_and_return_path()
 
-        if xai_method:
-            Validate.value_against_list(
-                "explainability_method", xai_method, ["shap", "lime", "ig", "dlb"]
-            )
-
         payload = {
             "project_name": self.project_name,
             "model_name": model_name,
