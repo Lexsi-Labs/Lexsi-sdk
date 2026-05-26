@@ -1661,20 +1661,6 @@ class TabularProject(Project):
 
         payload["project_name"] = self.project_name
 
-        Validate.value_against_list(
-            "stat_test_name", payload["stat_test_name"], DATA_DRIFT_STAT_TESTS
-        )
-
-        custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
-        Validate.value_against_list(
-            "pod",
-            pod,
-            [
-                server["instance_name"]
-                for server in custom_batch_servers.get("details", [])
-            ],
-        )
-
         if payload.get("pod", None):
             payload["instance_type"] = payload["pod"]
         if pod:
