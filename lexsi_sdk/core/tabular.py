@@ -1743,46 +1743,6 @@ class TabularProject(Project):
 
         payload["project_name"] = self.project_name
 
-        # validate required fields
-        Validate.check_for_missing_keys(payload, TARGET_DRIFT_DASHBOARD_REQUIRED_FIELDS)
-
-        # validate tags and labels
-        tags_info = self.available_tags()
-        all_tags = tags_info["alltags"]
-
-        Validate.value_against_list("base_line_tag", payload["base_line_tag"], all_tags)
-        Validate.value_against_list("current_tag", payload["current_tag"], all_tags)
-
-        Validate.validate_date_feature_val(payload, tags_info["alldatetimefeatures"])
-
-        Validate.value_against_list("model_type", payload["model_type"], MODEL_TYPES)
-
-        Validate.value_against_list(
-            "stat_test_name", payload["stat_test_name"], TARGET_DRIFT_STAT_TESTS
-        )
-
-        Validate.value_against_list(
-            "baseline_true_label",
-            [payload["baseline_true_label"]],
-            tags_info["alluniquefeatures"],
-        )
-
-        Validate.value_against_list(
-            "current_true_label",
-            [payload["current_true_label"]],
-            tags_info["alluniquefeatures"],
-        )
-
-        custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
-        Validate.value_against_list(
-            "pod",
-            pod,
-            [
-                server["instance_name"]
-                for server in custom_batch_servers.get("details", [])
-            ],
-        )
-
         if payload.get("pod", None):
             payload["instance_type"] = payload["pod"]
         if pod:
@@ -1835,50 +1795,6 @@ class TabularProject(Project):
             return self.get_default_dashboard("biasmonitoring")
 
         payload["project_name"] = self.project_name
-
-        # validate required fields
-        Validate.check_for_missing_keys(
-            payload, BIAS_MONITORING_DASHBOARD_REQUIRED_FIELDS
-        )
-
-        # validate tags and labels
-        tags_info = self.available_tags()
-        all_tags = tags_info["alltags"]
-
-        Validate.value_against_list("base_line_tag", payload["base_line_tag"], all_tags)
-
-        Validate.validate_date_feature_val(payload, tags_info["alldatetimefeatures"])
-
-        Validate.value_against_list("model_type", payload["model_type"], MODEL_TYPES)
-
-        Validate.value_against_list(
-            "baseline_true_label",
-            [payload["baseline_true_label"]],
-            tags_info["alluniquefeatures"],
-        )
-
-        Validate.value_against_list(
-            "baseline_pred_label",
-            [payload["baseline_pred_label"]],
-            tags_info["alluniquefeatures"],
-        )
-
-        if payload.get("features_to_use"):
-            Validate.value_against_list(
-                "features_to_use",
-                payload.get("features_to_use", []),
-                tags_info["alluniquefeatures"],
-            )
-
-        custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
-        Validate.value_against_list(
-            "pod",
-            pod,
-            [
-                server["instance_name"]
-                for server in custom_batch_servers.get("details", [])
-            ],
-        )
 
         if payload.get("pod", None):
             payload["instance_type"] = payload["pod"]
@@ -1934,61 +1850,6 @@ class TabularProject(Project):
             return self.get_default_dashboard("performance")
 
         payload["project_name"] = self.project_name
-
-        tags_info = self.available_tags()
-        all_tags = tags_info["alltags"]
-
-        if self.metadata.get("modality") == "image":
-            Validate.check_for_missing_keys(payload, ["base_line_tag", "current_tag"])
-
-        Validate.value_against_list("base_line_tag", payload["base_line_tag"], all_tags)
-        Validate.value_against_list("current_tag", payload["current_tag"], all_tags)
-
-        if self.metadata.get("modality") == "tabular":
-            Validate.check_for_missing_keys(
-                payload, MODEL_PERF_DASHBOARD_REQUIRED_FIELDS
-            )
-            Validate.validate_date_feature_val(
-                payload, tags_info["alldatetimefeatures"]
-            )
-
-            Validate.value_against_list(
-                "model_type", payload["model_type"], MODEL_TYPES
-            )
-
-            Validate.value_against_list(
-                "baseline_true_label",
-                [payload["baseline_true_label"]],
-                tags_info["alluniquefeatures"],
-            )
-
-            Validate.value_against_list(
-                "baseline_pred_label",
-                [payload["baseline_pred_label"]],
-                tags_info["alluniquefeatures"],
-            )
-
-            Validate.value_against_list(
-                "current_true_label",
-                [payload["current_true_label"]],
-                tags_info["alluniquefeatures"],
-            )
-
-            Validate.value_against_list(
-                "current_pred_label",
-                [payload["current_pred_label"]],
-                tags_info["alluniquefeatures"],
-            )
-
-        custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
-        Validate.value_against_list(
-            "pod",
-            pod,
-            [
-                server["instance_name"]
-                for server in custom_batch_servers.get("details", [])
-            ],
-        )
 
         if payload.get("pod", None):
             payload["instance_type"] = payload["pod"]
