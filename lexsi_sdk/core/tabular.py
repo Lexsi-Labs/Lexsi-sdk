@@ -812,38 +812,7 @@ class TabularProject(Project):
 
             return uploaded_path
 
-        model_types = self.api_client.get(GET_MODEL_TYPES_URI)
-        valid_model_architecture = model_types.get("model_architecture").keys()
-        Validate.value_against_list(
-            "model_achitecture", model_architecture, valid_model_architecture
-        )
-
-        valid_model_types = model_types.get("model_architecture")[model_architecture]
-        Validate.value_against_list("model_type", model_type, valid_model_types)
-
-        tags = self.tags()
-        Validate.value_against_list("model_train", model_train, tags)
-
-        if model_test:
-            Validate.value_against_list("model_test", model_test, tags)
-
         uploaded_path = upload_file_and_return_path()
-
-        if pod:
-            custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
-            Validate.value_against_list(
-                "pod",
-                pod,
-                [
-                    server["instance_name"]
-                    for server in custom_batch_servers.get("details", [])
-                ],
-            )
-
-        if xai_method:
-            Validate.value_against_list(
-                "explainability_method", xai_method, ["shap", "lime"]
-            )
 
         payload = {
             "project_name": self.project_name,
