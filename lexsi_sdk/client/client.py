@@ -105,7 +105,7 @@ class APIClient(BaseModel):
 
             res = None
             try:
-                res = response.json().get("details") or response.json()
+                res = response.json().get("details") or response.json().get("data") or response.json()
             except Exception:
                 res = response.text
             if 400 <= response.status_code < 500:
