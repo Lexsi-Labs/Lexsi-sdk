@@ -1949,11 +1949,6 @@ class TabularProject(Project):
 
         models = self.models()
 
-        available_models = models["model_name"].to_list()
-
-        if model_name:
-            Validate.value_against_list("model_name", model_name, available_models)
-
         model = (
             model_name
             or models.loc[models["status"] == "active"]["model_name"].values[0]
