@@ -1877,11 +1877,6 @@ class TabularProject(Project):
         :return: DataFrame
         :rtype: pd.DataFrame
         """
-        Validate.value_against_list(
-            "type",
-            type,
-            DASHBOARD_TYPES,
-        )
         self.api_client.refresh_bearer_token()
         auth_token = self.api_client.get_auth_token()
         query_params = (
