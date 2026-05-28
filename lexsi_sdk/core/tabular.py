@@ -2351,9 +2351,8 @@ class TabularProject(Project):
             "project_name": self.project_name,
             "model_name": model,
             "tags": tag,
+            "instance_type": pod,
         }
-        if pod:
-            run_model_payload["instance_type"] = pod
         if filepath:
             run_model_payload["filepath"] = filepath
 
