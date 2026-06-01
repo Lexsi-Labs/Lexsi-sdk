@@ -23,6 +23,7 @@ from lexsi_sdk.common.xai_uris import (
     INITIALIZE_TEXT_MODEL_URI,
     LIST_DATA_CONNECTORS,
     MESSAGES_URI,
+    MODEL_LOGS_URI,
     QUANTIZE_MODELS_URI,
     SESSIONS_URI,
     TEXT_MODEL_INFERENCE_SETTINGS_URI,
@@ -628,6 +629,7 @@ class TextProject(Project):
         api_key: Optional[str] = None,
         session_id: Optional[UUID] = None,
         max_tokens: Optional[int] = None,
+        max_completion_tokens: Optional[int] = None,
         stream: Optional[bool] = False,
     ) -> Union[dict, Iterator[str]]:
         """Generate a chat completion using an OpenAI-compliant interface.
@@ -638,19 +640,23 @@ class TextProject(Project):
         :param api_key: API key for the selected provider, if required
         :param session_id: Session ID associated with this chat completion, if provided
         :param max_tokens: Maximum number of tokens to generate
+        :param max_completion_tokens: Maximum number of tokens to generate for the completion
         :param stream: Whether to stream the response
         :return: a chat completion response dictionary or a streaming iterator of response chunks
         """
         payload = {
             "model": model,
             "messages": messages,
-            "max_tokens": max_tokens,
             "stream": stream,
             "project_name": self.project_name,
             "provider": provider,
             "api_key": api_key,
             "session_id": session_id,
         }
+        if max_tokens is not None:
+            payload["max_tokens"] = max_tokens
+        if max_completion_tokens is not None:
+            payload["max_completion_tokens"] = max_completion_tokens
 
         if not stream:
             return self.api_client.post(RUN_CHAT_COMPLETION, payload=payload)
@@ -696,6 +702,7 @@ class TextProject(Project):
         api_key: Optional[str] = None,
         session_id: Optional[UUID] = None,
         max_tokens: Optional[int] = None,
+        max_completion_tokens: Optional[int] = None,
         stream: Optional[bool] = False,
     ) -> dict:
         """Generate a text completion using an OpenAI-compliant interface.
@@ -713,13 +720,16 @@ class TextProject(Project):
         payload = {
             "model": model,
             "prompt": prompt,
-            "max_tokens": max_tokens,
             "stream": stream,
             "project_name": self.project_name,
             "provider": provider,
             "api_key": api_key,
             "session_id": session_id,
         }
+        if max_tokens is not None:
+            payload["max_tokens"] = max_tokens
+        if max_completion_tokens is not None:
+            payload["max_completion_tokens"] = max_completion_tokens
         if not stream:
             return self.api_client.post(RUN_COMPLETION, payload=payload)
 
@@ -920,6 +930,22 @@ class TextProject(Project):
         if not res["success"]:
             raise Exception(res.get("details", "Failed to remove guardrail from model"))
         return dict(res["details"])
+    
+    def model_logs(self, model_name: str, return_logs: Optional[bool] = False) -> str | None:
+        """Fetch and return logs for a specific finetuned and quantized model.
+
+        :param model_name: Name of the model to retrieve logs for.
+        :param return_logs: Whether to return the logs as a string. If False, logs will be printed line by line. If True, logs will be returned as a single string.
+        :return: Logs data as a string or None.
+        """
+        res = self.api_client.get(f"{MODEL_LOGS_URI}?project_name={self.project_name}&model_name={model_name}")
+        if not res["success"]:
+            raise Exception(res.get("details", "Failed to fetch model logs"))
+        logs = res.get("details", "No logs found for the model").get("logs", "")
+        if return_logs:
+            return logs
+        for line in logs.split("\n"):
+            print(line)
 
 class CaseText(BaseModel):
     """Explainability view for text-based cases. Supports token-level importance, attention visualization, and LLM output analysis."""
