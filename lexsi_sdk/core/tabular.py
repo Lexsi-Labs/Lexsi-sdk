@@ -2291,10 +2291,10 @@ class TabularProject(Project):
 
     def model_inference(
         self,
+        pod: str,
         tag: Optional[str] = None,
         file_name: Optional[str] = None,
         model_name: Optional[str] = None,
-        pod: Optional[str] = None
     ) -> pd.DataFrame:
         """Run model inference on tag or file_name data. Either tag or file_name is required for running inference
 
@@ -2347,32 +2347,11 @@ class TabularProject(Project):
             or models.loc[models["status"] == "active"]["model_name"].values[0]
         )
 
-        if pod and self.metadata.get("modality") == "tabular":
-            custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
-            available_custom_batch_servers = custom_batch_servers.get("details", []) + custom_batch_servers.get("available_gpu_custom_servers", [])
-            Validate.value_against_list(
-                "pod",
-                pod,
-                [
-                    server["instance_name"]
-                    for server in available_custom_batch_servers
-                ],
-            )
-        else:
-            Validate.value_against_list(
-                "pod",
-                pod,
-                [
-                    server["instance_name"]
-                    for server in custom_batch_servers.get("details", [])
-                ],
-            )
-
         run_model_payload = {
             "project_name": self.project_name,
             "model_name": model,
             "tags": tag,
-            "instance_type": pod
+            "instance_type": pod,
         }
         if filepath:
             run_model_payload["filepath"] = filepath
