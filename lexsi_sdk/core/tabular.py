@@ -2708,14 +2708,7 @@ class TabularProject(Project):
         )
 
         Validate.string("expression", expression)
-
-        Validate.string("statement", statement)
-
-        Validate.value_against_list(
-            "linked_feature",
-            linked_features,
-            list(observation_params["details"]["features"].keys()),
-        )
+        
         configuration, expression = build_expression(expression)
 
         validate_configuration(
