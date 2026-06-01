@@ -567,10 +567,19 @@ class TextProject(Project):
         quant_name: str,
         quantization_type: str,
         qbit: int,
-        instance_type: str,
+        node: str,
         tag: Optional[str] = None,
         input_column: Optional[str] = None,
-        no_of_samples: Optional[str] = None,
+        no_of_samples: Optional[int] = None,
+        assets: Optional[dict] = None,
+        max_seq_len: Optional[int] = 512,
+        target_layers: Optional[List[str]] = ["Linear"],
+        ignore_layers: Optional[List[str]] = ["lm_head"],
+        scheme: Optional[str] = None,
+        torch_compile: Optional[bool] = False,
+        batch_size: Optional[int] = 2,
+        apply_kvcache_quant: Optional[bool] = False,
+        smoothing_strength: Optional[float] = 0.8
     ):
         """Quantize a trained model to reduce its size and improve inference efficiency.
         Requires the model name, quantization method, quantization type,number of bits, and compute instance type. 
@@ -597,7 +606,7 @@ class TextProject(Project):
             **Quantization Bits**
             - ``4``
             - ``8``
-        :param instance_type: Instance type used for performing quantization
+        :param node: Node name used for performing quantization
         :param tag: Optional tag name to associate with the quantized model
         :param input_column: Optional input column used from the dataset for quantization
         :param no_of_samples: Optional number of samples to use for quantization
@@ -609,10 +618,19 @@ class TextProject(Project):
             "quant_name": quant_name,
             "quantization_type": quantization_type,
             "qbit": qbit,
-            "instance_type": instance_type,
+            "instance_type": node,
             "tag": tag,
+            "assets": assets,
+            "max_seq_len": max_seq_len,
+            "target_layers": target_layers,
+            "ignore_layers": ignore_layers,
             "input_column": input_column,
             "no_of_samples": no_of_samples,
+            "scheme": scheme,
+            "torch_compile": torch_compile,
+            "batch_size": batch_size,
+            "apply_kvcache_quant": apply_kvcache_quant,
+            "smoothing_strength": smoothing_strength
         }
 
         res = self.api_client.post(QUANTIZE_MODELS_URI, payload)
