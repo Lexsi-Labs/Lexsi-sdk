@@ -2708,7 +2708,7 @@ class TabularProject(Project):
         )
 
         Validate.string("expression", expression)
-        
+
         configuration, expression = build_expression(expression)
 
         validate_configuration(
@@ -2763,8 +2763,6 @@ class TabularProject(Project):
         :param linked_features: new linked features for observation, defaults to None
         :return: response
         """
-        if not status and not expression and not statement and not linked_features:
-            raise Exception("update parameters for observation not passed")
 
         payload = {
             "project_name": self.project_name,
@@ -2790,19 +2788,12 @@ class TabularProject(Project):
             payload["update_keys"]["metadata"] = {"expression": expression}
 
         if linked_features:
-            Validate.value_against_list(
-                "linked_feature",
-                linked_features,
-                list(observation_params["details"]["features"].keys()),
-            )
             payload["update_keys"]["linked_features"] = linked_features
 
         if statement:
-            Validate.string("statement", statement)
             payload["update_keys"]["statement"] = [statement]
 
         if status:
-            Validate.value_against_list("status", status, ["active", "inactive"])
             payload["update_keys"]["status"] = status
 
         res = self.api_client.post(UPDATE_OBSERVATION_URI, payload)
