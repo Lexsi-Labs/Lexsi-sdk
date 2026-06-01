@@ -2769,10 +2769,15 @@ class TabularProject(Project):
             or False
         )
 
+        unique_identifier = data_conf.get("unique_identifier") or project_config["unique_identifier"]
+        true_label = data_conf.get("true_label") or project_config["true_label"]
+        pred_label = data_conf.get("pred_label") or project_config.get("pred_label")
+
         payload = {
             "project_name": self.project_name,
-            "unique_identifier": project_config["unique_identifier"],
-            "true_label": project_config["true_label"],
+            "unique_identifier": unique_identifier,
+            "true_label": true_label,
+            "pred_label": pred_label,
             "metadata": {
                 "model_name": model_type,
                 "model_parameters": model_config,

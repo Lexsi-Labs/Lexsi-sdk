@@ -255,6 +255,15 @@ class DataConfig(TypedDict):
 
     :param handle_data_imbalance: Apply SMOTE to address class imbalance.
     :type handle_data_imbalance: bool
+
+    :param unique_identifier: Override the project-level unique identifier column.
+    :type unique_identifier: str | None
+
+    :param true_label: Override the project-level true label column.
+    :type true_label: str | None
+
+    :param pred_label: Override the project-level predicted label column.
+    :type pred_label: str | None
     """
 
     tags: List[str]
@@ -268,6 +277,9 @@ class DataConfig(TypedDict):
     lime_explainability_iterations: int
     xai_method: List[str]
     handle_data_imbalance: Optional[bool]
+    unique_identifier: Optional[str]
+    true_label: Optional[str]
+    pred_label: Optional[str]
 
 
 class XGBoostParams(TypedDict, total=False):
