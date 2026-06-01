@@ -3202,40 +3202,18 @@ class TabularProject(Project):
         servers = list(
             map(lambda instance: instance["instance_name"], available_servers)
         )
-        Validate.value_against_list("instance_type", pod, servers)
-
-        all_models_param = self.get_synthetic_model_params()
-
-        try:
-            model_params = all_models_param[model_name]
-        except KeyError as e:
-            availabel_models = list(all_models_param.keys())
-            Validate.value_against_list("model", [model_name], availabel_models)
 
         # validate and prepare data config
         data_config["model_name"] = model_name
 
-        available_tags = self.tags()
-        tags = data_config.get("tags", available_tags)
-
-        Validate.value_against_list("tag", tags, available_tags)
+        tags = data_config.get("tags", [])
 
         feature_exclude = data_config.get(
             "feature_exclude", project_config["feature_exclude"]
         )
 
-        Validate.value_against_list(
-            "feature_exclude", feature_exclude, project_config["avaialble_options"]
-        )
-
         feature_include = data_config.get(
             "feature_include", project_config["feature_include"]
-        )
-
-        Validate.value_against_list(
-            "feature_include",
-            feature_include,
-            project_config["avaialble_options"],
         )
 
         drop_duplicate_uid = data_config.get(
@@ -3244,28 +3222,6 @@ class TabularProject(Project):
 
         SYNTHETIC_MODELS_DEFAULT_HYPER_PARAMS[model_name].update(hyper_params)
         hyper_params = SYNTHETIC_MODELS_DEFAULT_HYPER_PARAMS[model_name]
-
-        # validate model hyper parameters
-        for key, value in hyper_params.items():
-            model_param = model_params.get(key, None)
-
-            if model_param:
-                if model_param["type"] == "input":
-                    if model_param["value"] == "int":
-                        if not isinstance(value, int):
-                            raise Exception(f"{key} value should be integer")
-                    elif model_param["value"] == "float":
-                        if not isinstance(value, float):
-                            raise Exception(f"{key} value should be float")
-
-                        if value < model_param["min"] or value > model_param["max"]:
-                            raise Exception(
-                                f"{key} value should be between {model_param['min']} and {model_param['max']}"
-                            )
-                    elif model_param["type"] == "select":
-                        Validate.value_against_list(
-                            "value", [value], model_param["value"]
-                        )
 
         print(f"Using data config: {json.dumps(data_config, indent=4)}")
         print(f"Using hyper params: {json.dumps(hyper_params, indent=4)}")
