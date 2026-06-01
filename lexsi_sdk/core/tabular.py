@@ -2182,158 +2182,11 @@ class TabularProject(Project):
         if project_config == "Not Found":
             raise Exception("Upload files first")
 
-        available_models = self.available_models()
-
-        Validate.value_against_list("model_type", model_type, available_models)
-
         all_unique_features = [
             *project_config["metadata"]["feature_exclude"],
             *project_config["metadata"]["feature_include"],
         ]
 
-        if tunning_strategy != "inference" and compute_type and "gova" not in compute_type:
-            custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
-            available_custom_batch_servers = custom_batch_servers.get("details", []) + custom_batch_servers.get("available_gpu_custom_servers", [])
-            Validate.value_against_list(
-                "pod",
-                compute_type,
-                [
-                    server["instance_name"]
-                    for server in available_custom_batch_servers
-                ],
-            )
-
-        if data_config:
-            if data_config.get("feature_exclude"):
-                Validate.value_against_list(
-                    "feature_exclude",
-                    data_config["feature_exclude"],
-                    all_unique_features,
-                )
-
-            if data_config.get("tags"):
-                available_tags = self.tags()
-                Validate.value_against_list("tags", data_config["tags"], available_tags)
-
-            if data_config.get("test_tags"):
-                available_tags = self.tags()
-                Validate.value_against_list(
-                    "test_tags", data_config["test_tags"], available_tags
-                )
-
-            if data_config.get("feature_encodings"):
-                Validate.value_against_list(
-                    "feature_encodings_feature",
-                    list(data_config["feature_encodings"].keys()),
-                    list(project_config["metadata"]["feature_encodings"].keys()),
-                )
-                Validate.value_against_list(
-                    "feature_encodings_feature",
-                    list(data_config["feature_encodings"].values()),
-                    ["labelencode", "countencode", "onehotencode"],
-                )
-
-            if data_config.get("sample_percentage"):
-                if (
-                    data_config["sample_percentage"] < 0
-                    or data_config["sample_percentage"] > 1
-                ):
-                    raise Exception(
-                        "Data sample percentage is invalid, select between 0 and 1"
-                    )
-
-            if data_config.get("explainability_sample_percentage"):
-                if (
-                    data_config["explainability_sample_percentage"] < 0
-                    or data_config["explainability_sample_percentage"] > 1
-                ):
-                    raise Exception(
-                        "Explainability sample percentage is invalid, select between 0 and 1"
-                    )
-
-            if data_config.get("lime_explainability_iterations"):
-                if (
-                    data_config["lime_explainability_iterations"] < 1
-                    or data_config["lime_explainability_iterations"] > 10000
-                ):
-                    raise Exception(
-                        "Lime explainability iterations is invalid, select between 1 and 10000"
-                    )
-
-            if data_config.get("xai_method"):
-                Validate.value_against_list(
-                    "xai_method",
-                    data_config["xai_method"],
-                    ["shap", "lime"],
-                )
-
-        if model_config:
-            model_params = self.api_client.get(MODEL_PARAMETERS_URI)
-            model_name = f"{model_type}_{project_config['project_type']}".lower()
-            model_parameters = model_params.get(model_name)
-
-            if model_parameters:
-
-                def validate_params(param_group, config_group):
-                    """Validate config values against model parameter constraints.
-                    Checks select options and numeric min/max bounds, raising exceptions on invalid values.
-
-                    :param param_group: Parameter definition dict (select/input types with constraints).
-                    :param config_group: User-supplied config dict to validate against `param_group`.
-                    :raises Exception: If any value violates the declared constraints.
-                    """
-                    if config_group:
-                        for param_name, param_value in config_group.items():
-                            model_param = param_group.get(param_name)
-                            if not model_param:
-                                # raise Exception(
-                                #     f"Invalid model config for {model_type} \n {json.dumps(model_parameters)}"
-                                # )
-                                continue
-
-                            param_type = model_param["type"]
-
-                            if param_type == "select":
-                                Validate.value_against_list(
-                                    param_name, param_value, model_param["value"]
-                                )
-                            elif param_type == "input":
-                                if param_value > model_param["max"]:
-                                    raise Exception(
-                                        f"{param_name} value cannot be greater than {model_param['max']}"
-                                    )
-                                if param_value < model_param["min"]:
-                                    raise Exception(
-                                        f"{param_name} value cannot be less than {model_param['min']}"
-                                    )
-
-                if model_type in ["TabPFN","TabICL","TabDPT","OrionMSP", "OrionBix","Mitra", "ContextTab"]:
-                    validate_params(
-                        model_parameters.get("model_params", {}), model_config
-                    )
-                    validate_params(
-                        model_parameters.get("tunning_params", {}), tunning_config
-                    )
-                    validate_params(
-                        model_parameters.get("processor_params", {}), processor_config
-                    )
-                    validate_params(
-                        model_parameters.get("peft_params", {}), peft_config
-                    )
-                else:
-                    validate_params(model_parameters, model_config)
-        if finetune_mode:
-            Validate.value_against_list(
-                "finetune_mode",
-                finetune_mode,
-                ["meta-learning", "sft"],
-            )
-        if tunning_strategy:
-            Validate.value_against_list(
-                "tunning_strategy",
-                tunning_strategy,
-                ["base-ft", "inference", "peft", "finetune"],
-            )
         data_conf = data_config or {}
 
         feature_exclude = [
@@ -2355,10 +2208,10 @@ class TabularProject(Project):
         )
 
         explainability_method = (
-            data_conf.get("explainability_method") 
+            data_conf.get("explainability_method")
             or data_conf.get("xai_method")
-            or project_config.get("metadata", {}).get("xai_method") 
-            or project_config.get("metadata", {}).get("explainability_method") 
+            or project_config.get("metadata", {}).get("xai_method")
+            or project_config.get("metadata", {}).get("explainability_method")
         )
 
         tags = data_conf.get("tags") or project_config["metadata"]["tags"]
@@ -2376,10 +2229,15 @@ class TabularProject(Project):
             or False
         )
 
+        unique_identifier = data_conf.get("unique_identifier") or project_config["unique_identifier"]
+        true_label = data_conf.get("true_label") or project_config["true_label"]
+        pred_label = data_conf.get("pred_label") or project_config.get("pred_label")
+
         payload = {
             "project_name": self.project_name,
-            "unique_identifier": project_config["unique_identifier"],
-            "true_label": project_config["true_label"],
+            "unique_identifier": unique_identifier,
+            "true_label": true_label,
+            "pred_label": pred_label,
             "metadata": {
                 "model_name": model_type,
                 "model_parameters": model_config,
