@@ -3014,13 +3014,6 @@ class TabularProject(Project):
             configuration, policy_params["details"], self.project_name, self.api_client
         )
 
-        Validate.value_against_list(
-            "decision", decision, list(policy_params["details"]["decision"].values())[0]
-        )
-
-        if decision == "input":
-            Validate.string("Decision input", input)
-
         payload = {
             "project_name": self.project_name,
             "policy_name": policy_name,
@@ -3073,8 +3066,6 @@ class TabularProject(Project):
         :param priority: Priority of the policy. Lower number indicates higher priority. Defaults to 5
         :return: response
         """
-        if not status and not expression and not statement and not decision:
-            raise Exception("update parameters for policy not passed")
 
         payload = {
             "project_name": self.project_name,
@@ -3100,21 +3091,12 @@ class TabularProject(Project):
             payload["update_keys"]["metadata"] = {"expression": expression}
 
         if statement:
-            Validate.string("statement", statement)
             payload["update_keys"]["statement"] = [statement]
 
         if status:
-            Validate.value_against_list("status", status, ["active", "inactive"])
             payload["update_keys"]["status"] = status
 
         if decision:
-            Validate.value_against_list(
-                "decision",
-                decision,
-                list(policy_params["details"]["decision"].values())[0],
-            )
-            if decision == "input":
-                Validate.string("Decision input", input)
             payload["update_keys"]["decision"] = (
                 input if decision == "input" else decision
             )
