@@ -2429,9 +2429,6 @@ class TabularProject(Project):
         :param tag: tag of case, defaults to None
         :return: response
         """
-        if tag:
-            all_tags = self.all_tags()
-            Validate.value_against_list("tag", tag, all_tags)
 
         paylod = {
             "project_name": self.project_name,
