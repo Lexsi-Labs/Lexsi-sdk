@@ -3257,13 +3257,6 @@ class TabularProject(Project):
         :raises Exception: _description_
         :return: response message
         """
-        models_df = self.synthetic_models()
-        valid_models = models_df["model_name"].tolist()
-
-        if model_name not in valid_models:
-            raise ValueError(
-                f"{model_name} is not valid. Pick a valid value from {valid_models}"
-            )
 
         payload = {"project_name": self.project_name, "model_name": model_name}
 
