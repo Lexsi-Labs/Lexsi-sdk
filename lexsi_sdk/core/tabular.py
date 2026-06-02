@@ -3292,13 +3292,6 @@ class TabularProject(Project):
         :raises Exception: _description_
         :return: _description_
         """
-        models_df = self.synthetic_models()
-        valid_models = models_df["model_name"].tolist()
-
-        if model_name not in valid_models:
-            raise ValueError(
-                f"{model_name} is not valid. Pick a valid value from {valid_models}"
-            )
 
         url = f"{GET_SYNTHETIC_MODEL_DETAILS_URI}?project_name={self.project_name}&model_name={model_name}"
 
@@ -3388,13 +3381,6 @@ class TabularProject(Project):
         :raises Exception: _description_
         :return: datapoints
         """
-        all_tags = self.all_tags()
-
-        Validate.value_against_list(
-            "tag",
-            tag,
-            all_tags,
-        )
 
         res = self.api_client.base_request(
             "GET",
@@ -3412,13 +3398,6 @@ class TabularProject(Project):
         :raises Exception: _description_
         :return: response messsage
         """
-        all_tags = self.all_tags()
-
-        Validate.value_against_list(
-            "tag",
-            tag,
-            all_tags,
-        )
 
         payload = {
             "project_name": self.project_name,
