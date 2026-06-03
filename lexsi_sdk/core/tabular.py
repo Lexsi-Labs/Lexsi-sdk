@@ -741,8 +741,8 @@ class TabularProject(Project):
         model_type: str,
         model_name: str,
         model_train: list,
-        model_test: Optional[list],
-        pod: Optional[str] = None,
+        pod: str,
+        model_test: Optional[list] = None,
         xai_method: Optional[list] = ["shap"],
         feature_list: Optional[list] = None,
     ):
@@ -754,8 +754,8 @@ class TabularProject(Project):
                 use upload_model_types() method to get all allowed model_types
         :param model_name: name of the model
         :param model_train: data tags for model
+        :param pod: pod to be used for uploading model (required)
         :param model_test: test tags for model (optional)
-        :param pod: pod to be used for uploading model (optional)
         :param xai_method: xai method to be used while uploading model ["shap", "lime"] (optional)
         :param feature_list: list of features in sequence which are to be passed in the model (optional)
         """
@@ -791,16 +791,18 @@ class TabularProject(Project):
         if model_test:
             Validate.value_against_list("model_test", model_test, tags)
 
-        if pod:
-            custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
-            Validate.value_against_list(
-                "pod",
-                pod,
-                [
-                    server["instance_name"]
-                    for server in custom_batch_servers.get("details", [])
-                ],
-            )
+        if not pod:
+            raise Exception("pod is required to upload a model.")
+
+        custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
+        Validate.value_against_list(
+            "pod",
+            pod,
+            [
+                server["instance_name"]
+                for server in custom_batch_servers.get("details", [])
+            ],
+        )
 
         if xai_method:
             Validate.value_against_list(
@@ -819,10 +821,8 @@ class TabularProject(Project):
             "model_test_tags": model_test,
             "explainability_method": xai_method,
             "feature_list": feature_list,
+            "instance_type": pod,
         }
-
-        if pod:
-            payload["instance_type"] = pod
 
         res = self.api_client.post(UPLOAD_MODEL_URI, payload)
 
@@ -844,7 +844,7 @@ class TabularProject(Project):
         model_name: str,
         model_train: list,
         model_test: Optional[list],
-        pod: Optional[str] = None,
+        pod: str,
         xai_method: Optional[list] = ["shap"],
         bucket_name: Optional[str] = None,
         file_path: Optional[str] = None,
@@ -858,7 +858,7 @@ class TabularProject(Project):
         :param model_name: name of the model
         :param model_train: data tags for model
         :param model_test: test tags for model (optional)
-        :param pod: pod to be used for uploading model (optional)
+        :param pod: pod to be used for uploading model (required)
         :param xai_method: explainability method to be used while uploading model ["shap", "lime"] (optional)
         :param bucket_name: if data connector has buckets # Example: s3/gcs buckets
         :param file_path: filepath from the bucket for the data to read
@@ -933,16 +933,18 @@ class TabularProject(Project):
         if model_test:
             Validate.value_against_list("model_test", model_test, tags)
 
-        if pod:
-            custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
-            Validate.value_against_list(
-                "pod",
-                pod,
-                [
-                    server["instance_name"]
-                    for server in custom_batch_servers.get("details", [])
-                ],
-            )
+        if not pod:
+            raise Exception("pod is required to upload a model.")
+
+        custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
+        Validate.value_against_list(
+            "pod",
+            pod,
+            [
+                server["instance_name"]
+                for server in custom_batch_servers.get("details", [])
+            ],
+        )
 
         if xai_method:
             Validate.value_against_list(
@@ -960,10 +962,8 @@ class TabularProject(Project):
             "model_data_tags": model_train,
             "model_test_tags": model_test,
             "explainability_method": xai_method,
+            "instance_type": pod,
         }
-
-        if pod:
-            payload["instance_type"] = pod
 
         res = self.api_client.post(UPLOAD_MODEL_URI, payload)
 
