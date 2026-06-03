@@ -598,6 +598,38 @@ class TabularProject(Project):
                     f"Project Config is required, since no config is set for project \n {json.dumps(config,indent=1)}"
                 )
 
+            Validate.check_for_missing_keys(
+                config, ["unique_identifier", "true_label"]
+            )
+
+            feature_encodings = config.get("feature_encodings", {})
+            if feature_encodings:
+                Validate.value_against_list(
+                    "feature_encodings_feature",
+                    list(feature_encodings.values()),
+                    ["labelencode", "countencode", "onehotencode"],
+                )
+
+            custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
+            available_custom_batch_servers = custom_batch_servers.get("details", []) + custom_batch_servers.get("available_gpu_custom_servers", [])
+
+            if config.get("model_name") and config.get("model_name") in ["TabPFN","TabICL","TabDPT","OrionMSP", "OrionBix","Mitra", "ContextTab"] and not compute_type:
+                valid_list = [
+                    server["instance_name"]
+                    for server in available_custom_batch_servers
+                ]
+                raise Exception(f"For Foundational models compute_type is mandatory. select from \n {valid_list}")
+
+            if tunning_strategy != "inference" and compute_type and "gova" not in compute_type:
+                Validate.value_against_list(
+                    "pod",
+                    compute_type,
+                    [
+                        server["instance_name"]
+                        for server in available_custom_batch_servers
+                    ],
+                )
+
             uploaded_path = upload_file_and_return_path(file_path, "data", tag)
 
             file_info = self.api_client.post(
@@ -617,11 +649,6 @@ class TabularProject(Project):
                 for feature in column_names
                 if feature not in feature_exclude
             ]
-
-            feature_encodings = config.get("feature_encodings", {})
-
-            custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
-            available_custom_batch_servers = custom_batch_servers.get("details", []) + custom_batch_servers.get("available_gpu_custom_servers", [])
 
             payload = {
                 "project_name": self.project_name,
@@ -656,13 +683,21 @@ class TabularProject(Project):
             if tunning_strategy:
                 payload["metadata"]["tunning_strategy"] = tunning_strategy
 
-            res = self.api_client.post(UPLOAD_DATA_WITH_CHECK_URI, payload)
+            try:
+                res = self.api_client.post(UPLOAD_DATA_WITH_CHECK_URI, payload)
+            except Exception as e:
+                self.delete_file(uploaded_path)
+                raise e
 
             if not res["success"]:
                 self.delete_file(uploaded_path)
                 raise Exception(res.get("details"))
 
-            poll_events(self.api_client, self.project_name, res["event_id"])
+            try:
+                poll_events(self.api_client, self.project_name, res["event_id"])
+            except Exception as e:
+                self.delete_file(uploaded_path)
+                raise e
 
             return res.get("details")
 
@@ -677,7 +712,11 @@ class TabularProject(Project):
             "type": "data",
             "project_name": self.project_name,
         }
-        res = self.api_client.post(UPLOAD_DATA_URI, payload)
+        try:
+            res = self.api_client.post(UPLOAD_DATA_URI, payload)
+        except Exception as e:
+            self.delete_file(uploaded_path)
+            raise e
 
         if not res["success"]:
             self.delete_file(uploaded_path)
@@ -736,6 +775,37 @@ class TabularProject(Project):
             uploaded_path = res.get("metadata").get("filepath")
 
             return uploaded_path
+
+        model_types = self.api_client.get(GET_MODEL_TYPES_URI)
+        valid_model_architecture = model_types.get("model_architecture").keys()
+        Validate.value_against_list(
+            "model_achitecture", model_architecture, valid_model_architecture
+        )
+
+        valid_model_types = model_types.get("model_architecture")[model_architecture]
+        Validate.value_against_list("model_type", model_type, valid_model_types)
+
+        tags = self.tags()
+        Validate.value_against_list("model_train", model_train, tags)
+
+        if model_test:
+            Validate.value_against_list("model_test", model_test, tags)
+
+        if pod:
+            custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
+            Validate.value_against_list(
+                "pod",
+                pod,
+                [
+                    server["instance_name"]
+                    for server in custom_batch_servers.get("details", [])
+                ],
+            )
+
+        if xai_method:
+            Validate.value_against_list(
+                "explainability_method", xai_method, ["shap", "lime", "ig", "dlb"]
+            )
 
         uploaded_path = upload_file_and_return_path()
 
@@ -847,6 +917,37 @@ class TabularProject(Project):
             uploaded_path = res.get("metadata").get("filepath")
 
             return uploaded_path
+        
+        model_types = self.api_client.get(GET_MODEL_TYPES_URI)
+        valid_model_architecture = model_types.get("model_architecture").keys()
+        Validate.value_against_list(
+            "model_achitecture", model_architecture, valid_model_architecture
+        )
+
+        valid_model_types = model_types.get("model_architecture")[model_architecture]
+        Validate.value_against_list("model_type", model_type, valid_model_types)
+
+        tags = self.tags()
+        Validate.value_against_list("model_train", model_train, tags)
+
+        if model_test:
+            Validate.value_against_list("model_test", model_test, tags)
+
+        if pod:
+            custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
+            Validate.value_against_list(
+                "pod",
+                pod,
+                [
+                    server["instance_name"]
+                    for server in custom_batch_servers.get("details", [])
+                ],
+            )
+
+        if xai_method:
+            Validate.value_against_list(
+                "explainability_method", xai_method, ["shap", "lime"]
+            )
 
         uploaded_path = upload_file_and_return_path()
 
