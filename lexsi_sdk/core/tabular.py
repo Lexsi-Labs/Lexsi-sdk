@@ -327,6 +327,38 @@ class TabularProject(Project):
                     f"Project Config is required, since no config is set for project \n {json.dumps(config,indent=1)}"
                 )
 
+            Validate.check_for_missing_keys(
+                config, ["unique_identifier", "true_label"]
+            )
+
+            feature_encodings = config.get("feature_encodings", {})
+            if feature_encodings:
+                Validate.value_against_list(
+                    "feature_encodings_feature",
+                    list(feature_encodings.values()),
+                    ["labelencode", "countencode", "onehotencode"],
+                )
+
+            custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
+            available_custom_batch_servers = custom_batch_servers.get("details", []) + custom_batch_servers.get("available_gpu_custom_servers", [])
+
+            if config.get("model_name") and config.get("model_name") in ["TabPFN","TabICL","TabDPT","OrionMSP", "OrionBix","Mitra", "ContextTab"] and not compute_type:
+                valid_list = [
+                    server["instance_name"]
+                    for server in available_custom_batch_servers
+                ]
+                raise Exception(f"For Foundational models compute_type is mandatory. select from \n {valid_list}")
+
+            if tunning_strategy != "inference" and compute_type and "gova" not in compute_type:
+                Validate.value_against_list(
+                    "pod",
+                    compute_type,
+                    [
+                        server["instance_name"]
+                        for server in available_custom_batch_servers
+                    ],
+                )
+
             uploaded_path = upload_file_and_return_path(data, "data", tag)
 
             file_info = self.api_client.post(
@@ -347,14 +379,10 @@ class TabularProject(Project):
                 if feature not in feature_exclude
             ]
 
-            feature_encodings = config.get("feature_encodings", {})
-            custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
-            available_custom_batch_servers = custom_batch_servers.get("details", []) + custom_batch_servers.get("available_gpu_custom_servers", [])
-
             payload = {
                 "project_name": self.project_name,
-                "unique_identifier": config["unique_identifier"],
-                "true_label": config["true_label"],
+                "unique_identifier": config.get("unique_identifier"),
+                "true_label": config.get("true_label"),
                 "pred_label": config.get("pred_label"),
                 "metadata": {
                     "path": uploaded_path,
@@ -393,7 +421,11 @@ class TabularProject(Project):
                 payload["metadata"]["finetune_mode"] = finetune_mode
             if tunning_strategy:
                 payload["metadata"]["tunning_strategy"] = tunning_strategy
-            res = self.api_client.post(UPLOAD_DATA_WITH_CHECK_URI, payload)
+            try:
+                res = self.api_client.post(UPLOAD_DATA_WITH_CHECK_URI, payload)
+            except Exception as e:
+                self.delete_file(uploaded_path)
+                raise e
 
             if not res["success"]:
                 self.delete_file(uploaded_path)
@@ -416,14 +448,18 @@ class TabularProject(Project):
             "type": "data",
             "project_name": self.project_name,
         }
-        res = self.api_client.post(UPLOAD_DATA_URI, payload)
+        try:
+            res = self.api_client.post(UPLOAD_DATA_URI, payload)
+        except Exception as e:
+            self.delete_file(uploaded_path)
+            raise e
 
         if not res["success"]:
             self.delete_file(uploaded_path)
             raise Exception(res.get("details"))
 
         return res.get("details")
-    
+
     def upload_data_dataconnectors(
         self,
         data_connector_name: str,
