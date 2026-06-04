@@ -12,7 +12,7 @@ from lexsi_sdk.common.types import (
     GDriveConfig,
     SFTPConfig,
 )
-from lexsi_sdk.common.utils import normalize_time, parse_datetime, parse_float, poll_events
+from lexsi_sdk.common.utils import normalize_time, parse_float, poll_events
 from lexsi_sdk.common.validation import Validate
 import pandas as pd
 from lexsi_sdk.common.xai_uris import (
@@ -46,7 +46,6 @@ from lexsi_sdk.common.xai_uris import (
     LIST_FILEPATHS,
     UPLOAD_FILE_DATA_CONNECTORS,
     DROPBOX_OAUTH,
-    VALIDATE_POLICY_URI,
 )
 import io
 from lexsi_sdk.core.alert import Alert
@@ -1062,78 +1061,3 @@ def build_expression(expression_string):
             configuration.append(logical_operators[log_operator])
 
     return configuration, metadata_expression
-
-
-def validate_configuration(
-    configuration, params, project_name="", api_client=APIClient(), observations=False
-):
-    """Validate an expression provided configuration against allowed features/operators.
-    Raises exceptions for invalid columns/operators/values and can validate observation comparisons.
-
-    :param configuration: Configuration token list (from `build_expression`).
-    :param params: Allowed features/operators payload fetched from the backend.
-    :param project_name: Project name used for backend validation calls.
-    :param api_client: API client used for optional backend validation.
-    :param observations: If True, validate observation column-vs-column comparisons.
-    :raises Exception: If the configuration is invalid."""
-    for expression in configuration:
-        if isinstance(expression, str):
-            if expression not in ["(", ")", *params.get("logical_operators")]:
-                raise Exception(f"{expression} not a valid logical operator")
-
-        if isinstance(expression, dict):
-            # validate column name
-            Validate.value_against_list(
-                "feature",
-                expression.get("column"),
-                list(params.get("features", {}).keys()),
-            )
-
-            # validate operator
-            Validate.value_against_list(
-                "condition_operator",
-                expression.get("expression"),
-                params.get("condition_operators"),
-            )
-
-            # validate value(s)
-            expression_value = expression.get("value")
-            valid_feature_values = params.get("features").get(expression.get("column"))
-            if observations and isinstance(valid_feature_values, list):
-                condition_operators = {
-                    "_NOTEQ": "!==",
-                    "_ISEQ": "==",
-                    "_GRT": ">",
-                    "_LST": "<",
-                }
-                res = api_client.get(
-                    f"{VALIDATE_POLICY_URI}?project_name={project_name}&column1_name={expression.get('column')}&column2_name={expression.get('value')}&operation={condition_operators[expression.get('expression')]}"
-                )
-                if not res.get("success"):
-                    raise Exception(res.get("message"))
-            if isinstance(valid_feature_values, str):
-                #     if valid_feature_values == "input" and not parse_float(
-                #         expression_value
-                #     ):
-                #         raise Exception(
-                #             f"Invalid value comparison with {expression_value} for {expression.get('column')}"
-                #         )
-                if valid_feature_values == "datetime" and not parse_datetime(
-                    expression_value
-                ):
-                    raise Exception(
-                        f"Invalid value comparison with {expression_value} for {expression.get('column')}"
-                    )
-
-                else:
-                    condition_operators = {
-                        "_NOTEQ": "!==",
-                        "_ISEQ": "==",
-                        "_GRT": ">",
-                        "_LST": "<",
-                    }
-                    res = api_client.get(
-                        f"{VALIDATE_POLICY_URI}?project_name={project_name}&column1_name={expression.get('column')}&column2_name={expression.get('value')}&operation={condition_operators[expression.get('expression')]}"
-                    )
-                    if not res.get("success"):
-                        raise Exception(res.get("message"))
