@@ -562,10 +562,10 @@ class ImageProject(Project):
     
     def model_inference(
         self,
+        pod: str,
         tag: Optional[str] = None,
         file_name: Optional[str] = None,
         model_name: Optional[str] = None,
-        pod: Optional[str] = None
     ) -> pd.DataFrame:
         """Run model inference on tag or file_name data. Either tag or file_name is required for running inference
 
@@ -622,9 +622,8 @@ class ImageProject(Project):
             "project_name": self.project_name,
             "model_name": model,
             "tags": tag,
+            "instance_type": pod,
         }
-        if pod:
-            run_model_payload["instance_type"] = pod
         if filepath:
             run_model_payload["filepath"] = filepath
 
