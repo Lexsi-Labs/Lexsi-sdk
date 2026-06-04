@@ -1707,10 +1707,10 @@ class TabularProject(Project):
             res = self.api_client.post(RUN_DATA_DRIFT_DIAGNOSIS_URI, payload)
 
             if not res["success"]:
-                if res.get("details").get("reason"):
-                    raise Exception(res.get("details").get("reason"))
-                else:
-                    raise Exception(res.get("message"))
+                details = res.get("details")
+                if isinstance(details, dict) and details.get("reason"):
+                    raise Exception(details.get("reason"))
+                raise Exception(details or res.get("message"))
             poll_events(self.api_client, self.project_name, res["task_id"])
 
         res = self.api_client.post(
