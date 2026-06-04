@@ -2024,11 +2024,13 @@ class TabularProject(Project):
         res = self.api_client.base_request("GET", uri)
 
         if res.status_code != 200:
-            raise Exception(
-                res.get(
-                    "details", f"Error Downloading Dasboard Logs, {res.status_code}"
+            try:
+                details = res.json().get(
+                    "details", f"Error Downloading Dashboard Logs, {res.status_code}"
                 )
-            )
+            except Exception:
+                details = f"Error Downloading Dashboard Logs, {res.status_code}"
+            raise Exception(details)
 
         try:
             df = pd.read_csv(io.StringIO(res.text))
