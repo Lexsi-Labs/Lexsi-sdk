@@ -4311,9 +4311,9 @@ class CaseTabular(BaseModel):
     """Represents an explainability case for a prediction. Provides visualization helpers such as SHAP, LIME, DLB and decision paths for tabular data."""
     
     status: str
-    true_value: str | int
-    pred_value: str | int
-    pred_category: str | int
+    true_value: Optional[str | int] = None
+    pred_value: Optional[str | int] = None
+    pred_category: Optional[str | int] = None
     observations: List
     shap_feature_importance: Optional[Dict] = {}
     lime_feature_importance: Optional[Dict] = {}
