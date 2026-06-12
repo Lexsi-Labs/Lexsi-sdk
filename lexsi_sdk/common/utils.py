@@ -68,6 +68,8 @@ def poll_events(
     last_message = ""
     log_length = 0
     progress = 0
+    last_metric_step = None
+    last_system_ts = None
 
     for event in api_client.stream(
         uri=f"{POLL_EVENTS}?project_name={project_name}&event_id={event_id}",
@@ -83,6 +85,52 @@ def poll_events(
         if details.get("message") != last_message:
             last_message = details.get("message")
             print(f"{details.get('message')}")
+
+        model_metrics = details.get("model_metrics") or {}
+        if model_metrics:
+            latest_step = max(
+                (points[-1][0] for points in model_metrics.values() if points),
+                default=None,
+            )
+            if latest_step is not None and latest_step != last_metric_step:
+                last_metric_step = latest_step
+                summary = ", ".join(
+                    f"{name}={points[-1][1]:.4g}"
+                    for name, points in sorted(model_metrics.items())
+                    if points
+                )
+                if summary:
+                    print(f"  [model metrics] step {latest_step}: {summary}")
+
+        system_metrics = details.get("system_metrics") or {}
+        if system_metrics:
+            latest_ts = max(
+                (points[-1][0] for points in system_metrics.values() if points),
+                default=None,
+            )
+            if latest_ts is not None and latest_ts != last_system_ts:
+                last_system_ts = latest_ts
+                summary = ", ".join(
+                    f"{name.replace('system/', '')}={points[-1][1]:.4g}"
+                    for name, points in sorted(system_metrics.items())
+                    if points
+                )
+                if summary:
+                    print(f"  [system metrics]  {summary}")
+
+        if details.get("status") == "completed":
+            final_model = ", ".join(
+                f"{name}={points[-1][1]:.4g}"
+                for name, points in sorted(model_metrics.items()) if points
+            )
+            if final_model:
+                print(f"  [model metrics] final: {final_model}")
+            final_system = ", ".join(
+                f"{name.replace('system/', '')}={points[-1][1]:.4g}"
+                for name, points in sorted(system_metrics.items()) if points
+            )
+            if final_system:
+                print(f"  [system metrics] final: {final_system}")
         if details.get("progress"):
             if details.get("progress") != progress:
                 progress = details.get("progress")
