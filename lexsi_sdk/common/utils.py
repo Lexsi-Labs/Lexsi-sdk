@@ -117,6 +117,20 @@ def poll_events(
                 )
                 if summary:
                     print(f"  [system metrics]  {summary}")
+
+        if details.get("status") == "completed":
+            final_model = ", ".join(
+                f"{name}={points[-1][1]:.4g}"
+                for name, points in sorted(model_metrics.items()) if points
+            )
+            if final_model:
+                print(f"  [model metrics] final: {final_model}")
+            final_system = ", ".join(
+                f"{name.replace('system/', '')}={points[-1][1]:.4g}"
+                for name, points in sorted(system_metrics.items()) if points
+            )
+            if final_system:
+                print(f"  [system metrics] final: {final_system}")
         if details.get("progress"):
             if details.get("progress") != progress:
                 progress = details.get("progress")
