@@ -1,9 +1,10 @@
 from datetime import date, datetime, time, timedelta, timezone
 import re
+import warnings
 from typing import Callable, Optional, Union
 from lexsi_sdk.client.client import APIClient
-from IPython.display import display, HTML
 
+from lexsi_sdk.common.live_plot import LiveMetricsPlotter, in_notebook
 from lexsi_sdk.common.xai_uris import POLL_EVENTS
 
 
@@ -56,7 +57,11 @@ def poll_events(
     handle_failed_event: Optional[Callable] = None,
     progress_message: str = "progress",
 ):
-    """Poll long-running event stream and print incremental progress.
+    """Poll a long-running event stream and render incremental progress.
+
+    Model and system metrics are plotted live (one chart per metric) in a Plotly
+    ``FigureWidget`` when running in a notebook. Outside a notebook the metrics
+    fall back to printed summaries so CLI runs are not left blind.
 
     :param api_client: API client with streaming support.
     :param project_name: Project name owning the event.
@@ -70,6 +75,12 @@ def poll_events(
     progress = 0
     last_metric_step = None
     last_system_ts = None
+
+    plot_enabled = in_notebook()
+    model_plotter = LiveMetricsPlotter("Model metrics", "step") if plot_enabled else None
+    system_plotter = (
+        LiveMetricsPlotter("System metrics", "timestamp", mode="lines") if plot_enabled else None
+    )
 
     for event in api_client.stream(
         uri=f"{POLL_EVENTS}?project_name={project_name}&event_id={event_id}",
@@ -87,50 +98,51 @@ def poll_events(
             print(f"{details.get('message')}")
 
         model_metrics = details.get("model_metrics") or {}
-        if model_metrics:
-            latest_step = max(
-                (points[-1][0] for points in model_metrics.values() if points),
-                default=None,
-            )
-            if latest_step is not None and latest_step != last_metric_step:
-                last_metric_step = latest_step
-                summary = ", ".join(
-                    f"{name}={points[-1][1]:.4g}"
-                    for name, points in sorted(model_metrics.items())
-                    if points
-                )
-                if summary:
-                    print(f"  [model metrics] step {latest_step}: {summary}")
-
         system_metrics = details.get("system_metrics") or {}
-        if system_metrics:
-            latest_ts = max(
-                (points[-1][0] for points in system_metrics.values() if points),
-                default=None,
-            )
-            if latest_ts is not None and latest_ts != last_system_ts:
-                last_system_ts = latest_ts
-                summary = ", ".join(
-                    f"{name.replace('system/', '')}={points[-1][1]:.4g}"
-                    for name, points in sorted(system_metrics.items())
-                    if points
-                )
-                if summary:
-                    print(f"  [system metrics]  {summary}")
 
-        if details.get("status") == "completed":
-            final_model = ", ".join(
-                f"{name}={points[-1][1]:.4g}"
-                for name, points in sorted(model_metrics.items()) if points
-            )
-            if final_model:
-                print(f"  [model metrics] final: {final_model}")
-            final_system = ", ".join(
-                f"{name.replace('system/', '')}={points[-1][1]:.4g}"
-                for name, points in sorted(system_metrics.items()) if points
-            )
-            if final_system:
-                print(f"  [system metrics] final: {final_system}")
+        if plot_enabled:
+            try:
+                model_plotter.update(model_metrics)
+                system_plotter.update(system_metrics)
+            except Exception as exc:
+                warnings.warn(
+                    f"Live metric plotting disabled, falling back to printed "
+                    f"metrics: {exc!r}",
+                    stacklevel=2,
+                )
+                plot_enabled = False
+
+        if not plot_enabled:
+            if model_metrics:
+                latest_step = max(
+                    (points[-1][0] for points in model_metrics.values() if points),
+                    default=None,
+                )
+                if latest_step is not None and latest_step != last_metric_step:
+                    last_metric_step = latest_step
+                    summary = ", ".join(
+                        f"{name}={points[-1][1]:.4g}"
+                        for name, points in sorted(model_metrics.items())
+                        if points
+                    )
+                    if summary:
+                        print(f"  [model metrics] step {latest_step}: {summary}")
+
+            if system_metrics:
+                latest_ts = max(
+                    (points[-1][0] for points in system_metrics.values() if points),
+                    default=None,
+                )
+                if latest_ts is not None and latest_ts != last_system_ts:
+                    last_system_ts = latest_ts
+                    summary = ", ".join(
+                        f"{name.replace('system/', '')}={points[-1][1]:.4g}"
+                        for name, points in sorted(system_metrics.items())
+                        if points
+                    )
+                    if summary:
+                        print(f"  [system metrics]  {summary}")
+
         if details.get("progress"):
             if details.get("progress") != progress:
                 progress = details.get("progress")
