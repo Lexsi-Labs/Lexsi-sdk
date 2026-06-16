@@ -192,12 +192,21 @@ def fetch_event_metrics(
         if details.get("status") in ("completed", "failed"):
             break
 
+    rendered = False
     if in_notebook():
-        if system_metrics:
-            LiveMetricsPlotter("System metrics", "timestamp", mode="lines").update(system_metrics)
-        if model_metrics:
-            LiveMetricsPlotter("Model metrics", "step").update(model_metrics)
-    else:
+        try:
+            if system_metrics:
+                LiveMetricsPlotter("System metrics", "timestamp", mode="lines").update(system_metrics)
+            if model_metrics:
+                LiveMetricsPlotter("Model metrics", "step").update(model_metrics)
+            rendered = True
+        except Exception as exc:
+            warnings.warn(
+                f"Metric plotting failed, falling back to printed metrics: {exc!r}",
+                stacklevel=2,
+            )
+
+    if not rendered:
         for label, metrics in (("system", system_metrics), ("model", model_metrics)):
             summary = ", ".join(
                 f"{name.replace('system/', '')}={points[-1][1]:.4g}"

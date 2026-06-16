@@ -966,18 +966,21 @@ class TextProject(Project):
         for line in logs.split("\n"):
             print(line)
 
-    def model_metrics(self, model_name: str) -> dict | None:
+    def model_metrics(self, model_name: str, return_metrics: Optional[bool] = False) -> dict | None:
         """Fetch and plot the system and model metrics for a finetuned model.
 
         Mirrors :meth:`model_logs` but for metrics: it locates the finetuning
         event for ``model_name`` and replays its metrics from the ``events/poll``
         stream (the same source used for live metrics during training), then
-        renders the model and system metric charts — one subplot per metric — in
+        renders the system and model metric charts — one subplot per metric — in
         a notebook, or prints the final values otherwise.
 
         :param model_name: Name of the finetuned model to retrieve metrics for.
-        :return: dict with ``model_metrics`` and ``system_metrics`` series, or
-            None if no finetuning event exists for the model.
+        :param return_metrics: When True, return the metrics dict for
+            programmatic use. Defaults to False so notebooks show only the charts
+            instead of also echoing the raw series.
+        :return: dict with ``model_metrics`` and ``system_metrics`` series when
+            ``return_metrics`` is True, otherwise None.
         """
         res = self.api_client.post(
             FETCH_EVENTS,
@@ -999,7 +1002,9 @@ class TextProject(Project):
         if not event_id:
             raise Exception(f"No finetuning event found for model '{model_name}'")
 
-        return fetch_event_metrics(self.api_client, self.project_name, event_id)
+        metrics = fetch_event_metrics(self.api_client, self.project_name, event_id)
+        if return_metrics:
+            return metrics
 
 
 class CaseText(BaseModel):
