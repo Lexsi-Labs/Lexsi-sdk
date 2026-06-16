@@ -12,11 +12,12 @@ import plotly.graph_objects as go
 import base64
 from PIL import Image
 from lexsi_sdk.common.types import InferenceCompute, InferenceSettings
-from lexsi_sdk.common.utils import normalize_time, poll_events
+from lexsi_sdk.common.utils import fetch_event_metrics, normalize_time, poll_events
 from lexsi_sdk.common.xai_uris import (
     AVAILABLE_GUARDRAILS_URI,
     CONFIGURE_GUARDRAILS_URI,
     DELETE_GUARDRAILS_URI,
+    FETCH_EVENTS,
     FINETUNE_MODEL_URI,
     GET_AVAILABLE_TEXT_MODELS_URI,
     GET_GUARDRAILS_URI,
@@ -964,6 +965,42 @@ class TextProject(Project):
             return logs
         for line in logs.split("\n"):
             print(line)
+
+    def model_metrics(self, model_name: str) -> dict | None:
+        """Fetch and plot the system and model metrics for a finetuned model.
+
+        Mirrors :meth:`model_logs` but for metrics: it locates the finetuning
+        event for ``model_name`` and replays its metrics from the ``events/poll``
+        stream (the same source used for live metrics during training), then
+        renders the model and system metric charts — one subplot per metric — in
+        a notebook, or prints the final values otherwise.
+
+        :param model_name: Name of the finetuned model to retrieve metrics for.
+        :return: dict with ``model_metrics`` and ``system_metrics`` series, or
+            None if no finetuning event exists for the model.
+        """
+        res = self.api_client.post(
+            FETCH_EVENTS,
+            {"project_name": self.project_name, "task_name": ["fine_tune_model"]},
+        )
+        if not res["success"]:
+            raise Exception(res.get("details", "Failed to fetch finetuning events"))
+
+        # Events come back newest-first; match the finetuning event for this model.
+        event_id = next(
+            (
+                event.get("_id")
+                for event in (res.get("details") or [])
+                if (event.get("config") or {}).get("model_name") == model_name
+                or (event.get("params") or {}).get("model_name") == model_name
+            ),
+            None,
+        )
+        if not event_id:
+            raise Exception(f"No finetuning event found for model '{model_name}'")
+
+        return fetch_event_metrics(self.api_client, self.project_name, event_id)
+
 
 class CaseText(BaseModel):
     """Explainability view for text-based cases. Supports token-level importance, attention visualization, and LLM output analysis."""

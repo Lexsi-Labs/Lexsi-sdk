@@ -154,6 +154,65 @@ def poll_events(
                 handle_failed_event()
             raise Exception(details.get("message"))
 
+
+def fetch_event_metrics(
+    api_client: APIClient,
+    project_name: str,
+    event_id: str,
+) -> dict:
+    """Fetch a completed event's metrics from the poll stream and plot them.
+
+    Re-uses the ``events/poll`` stream that powers live training metrics. For a
+    completed event the stream yields a single message carrying the full
+    cumulative metric series, so this drains the stream, extracts the latest
+    ``model_metrics``/``system_metrics``, and renders them with the same
+    :class:`LiveMetricsPlotter` used during training (one subplot per metric).
+    Outside a notebook it prints the final values instead.
+
+    :param api_client: API client with streaming support.
+    :param project_name: Project name owning the event.
+    :param event_id: Identifier of the finetuning event to read metrics from.
+    :return: mapping with ``model_metrics`` and ``system_metrics`` series.
+    """
+    model_metrics: dict = {}
+    system_metrics: dict = {}
+
+    for event in api_client.stream(
+        uri=f"{POLL_EVENTS}?project_name={project_name}&event_id={event_id}",
+        method="GET",
+    ):
+        details = event.get("details")
+        if not event.get("success"):
+            raise Exception(details)
+        # Series are cumulative, so the latest payload supersedes earlier ones.
+        if details.get("model_metrics"):
+            model_metrics = details["model_metrics"]
+        if details.get("system_metrics"):
+            system_metrics = details["system_metrics"]
+        if details.get("status") in ("completed", "failed"):
+            break
+
+    if in_notebook():
+        if system_metrics:
+            LiveMetricsPlotter("System metrics", "timestamp", mode="lines").update(system_metrics)
+        if model_metrics:
+            LiveMetricsPlotter("Model metrics", "step").update(model_metrics)
+    else:
+        for label, metrics in (("system", system_metrics), ("model", model_metrics)):
+            summary = ", ".join(
+                f"{name.replace('system/', '')}={points[-1][1]:.4g}"
+                for name, points in sorted(metrics.items())
+                if points
+            )
+            if summary:
+                print(f"  [{label} metrics] {summary}")
+
+    if not model_metrics and not system_metrics:
+        print("No metrics found for the event")
+
+    return {"model_metrics": model_metrics, "system_metrics": system_metrics}
+
+
 TIME_RE = re.compile(
     r"^(?P<h>\d{2}):(?P<m>\d{2})(?P<tz>Z|[+-]\d{2}:\d{2})?$"
 )
