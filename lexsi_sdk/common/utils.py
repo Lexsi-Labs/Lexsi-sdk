@@ -60,8 +60,9 @@ def poll_events(
     """Poll a long-running event stream and render incremental progress.
 
     Model and system metrics are plotted live (one chart per metric) in a Plotly
-    ``FigureWidget`` when running in a notebook. Outside a notebook the metrics
-    fall back to printed summaries so CLI runs are not left blind.
+    figure when running in a notebook (Jupyter, VS Code or Colab). Outside a
+    notebook the metrics fall back to printed summaries so CLI runs are not left
+    blind.
 
     :param api_client: API client with streaming support.
     :param project_name: Project name owning the event.
