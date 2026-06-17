@@ -24,6 +24,7 @@ from lexsi_sdk.common.xai_uris import (
     LIST_DATA_CONNECTORS,
     MESSAGES_URI,
     MODEL_LOGS_URI,
+    PRUNING_MODEL_URI,
     QUANTIZE_MODELS_URI,
     SESSIONS_URI,
     TEXT_MODEL_INFERENCE_SETTINGS_URI,
@@ -964,6 +965,28 @@ class TextProject(Project):
             return logs
         for line in logs.split("\n"):
             print(line)
+
+    def prune_model(
+        self,
+        model_name: str,
+        node: DedicatedGPUNodeValues,
+        assets: Optional[dict] = None,
+        config: Optional[dict] = None,
+    ):
+        payload  = {
+            "project_name": self.project_name,
+            "model_name": model_name,
+            "assets": assets,
+            "instance_type": node
+        }
+        if config:
+            payload.update({k: v for k, v in config.items() if v is not None})
+        res = self.api_client.post(PRUNING_MODEL_URI, payload)
+        
+        if not res["success"]:
+            raise Exception(res.get("details", "Model Fine-tuning Failed"))
+        
+        poll_events(self.api_client, self.project_name, res["event_id"])
 
 class CaseText(BaseModel):
     """Explainability view for text-based cases. Supports token-level importance, attention visualization, and LLM output analysis."""
