@@ -56,19 +56,22 @@ def poll_events(
     event_id: str,
     handle_failed_event: Optional[Callable] = None,
     progress_message: str = "progress",
+    plot: bool = True,
 ):
     """Poll a long-running event stream and render incremental progress.
 
     Model and system metrics are plotted live (one chart per metric) in a Plotly
     figure when running in a notebook (Jupyter, VS Code or Colab). Outside a
-    notebook the metrics fall back to printed summaries so CLI runs are not left
-    blind.
+    notebook — or when ``plot`` is False — the metrics fall back to printed
+    summaries so CLI runs are not left blind.
 
     :param api_client: API client with streaming support.
     :param project_name: Project name owning the event.
     :param event_id: Identifier of the event to track.
     :param handle_failed_event: Optional callback to invoke on failure.
     :param progress_message: Label used when printing progress.
+    :param plot: When False, always print raw metric summaries instead of
+        plotting, even in environments where charts could be rendered.
     :return: None. Raises on failure events.
     """
     last_message = ""
@@ -77,7 +80,7 @@ def poll_events(
     last_metric_step = None
     last_system_ts = None
 
-    plot_enabled = in_notebook()
+    plot_enabled = plot and in_notebook()
     model_plotter = LiveMetricsPlotter("Model metrics", "step") if plot_enabled else None
     system_plotter = (
         LiveMetricsPlotter("System metrics", "timestamp", mode="lines") if plot_enabled else None
@@ -155,10 +158,37 @@ def poll_events(
             raise Exception(details.get("message"))
 
 
+def _print_metric_history(label: str, metrics: dict, x_label: str) -> None:
+    """Print the full step-by-step history for a group of metrics.
+
+    Metrics arrive as ``{name: [[x, y], ...]}`` cumulative series that may be
+    logged at different x values (e.g. train metrics every few steps, eval
+    metrics only at epoch boundaries). Points are aligned by their x value so
+    each printed row lists every metric that has a value at that step/timestamp.
+
+    :param label: Group label used in the line prefix, e.g. ``"model"``.
+    :param metrics: mapping of ``{metric_name: [[x, y], ...]}``.
+    :param x_label: Name of the x axis printed before each x value, e.g. ``"step"``.
+    """
+    rows: dict = {}
+    for name, points in metrics.items():
+        clean = name.replace("system/", "")
+        for point in points:
+            if point:
+                rows.setdefault(point[0], {})[clean] = point[1]
+
+    for x in sorted(rows):
+        summary = ", ".join(f"{name}={value:.4g}" for name, value in sorted(rows[x].items()))
+        if summary:
+            x_str = int(x) if isinstance(x, float) and x.is_integer() else x
+            print(f"  [{label} metrics] {x_label} {x_str}: {summary}")
+
+
 def fetch_event_metrics(
     api_client: APIClient,
     project_name: str,
     event_id: str,
+    plot: bool = True,
 ) -> dict:
     """Fetch a completed event's metrics from the poll stream and plot them.
 
@@ -167,11 +197,14 @@ def fetch_event_metrics(
     cumulative metric series, so this drains the stream, extracts the latest
     ``model_metrics``/``system_metrics``, and renders them with the same
     :class:`LiveMetricsPlotter` used during training (one subplot per metric).
-    Outside a notebook it prints the final values instead.
+    Outside a notebook — or when ``plot`` is False — it prints the final values
+    instead.
 
     :param api_client: API client with streaming support.
     :param project_name: Project name owning the event.
     :param event_id: Identifier of the finetuning event to read metrics from.
+    :param plot: When False, always print raw metric summaries instead of
+        plotting, even in environments where charts could be rendered.
     :return: mapping with ``model_metrics`` and ``system_metrics`` series.
     """
     model_metrics: dict = {}
@@ -193,7 +226,7 @@ def fetch_event_metrics(
             break
 
     rendered = False
-    if in_notebook():
+    if plot and in_notebook():
         try:
             if system_metrics:
                 LiveMetricsPlotter("System metrics", "timestamp", mode="lines").update(system_metrics)
@@ -207,14 +240,10 @@ def fetch_event_metrics(
             )
 
     if not rendered:
-        for label, metrics in (("system", system_metrics), ("model", model_metrics)):
-            summary = ", ".join(
-                f"{name.replace('system/', '')}={points[-1][1]:.4g}"
-                for name, points in sorted(metrics.items())
-                if points
-            )
-            if summary:
-                print(f"  [{label} metrics] {summary}")
+        if system_metrics:
+            _print_metric_history("system", system_metrics, "timestamp")
+        if model_metrics:
+            _print_metric_history("model", model_metrics, "step")
 
     if not model_metrics and not system_metrics:
         print("No metrics found for the event")

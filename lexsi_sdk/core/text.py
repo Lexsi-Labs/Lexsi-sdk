@@ -907,6 +907,7 @@ class TextProject(Project):
         node: DedicatedGPUNodeValues,
         assets: Optional[dict] = None,
         config: Optional[dict] = None,
+        plot: bool = True,
     ) -> str:
         """Fine-tune a model using the provided training data and settings.
 
@@ -914,6 +915,9 @@ class TextProject(Project):
         :param node: Dedicated GPU node configuration for fine-tuning.
         :param assets: Assets required for fine-tuning, such as hugging face secrets.
         :param config: Configuration settings for fine-tuning, including hyperparameters, training settings,
+        :param plot: When True (default), live model/system metrics are plotted in
+            notebook environments; when False, raw metric summaries are printed
+            instead even where plotting is possible.
         :return: response with fine-tuning details.
         """
         
@@ -931,7 +935,7 @@ class TextProject(Project):
         if not res["success"]:
             raise Exception(res.get("details", "Model Fine-tuning Failed"))
         
-        poll_events(self.api_client, self.project_name, res["event_id"])
+        poll_events(self.api_client, self.project_name, res["event_id"], plot=plot)
 
     def remove_guardrail_from_model(self, model_name: str, apply_on: str = "input") -> str:
         """Remove a guardrail from a specific model.
@@ -966,7 +970,12 @@ class TextProject(Project):
         for line in logs.split("\n"):
             print(line)
 
-    def model_metrics(self, model_name: str, return_metrics: Optional[bool] = False) -> dict | None:
+    def model_metrics(
+        self,
+        model_name: str,
+        return_metrics: Optional[bool] = False,
+        plot: bool = True,
+    ) -> dict | None:
         """Fetch and plot the system and model metrics for a finetuned model.
 
         Mirrors :meth:`model_logs` but for metrics: it locates the finetuning
@@ -979,6 +988,9 @@ class TextProject(Project):
         :param return_metrics: When True, return the metrics dict for
             programmatic use. Defaults to False so notebooks show only the charts
             instead of also echoing the raw series.
+        :param plot: When True (default), metrics are plotted in notebook
+            environments; when False, raw metric summaries are printed instead
+            even where plotting is possible.
         :return: dict with ``model_metrics`` and ``system_metrics`` series when
             ``return_metrics`` is True, otherwise None.
         """
@@ -1002,7 +1014,7 @@ class TextProject(Project):
         if not event_id:
             raise Exception(f"No finetuning event found for model '{model_name}'")
 
-        metrics = fetch_event_metrics(self.api_client, self.project_name, event_id)
+        metrics = fetch_event_metrics(self.api_client, self.project_name, event_id, plot=plot)
         if return_metrics:
             return metrics
 
