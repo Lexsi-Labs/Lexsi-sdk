@@ -116,8 +116,10 @@ class GuardrailSupervisor:
         current_content = content
         retry_count = 0
         while retry_count <= self.max_retries:
+            is_final = retry_count >= self.max_retries or self.llm is None
             failed_flows = self._run_guardrails(
-                current_content, agent_id, content_type, ctx, retry_count=retry_count
+                current_content, agent_id, content_type, ctx,
+                retry_count=retry_count, is_final_retry=is_final,
             )
             if failed_flows:
                 if self.llm is not None and retry_count < self.max_retries:
@@ -125,8 +127,8 @@ class GuardrailSupervisor:
                     retry_count += 1
                 else:
                     raise ValueError(
-                        f"Content failed guardrails {failed_flows} after {retry_count} retries "
-                        f"in {content_type} for agent '{agent_id}'. Operation blocked."
+                        f"Blocked by flow '{failed_flows[0]}' after {retry_count} retries "
+                        f"in {content_type} for agent '{agent_id}'."
                     )
             else:
                 break
@@ -135,7 +137,8 @@ class GuardrailSupervisor:
     # --------- Core guardrail execution ---------
 
     def _run_guardrails(
-        self, content: str, agent_id: str, content_type: str, ctx, retry_count: int = 0
+        self, content: str, agent_id: str, content_type: str, ctx,
+        retry_count: int = 0, is_final_retry: bool = True,
     ) -> List[str]:
         """Run the guardrail group and return the list of failed flow names.
         Raises ValueError immediately for action='block'."""
@@ -202,6 +205,7 @@ class GuardrailSupervisor:
                             "passed": flow_summary.get("passed"),
                             "status": flow_summary.get("status"),
                             "individual_results": individual,
+                            "config": {},
                         }))
                         flow_span.set_attribute("start_time", flow_start_iso)
                         flow_span.set_attribute("end_time", flow_end_iso)
@@ -225,12 +229,26 @@ class GuardrailSupervisor:
 
                     if detected_issue:
                         if self.action == "block":
+                            parent_gr_span.set_attribute(
+                                "output.value",
+                                f"Blocked by flow '{flow_name}'",
+                            )
                             raise ValueError(
                                 f"Guardrail flow '{flow_name}' detected an issue for agent "
                                 f"'{agent_id}' in {content_type}. Operation blocked."
                             )
-                        elif self.action == "retry":
+                        else:
                             failed_flows.append(flow_name)
+
+                if failed_flows and self.action == "retry" and is_final_retry:
+                    parent_gr_span.set_attribute(
+                        "output.value",
+                        f"Blocked by flow '{failed_flows[0]}' after {retry_count} retries",
+                    )
+                else:
+                    parent_gr_span.set_attribute(
+                        "output.value", "All guardrails ran successfully"
+                    )
 
             except ValueError:
                 raise  # block signal — propagate up

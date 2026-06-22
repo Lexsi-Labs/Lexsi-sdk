@@ -195,6 +195,7 @@ class OpenAIAgentsGuardrail:
                         parent_gr_span.set_attribute("llm.token_count.total", total_tokens_all)
 
                         detected_issue = False
+                        failed_flows: List[str] = []
                         for flow_summary in flow_summaries:
                             flow_name = flow_summary.get("flow_name", "unknown")
                             passed = flow_summary.get("passed", False)
@@ -223,6 +224,7 @@ class OpenAIAgentsGuardrail:
                                     "passed": flow_summary.get("passed"),
                                     "status": flow_summary.get("status"),
                                     "individual_results": individual,
+                                    "config": {},
                                 }))
                                 flow_span.set_attribute("start_time", flow_start_iso)
                                 flow_span.set_attribute("end_time", flow_end_iso)
@@ -241,9 +243,14 @@ class OpenAIAgentsGuardrail:
 
                             if is_issue:
                                 detected_issue = True
+                                failed_flows.append(flow_name)
                                 output_info[f"flow_{flow_name}"] = flow_summary
                                 if action == "block":
                                     tripwire_triggered = True
+                                    parent_gr_span.set_attribute(
+                                        "output.value",
+                                        f"Blocked by flow '{flow_name}'",
+                                    )
                                     return current_content, tripwire_triggered, output_info
 
                         if (
@@ -261,9 +268,16 @@ class OpenAIAgentsGuardrail:
                             await asyncio.sleep(self.retry_delay)
                             continue
                         else:
-                            # Only trigger tripwire for retry when retries are exhausted
                             if detected_issue and action == "retry" and retry_count >= self.max_retries:
                                 tripwire_triggered = True
+                                parent_gr_span.set_attribute(
+                                    "output.value",
+                                    f"Blocked by flow '{failed_flows[0]}' after {retry_count} retries",
+                                )
+                            else:
+                                parent_gr_span.set_attribute(
+                                    "output.value", "All guardrails ran successfully"
+                                )
                             output_info["retry_count"] = retry_count
                             output_info["final_content"] = current_content
                             return current_content, tripwire_triggered, output_info

@@ -216,6 +216,7 @@ class LangGraphGuardrail:
                                     "passed": flow_summary.get("passed"),
                                     "status": flow_summary.get("status"),
                                     "individual_results": individual,
+                                    "config": {},
                                 }))
                                 flow_span.set_attribute("start_time", flow_start_iso)
                                 flow_span.set_attribute("end_time", flow_end_iso)
@@ -228,10 +229,14 @@ class LangGraphGuardrail:
 
                             if detected_issue:
                                 if action == "block":
+                                    parent_gr_span.set_attribute(
+                                        "output.value",
+                                        f"Blocked by flow '{flow_name}'",
+                                    )
                                     raise ValueError(
                                         f"Guardrail flow '{flow_name}' detected an issue in {content_type}. Operation blocked."
                                     )
-                                elif action == "retry":
+                                else:
                                     failed_flows.append(flow_name)
 
                         if failed_flows and action == "retry":
@@ -242,12 +247,19 @@ class LangGraphGuardrail:
                                 retry_count += 1
                                 continue
                             else:
+                                parent_gr_span.set_attribute(
+                                    "output.value",
+                                    f"Blocked by flow '{failed_flows[0]}' after {retry_count} retries",
+                                )
                                 raise ValueError(
                                     f"Content failed guardrails {failed_flows} after {retry_count} retries "
                                     f"in {content_type}. Operation blocked."
                                 )
                         else:
-                            break  # all flows passed (or action is warn)
+                            parent_gr_span.set_attribute(
+                                "output.value", "All guardrails ran successfully"
+                            )
+                            break
 
             if is_list:
                 content[-1].content = current_content
