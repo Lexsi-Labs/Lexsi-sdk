@@ -27,6 +27,7 @@ from lexsi_sdk.common.xai_uris import (
     MODEL_LOGS_URI,
     QUANTIZE_MODELS_URI,
     SESSIONS_URI,
+    STOP_EVENT_URI,
     TEXT_MODEL_INFERENCE_SETTINGS_URI,
     TRACES_URI,
     UPDATE_ACTIVE_INFERENCE_MODEL_URI,
@@ -931,11 +932,48 @@ class TextProject(Project):
             }
         }
         res = self.api_client.post(FINETUNE_MODEL_URI, payload)
-        
+
         if not res["success"]:
             raise Exception(res.get("details", "Model Fine-tuning Failed"))
-        
+
         poll_events(self.api_client, self.project_name, res["event_id"], plot=plot)
+
+    def stop_finetuning(self, model_name: str) -> str:
+        """Stop a running fine-tuning job.
+
+        Locates the fine-tuning event for ``model_name`` (the generated model
+        name, e.g. ``meta-llama-Llama-3.2-1B-rl-dpo_v3``, as listed by the model
+        list / :meth:`model_metrics`), terminates the GPU server running the
+        task, and marks the job as terminated. Requires admin/manager access to
+        the project.
+
+        :param model_name: Name of the finetuned model whose job to stop.
+        :return: Confirmation message from the API.
+        """
+        res = self.api_client.post(
+            FETCH_EVENTS,
+            {"project_name": self.project_name, "task_name": ["fine_tune_model"]},
+        )
+        if not res["success"]:
+            raise Exception(res.get("details", "Failed to fetch finetuning events"))
+
+        # Events come back newest-first; match the finetuning event for this model.
+        event_id = next(
+            (
+                event.get("_id")
+                for event in (res.get("details") or [])
+                if (event.get("config") or {}).get("model_name") == model_name
+                or (event.get("params") or {}).get("model_name") == model_name
+            ),
+            None,
+        )
+        if not event_id:
+            raise Exception(f"No finetuning event found for model '{model_name}'")
+
+        res = self.api_client.post(STOP_EVENT_URI, payload={"event_id": event_id})
+        if not res["success"]:
+            raise Exception(res.get("details", "Failed to stop fine-tuning job"))
+        return res.get("details")
 
     def remove_guardrail_from_model(self, model_name: str, apply_on: str = "input") -> str:
         """Remove a guardrail from a specific model.

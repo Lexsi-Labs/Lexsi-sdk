@@ -146,6 +146,7 @@ GET_SYNTHETIC_PROMPT_URI = f"{API_VERSION_V2}/synthetics/get_synthetics_promts"
 # Events
 POLL_EVENTS = f"{API_VERSION_V2}/events/poll"
 FETCH_EVENTS = f"{API_VERSION_V2}/events/fetch"
+STOP_EVENT_URI = f"{API_VERSION_V2}/events/stop"
 
 # Organization
 USER_ORGANIZATION_URI = f"{API_VERSION_V2}/organization/user_organization"
