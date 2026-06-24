@@ -152,36 +152,10 @@ def poll_events(
                 progress = details.get("progress")
                 print(f"{progress_message}: {progress}%")
             # display(HTML(f"<progress style='width:100%' value='{progress}' max='100'></progress>"))
-        if details.get("status") == "failed":
+        if details.get("status") in ("failed", "terminated"):
             if handle_failed_event:
                 handle_failed_event()
             raise Exception(details.get("message"))
-
-
-def _print_metric_history(label: str, metrics: dict, x_label: str) -> None:
-    """Print the full step-by-step history for a group of metrics.
-
-    Metrics arrive as ``{name: [[x, y], ...]}`` cumulative series that may be
-    logged at different x values (e.g. train metrics every few steps, eval
-    metrics only at epoch boundaries). Points are aligned by their x value so
-    each printed row lists every metric that has a value at that step/timestamp.
-
-    :param label: Group label used in the line prefix, e.g. ``"model"``.
-    :param metrics: mapping of ``{metric_name: [[x, y], ...]}``.
-    :param x_label: Name of the x axis printed before each x value, e.g. ``"step"``.
-    """
-    rows: dict = {}
-    for name, points in metrics.items():
-        clean = name.replace("system/", "")
-        for point in points:
-            if point:
-                rows.setdefault(point[0], {})[clean] = point[1]
-
-    for x in sorted(rows):
-        summary = ", ".join(f"{name}={value:.4g}" for name, value in sorted(rows[x].items()))
-        if summary:
-            x_str = int(x) if isinstance(x, float) and x.is_integer() else x
-            print(f"  [{label} metrics] {x_label} {x_str}: {summary}")
 
 
 def fetch_event_metrics(
@@ -190,25 +164,37 @@ def fetch_event_metrics(
     event_id: str,
     plot: bool = True,
 ) -> dict:
-    """Fetch a completed event's metrics from the poll stream and plot them.
+    """Stream an event's metrics from the ``events/poll`` stream and render live.
 
-    Re-uses the ``events/poll`` stream that powers live training metrics. For a
-    completed event the stream yields a single message carrying the full
-    cumulative metric series, so this drains the stream, extracts the latest
-    ``model_metrics``/``system_metrics``, and renders them with the same
-    :class:`LiveMetricsPlotter` used during training (one subplot per metric).
-    Outside a notebook — or when ``plot`` is False — it prints the final values
-    instead.
+    Works for an event in **any** status. A *running* job streams live —
+    updating the metric charts (or printing incremental summaries) on each poll
+    tick — while a *completed*, *failed* or *terminated* job yields its final
+    cumulative series in one shot. The series are cumulative, so the latest
+    payload always supersedes earlier ones. The loop exits when the event
+    reaches a terminal status (completed / failed / terminated) or the stream
+    closes.
+
+    Inside a notebook the metrics are plotted with :class:`LiveMetricsPlotter`
+    (one subplot per metric, updated in place); outside a notebook — or when
+    ``plot`` is False — incremental per-step summaries are printed instead.
 
     :param api_client: API client with streaming support.
     :param project_name: Project name owning the event.
     :param event_id: Identifier of the finetuning event to read metrics from.
     :param plot: When False, always print raw metric summaries instead of
         plotting, even in environments where charts could be rendered.
-    :return: mapping with ``model_metrics`` and ``system_metrics`` series.
+    :return: mapping with the final ``model_metrics`` and ``system_metrics`` series.
     """
     model_metrics: dict = {}
     system_metrics: dict = {}
+    last_metric_step = None
+    last_system_ts = None
+
+    plot_enabled = plot and in_notebook()
+    model_plotter = LiveMetricsPlotter("Model metrics", "step") if plot_enabled else None
+    system_plotter = (
+        LiveMetricsPlotter("System metrics", "timestamp", mode="lines") if plot_enabled else None
+    )
 
     for event in api_client.stream(
         uri=f"{POLL_EVENTS}?project_name={project_name}&event_id={event_id}",
@@ -217,33 +203,58 @@ def fetch_event_metrics(
         details = event.get("details")
         if not event.get("success"):
             raise Exception(details)
+
         # Series are cumulative, so the latest payload supersedes earlier ones.
         if details.get("model_metrics"):
             model_metrics = details["model_metrics"]
         if details.get("system_metrics"):
             system_metrics = details["system_metrics"]
-        if details.get("status") in ("completed", "failed"):
-            break
 
-    rendered = False
-    if plot and in_notebook():
-        try:
-            if system_metrics:
-                LiveMetricsPlotter("System metrics", "timestamp", mode="lines").update(system_metrics)
+        if plot_enabled:
+            try:
+                model_plotter.update(model_metrics)
+                system_plotter.update(system_metrics)
+            except Exception as exc:
+                warnings.warn(
+                    f"Live metric plotting disabled, falling back to printed "
+                    f"metrics: {exc!r}",
+                    stacklevel=2,
+                )
+                plot_enabled = False
+
+        if not plot_enabled:
             if model_metrics:
-                LiveMetricsPlotter("Model metrics", "step").update(model_metrics)
-            rendered = True
-        except Exception as exc:
-            warnings.warn(
-                f"Metric plotting failed, falling back to printed metrics: {exc!r}",
-                stacklevel=2,
-            )
+                latest_step = max(
+                    (points[-1][0] for points in model_metrics.values() if points),
+                    default=None,
+                )
+                if latest_step is not None and latest_step != last_metric_step:
+                    last_metric_step = latest_step
+                    summary = ", ".join(
+                        f"{name}={points[-1][1]:.4g}"
+                        for name, points in sorted(model_metrics.items())
+                        if points
+                    )
+                    if summary:
+                        print(f"  [model metrics] step {latest_step}: {summary}")
 
-    if not rendered:
-        if system_metrics:
-            _print_metric_history("system", system_metrics, "timestamp")
-        if model_metrics:
-            _print_metric_history("model", model_metrics, "step")
+            if system_metrics:
+                latest_ts = max(
+                    (points[-1][0] for points in system_metrics.values() if points),
+                    default=None,
+                )
+                if latest_ts is not None and latest_ts != last_system_ts:
+                    last_system_ts = latest_ts
+                    summary = ", ".join(
+                        f"{name.replace('system/', '')}={points[-1][1]:.4g}"
+                        for name, points in sorted(system_metrics.items())
+                        if points
+                    )
+                    if summary:
+                        print(f"  [system metrics]  {summary}")
+
+        if details.get("status") in ("completed", "failed", "terminated"):
+            break
 
     if not model_metrics and not system_metrics:
         print("No metrics found for the event")
