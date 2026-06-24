@@ -27,6 +27,7 @@ from lexsi_sdk.common.xai_uris import (
     GET_MODELS_URI,
     GET_NOTIFICATIONS_URI,
     GET_VIEWED_CASE_URI,
+    MODEL_OVERVIEW_URI,
     MODEL_SUMMARY_URI,
     PROJECT_OVERVIEW_TEXT_URI,
     REMOVE_MODEL_URI,
@@ -426,6 +427,28 @@ class Project(BaseModel):
             raise Exception(res["details"])
 
         return ModelSummary(api_client=self.api_client, **res.get("details"))
+
+    def model_metadata(self, model_name: Optional[str] = None) -> dict:
+        """Fetch the metadata / overview for a specific model.
+
+        Returns the model's full overview document (its ``metadata`` plus
+        ``model_results``, related event ids, etc.) — the same data the UI shows
+        for a model. If ``model_name`` is omitted, the project's active model is
+        used.
+
+        :param model_name: Generated model name (e.g. as listed by
+            :meth:`models`); defaults to the active model for the project.
+        :return: the model's overview details.
+        """
+        res = self.api_client.get(
+            f"{MODEL_OVERVIEW_URI}?project_name={self.project_name}"
+            + (f"&model_name={model_name}" if model_name else "")
+        )
+        if not res.get("success"):
+            raise Exception(
+                res.get("details") or res.get("message", "Failed to fetch model metadata")
+            )
+        return res.get("details")
 
     def tags(self) -> List[str]:
         """Available User Tags for Project
