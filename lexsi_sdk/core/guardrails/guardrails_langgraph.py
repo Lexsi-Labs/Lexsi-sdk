@@ -139,9 +139,6 @@ class LangGraphGuardrail:
         action: str,
         guardrail_group_id: str,
     ) -> Any:
-        if not guardrail_group_id:
-            return content
-
         is_list = isinstance(content, list)
         if is_list and content:
             content_to_process = content[-1].content
@@ -163,22 +160,52 @@ class LangGraphGuardrail:
                     parent_gr_span.set_attribute("component", str(node_name))
                     parent_gr_span.set_attribute("content_type", str(content_type))
 
+                    parent_gr_span.set_attribute("input.value", self._safe_str(current_content))
+
+                    if not guardrail_group_id:
+                        parent_gr_span.set_attribute("output.value", "No guardrail ID provided")
+                        return content
+
                     retry_count = 0
                     while retry_count <= self.max_retries:
-                        group_result = self._apply_guardrail_group(current_content, guardrail_group_id)
+                        try:
+                            group_result = self._apply_guardrail_group(current_content, guardrail_group_id)
+                        except ValueError as fetch_err:
+                            parent_gr_span.set_attribute(
+                                "output.value",
+                                str(fetch_err),
+                            )
+                            raise
+                        except Exception as e:
+                            parent_gr_span.set_attribute(
+                                "output.value",
+                                str(e),
+                            )
+                            break
 
                         if not group_result.get("success", False):
+                            error_detail = group_result.get("details") or group_result.get("message") or "API error"
+                            parent_gr_span.set_attribute(
+                                "output.value",
+                                str(error_detail),
+                            )
+                            break
+
+                        data = group_result.get("data", {})
+                        flow_summaries = data.get("flow_summaries", [])
+                        if not flow_summaries:
+                            parent_gr_span.set_attribute(
+                                "output.value",
+                                f"Guardrail group '{guardrail_group_id}' returned no flows",
+                            )
                             break
 
                         overall_start_iso = group_result.get("start_time", "")
-                        data = group_result.get("data", {})
-                        flow_summaries = data.get("flow_summaries", [])
                         total_tokens_all = sum(f.get("total_tokens", 0) for f in flow_summaries)
 
                         parent_gr_span.set_attribute("start_time", overall_start_iso)
                         parent_gr_span.set_attribute("end_time", group_result.get("end_time", ""))
                         parent_gr_span.set_attribute("duration", float(group_result.get("duration", 0.0)))
-                        parent_gr_span.set_attribute("input.value", self._safe_str(current_content))
                         parent_gr_span.set_attribute("llm.token_count.total", total_tokens_all)
                         if action == "retry":
                             parent_gr_span.set_attribute("retry_count", retry_count)

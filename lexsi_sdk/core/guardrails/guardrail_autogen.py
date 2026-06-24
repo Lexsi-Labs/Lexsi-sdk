@@ -142,9 +142,6 @@ class GuardrailSupervisor:
     ) -> List[str]:
         """Run the guardrail group and return the list of failed flow names.
         Raises ValueError immediately for action='block'."""
-        if not self.guardrail_group_id:
-            return []
-
         failed_flows: List[str] = []
 
         with self.tracer.start_as_current_span(
@@ -155,8 +152,27 @@ class GuardrailSupervisor:
             if self.action == "retry":
                 parent_gr_span.set_attribute("retry_count", retry_count)
 
+            if not self.guardrail_group_id:
+                parent_gr_span.set_attribute("output.value", "No guardrail ID provided")
+                return []
+
             try:
-                guardrail_flows = self._fetch_guardrail_group(self.guardrail_group_id)
+                try:
+                    guardrail_flows = self._fetch_guardrail_group(self.guardrail_group_id)
+                except ValueError as fetch_err:
+                    parent_gr_span.set_attribute(
+                        "output.value",
+                        str(fetch_err),
+                    )
+                    return []
+
+                if not guardrail_flows:
+                    parent_gr_span.set_attribute(
+                        "output.value",
+                        f"Guardrail group '{self.guardrail_group_id}' returned no flows",
+                    )
+                    return []
+
                 payload = {"input_data": content, "guardrails": guardrail_flows}
 
                 start_time = datetime.now()
@@ -164,7 +180,11 @@ class GuardrailSupervisor:
                 end_time = datetime.now()
 
                 if not response.get("success", False):
-                    parent_gr_span.set_attribute("error.message", str(response.get("details", "")))
+                    error_detail = response.get("details") or response.get("message") or "API error"
+                    parent_gr_span.set_attribute(
+                        "output.value",
+                        str(error_detail),
+                    )
                     return []
 
                 data = response.get("data", {})

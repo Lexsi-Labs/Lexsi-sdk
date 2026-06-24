@@ -168,8 +168,27 @@ class OpenAIAgentsGuardrail:
                     parent_gr_span.set_attribute("component", str(agent_name))
                     parent_gr_span.set_attribute("content_type", guardrail_type)
 
+                    if not guardrail_group_id:
+                        parent_gr_span.set_attribute("output.value", "No guardrail ID provided")
+                        return current_content, tripwire_triggered, output_info
+
                     while retry_count <= self.max_retries:
-                        guardrail_flows = self._fetch_guardrail_group(guardrail_group_id)
+                        try:
+                            guardrail_flows = self._fetch_guardrail_group(guardrail_group_id)
+                        except ValueError as fetch_err:
+                            parent_gr_span.set_attribute(
+                                "output.value",
+                                str(fetch_err),
+                            )
+                            return current_content, tripwire_triggered, output_info
+
+                        if not guardrail_flows:
+                            parent_gr_span.set_attribute(
+                                "output.value",
+                                f"Guardrail group '{guardrail_group_id}' returned no flows",
+                            )
+                            return current_content, tripwire_triggered, output_info
+
                         payload = {"input_data": current_content, "guardrails": guardrail_flows}
 
                         start_time = datetime.now()
@@ -181,7 +200,12 @@ class OpenAIAgentsGuardrail:
                         response["duration"] = (end_time - start_time).total_seconds()
 
                         if not response.get("success", False):
-                            output_info["execution_error"] = response.get("details", {})
+                            error_detail = response.get("details") or response.get("message") or "API error"
+                            parent_gr_span.set_attribute(
+                                "output.value",
+                                str(error_detail),
+                            )
+                            output_info["execution_error"] = error_detail
                             return current_content, tripwire_triggered, output_info
 
                         data = response.get("data", {})
