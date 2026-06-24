@@ -938,26 +938,28 @@ class TextProject(Project):
 
         poll_events(self.api_client, self.project_name, res["event_id"], plot=plot)
 
-    def stop_finetuning(self, model_name: str) -> str:
-        """Stop a running fine-tuning job.
+    def stop_model_training(self, model_name: str) -> str:
+        """Stop a running model-training job (fine-tuning, quantization, etc.).
 
-        Locates the fine-tuning event for ``model_name`` (the generated model
-        name, e.g. ``meta-llama-Llama-3.2-1B-rl-dpo_v3``, as listed by the model
-        list / :meth:`model_metrics`), terminates the GPU server running the
-        task, and marks the job as terminated. Requires admin/manager access to
-        the project.
+        Locates the in-progress training/processing event for ``model_name`` (the
+        generated model name, e.g. ``meta-llama-Llama-3.2-1B-rl-dpo_v3``, as
+        listed by the model list / :meth:`model_metrics`), terminates the GPU
+        server running it, and marks the job as terminated. Requires
+        admin/manager access to the project.
 
-        :param model_name: Name of the finetuned model whose job to stop.
+        :param model_name: Name of the model whose training job to stop.
         :return: Confirmation message from the API.
         """
         res = self.api_client.post(
             FETCH_EVENTS,
-            {"project_name": self.project_name, "task_name": ["fine_tune_model"]},
+            {
+                "project_name": self.project_name,
+                "task_name": ["fine_tune_model", "quantize_model", "prune_model"],
+            },
         )
         if not res["success"]:
-            raise Exception(res.get("details", "Failed to fetch finetuning events"))
+            raise Exception(res.get("details", "Failed to fetch training events"))
 
-        # Events come back newest-first; match the finetuning event for this model.
         event_id = next(
             (
                 event.get("_id")
@@ -968,11 +970,11 @@ class TextProject(Project):
             None,
         )
         if not event_id:
-            raise Exception(f"No finetuning event found for model '{model_name}'")
+            raise Exception(f"No training job found for model '{model_name}'")
 
         res = self.api_client.post(STOP_EVENT_URI, payload={"event_id": event_id})
         if not res["success"]:
-            raise Exception(res.get("details", "Failed to stop fine-tuning job"))
+            raise Exception(res.get("details", "Failed to stop the training job"))
         return res.get("details")
 
     def remove_guardrail_from_model(self, model_name: str, apply_on: str = "input") -> str:
