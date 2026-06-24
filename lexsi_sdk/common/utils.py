@@ -158,6 +158,41 @@ def poll_events(
             raise Exception(details.get("message"))
 
 
+def _emit_metric_rows(label: str, metrics: dict, x_label: str, last_x):
+    """Print metric rows (aligned by x) whose x is greater than ``last_x``.
+
+    Metrics arrive as ``{name: [[x, y], ...]}`` cumulative series. Points are
+    aligned by their x value so each printed row lists every metric logged at
+    that x. On the first call (``last_x`` is None) the full history so far is
+    printed — so a late-started stream still shows earlier points — and on later
+    calls only rows newer than ``last_x`` print.
+
+    :param label: Group label used in the line prefix, e.g. ``"model"``.
+    :param metrics: mapping of ``{metric_name: [[x, y], ...]}``.
+    :param x_label: Name of the x axis printed before each x value, e.g. ``"step"``.
+    :param last_x: Highest x already printed (None on first call).
+    :return: the highest x printed, or ``last_x`` unchanged if nothing was new.
+    """
+    rows: dict = {}
+    for name, points in metrics.items():
+        clean = name.replace("system/", "")
+        for point in points:
+            if point:
+                rows.setdefault(point[0], {})[clean] = point[1]
+
+    for x in sorted(rows):
+        if last_x is not None and x <= last_x:
+            continue
+        summary = ", ".join(
+            f"{name}={value:.4g}" for name, value in sorted(rows[x].items())
+        )
+        if summary:
+            x_str = int(x) if isinstance(x, float) and x.is_integer() else x
+            print(f"  [{label} metrics] {x_label} {x_str}: {summary}")
+        last_x = x
+    return last_x
+
+
 def fetch_event_metrics(
     api_client: APIClient,
     project_name: str,
@@ -224,34 +259,13 @@ def fetch_event_metrics(
 
         if not plot_enabled:
             if model_metrics:
-                latest_step = max(
-                    (points[-1][0] for points in model_metrics.values() if points),
-                    default=None,
+                last_metric_step = _emit_metric_rows(
+                    "model", model_metrics, "step", last_metric_step
                 )
-                if latest_step is not None and latest_step != last_metric_step:
-                    last_metric_step = latest_step
-                    summary = ", ".join(
-                        f"{name}={points[-1][1]:.4g}"
-                        for name, points in sorted(model_metrics.items())
-                        if points
-                    )
-                    if summary:
-                        print(f"  [model metrics] step {latest_step}: {summary}")
-
             if system_metrics:
-                latest_ts = max(
-                    (points[-1][0] for points in system_metrics.values() if points),
-                    default=None,
+                last_system_ts = _emit_metric_rows(
+                    "system", system_metrics, "timestamp", last_system_ts
                 )
-                if latest_ts is not None and latest_ts != last_system_ts:
-                    last_system_ts = latest_ts
-                    summary = ", ".join(
-                        f"{name.replace('system/', '')}={points[-1][1]:.4g}"
-                        for name, points in sorted(system_metrics.items())
-                        if points
-                    )
-                    if summary:
-                        print(f"  [system metrics]  {summary}")
 
         if details.get("status") in ("completed", "failed", "terminated"):
             break
