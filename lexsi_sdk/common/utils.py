@@ -50,6 +50,42 @@ def pretty_date(date: str) -> str:
     return datetime_obj.strftime("%d-%m-%Y %H:%M:%S")
 
 
+def _fmt_metric(value) -> str:
+    """Format a metric value for printing, tolerating non-numeric values.
+
+    MLflow's REST API serializes non-finite metric values (``NaN``, ``Infinity``,
+    ``-Infinity``) as strings, so a metric series can contain string values.
+    Format real numbers with ``.4g`` and pass anything else through as-is so
+    printing never crashes.
+    """
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return str(value)
+    return f"{value:.4g}"
+
+
+def _normalize_metrics(metrics: dict) -> dict:
+    """Coerce metric values to real numbers, preserving every point.
+
+    MLflow's REST API serializes non-finite values (``NaN``, ``Infinity``,
+    ``-Infinity``) as strings. Convert those (and any numeric-looking string) to
+    real floats so the data plots, prints and is numerically usable downstream.
+    Points are kept — not dropped — so a diverged step still shows up (as a gap
+    when plotted). Values that can't be parsed are left untouched.
+    """
+    def coerce(v):
+        if isinstance(v, str):
+            try:
+                return float(v)
+            except (ValueError, TypeError):
+                return v
+        return v
+
+    return {
+        key: [[point[0], coerce(point[1])] for point in points if point]
+        for key, points in (metrics or {}).items()
+    }
+
+
 def poll_events(
     api_client: APIClient,
     project_name: str,
@@ -101,8 +137,8 @@ def poll_events(
             last_message = details.get("message")
             print(f"{details.get('message')}")
 
-        model_metrics = details.get("model_metrics") or {}
-        system_metrics = details.get("system_metrics") or {}
+        model_metrics = _normalize_metrics(details.get("model_metrics") or {})
+        system_metrics = _normalize_metrics(details.get("system_metrics") or {})
 
         if plot_enabled:
             try:
@@ -125,7 +161,7 @@ def poll_events(
                 if latest_step is not None and latest_step != last_metric_step:
                     last_metric_step = latest_step
                     summary = ", ".join(
-                        f"{name}={points[-1][1]:.4g}"
+                        f"{name}={_fmt_metric(points[-1][1])}"
                         for name, points in sorted(model_metrics.items())
                         if points
                     )
@@ -140,7 +176,7 @@ def poll_events(
                 if latest_ts is not None and latest_ts != last_system_ts:
                     last_system_ts = latest_ts
                     summary = ", ".join(
-                        f"{name.replace('system/', '')}={points[-1][1]:.4g}"
+                        f"{name.replace('system/', '')}={_fmt_metric(points[-1][1])}"
                         for name, points in sorted(system_metrics.items())
                         if points
                     )
@@ -184,7 +220,7 @@ def _emit_metric_rows(label: str, metrics: dict, x_label: str, last_x):
         if last_x is not None and x <= last_x:
             continue
         summary = ", ".join(
-            f"{name}={value:.4g}" for name, value in sorted(rows[x].items())
+            f"{name}={_fmt_metric(value)}" for name, value in sorted(rows[x].items())
         )
         if summary:
             x_str = int(x) if isinstance(x, float) and x.is_integer() else x
@@ -239,11 +275,10 @@ def fetch_event_metrics(
         if not event.get("success"):
             raise Exception(details)
 
-        # Series are cumulative, so the latest payload supersedes earlier ones.
         if details.get("model_metrics"):
-            model_metrics = details["model_metrics"]
+            model_metrics = _normalize_metrics(details["model_metrics"])
         if details.get("system_metrics"):
-            system_metrics = details["system_metrics"]
+            system_metrics = _normalize_metrics(details["system_metrics"])
 
         if plot_enabled:
             try:
