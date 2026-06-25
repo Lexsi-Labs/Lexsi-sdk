@@ -5,7 +5,7 @@ from typing import Callable, Optional, Union
 from lexsi_sdk.client.client import APIClient
 
 from lexsi_sdk.common.live_plot import LiveMetricsPlotter, in_notebook
-from lexsi_sdk.common.xai_uris import POLL_EVENTS
+from lexsi_sdk.common.xai_uris import FETCH_EVENTS, POLL_EVENTS
 
 
 def parse_float(s):
@@ -309,6 +309,47 @@ def fetch_event_metrics(
         print("No metrics found for the event")
 
     return {"model_metrics": model_metrics, "system_metrics": system_metrics}
+
+
+def fetch_submitted_training_config(
+    api_client: APIClient,
+    project_name: str,
+    details: dict,
+    model_name: Optional[str],
+) -> Optional[dict]:
+    """Recover the config originally submitted for a model's training job.
+
+    The overview drops data/sampling/toggle fields from the stored
+    hyper-config; the original ``config`` payload survives on the training
+    event (fine-tune / quantization / pruning). Looks that event up and
+    returns its ``config``. Returns ``None`` when there is no training event,
+    the lookup fails, or the caller lacks access (fetching events requires
+    admin/manager access) — callers treat this as best-effort enrichment.
+    """
+    training_tasks = ["fine_tune_model", "quantize_model", "prune_model"]
+    events = details.get("events") or {}
+    if not any(task in events for task in training_tasks):
+        return None
+
+    target = model_name or (details.get("metadata") or {}).get("model_name")
+    try:
+        res = api_client.post(
+            FETCH_EVENTS,
+            {"project_name": project_name, "task_name": training_tasks},
+        )
+    except Exception:
+        return None
+    if not res.get("success"):
+        return None
+
+    for event in res.get("details") or []:
+        params = event.get("params") or {}
+        event_model = (params.get("metadata") or {}).get("model_name") or params.get(
+            "model_name"
+        )
+        if event_model == target:
+            return params.get("config") or None
+    return None
 
 
 TIME_RE = re.compile(

@@ -12,7 +12,13 @@ from lexsi_sdk.common.types import (
     GDriveConfig,
     SFTPConfig,
 )
-from lexsi_sdk.common.utils import normalize_time, parse_datetime, parse_float, poll_events
+from lexsi_sdk.common.utils import (
+    fetch_submitted_training_config,
+    normalize_time,
+    parse_datetime,
+    parse_float,
+    poll_events,
+)
 from lexsi_sdk.common.validation import Validate
 import pandas as pd
 from lexsi_sdk.common.xai_uris import (
@@ -436,9 +442,24 @@ class Project(BaseModel):
         for a model. If ``model_name`` is omitted, the project's active model is
         used.
 
+        For models produced by fine-tuning, quantization or pruning, the config
+        used to create the model is surfaced at the top level under ``config`` so
+        it can be read without digging into ``model_results``. ``config`` is
+        ``None`` for base models that carry no such config.
+
+        The overview only persists the *resolved* hyper-config
+        (``model_results.*_info``); data-selection, sampling and toggle fields
+        that were passed at submission time (e.g. ``tag``, ``training_type``,
+        ``prompt_column`` / ``chosen_column`` / ``rejected_column``,
+        ``system_prompt``, ``max_samples``, ``use_quantization``) are consumed by
+        the data pipeline and dropped from it. Those are recovered from the
+        original training event and merged into ``config`` (the resolved values
+        take precedence; only missing keys are added), so the returned ``config``
+        reflects what was actually submitted as closely as possible.
+
         :param model_name: Generated model name (e.g. as listed by
             :meth:`models`); defaults to the active model for the project.
-        :return: the model's overview details.
+        :return: the model's overview details, with an added ``config`` key.
         """
         res = self.api_client.get(
             f"{MODEL_OVERVIEW_URI}?project_name={self.project_name}"
@@ -448,7 +469,26 @@ class Project(BaseModel):
             raise Exception(
                 res.get("details") or res.get("message", "Failed to fetch model metadata")
             )
-        return res.get("details")
+
+        details = res.get("details") or {}
+        model_results = details.get("model_results") or {}
+        config = (
+            model_results.get("finetunning_info")
+            or model_results.get("quantization_info")
+            or model_results.get("pruning_info")
+            or None
+        )
+
+        submitted = fetch_submitted_training_config(
+            self.api_client, self.project_name, details, model_name
+        )
+        if submitted:
+            config = dict(config) if config else {}
+            for key, value in submitted.items():
+                config.setdefault(key, value)
+
+        details["config"] = config
+        return details
 
     def tags(self) -> List[str]:
         """Available User Tags for Project
