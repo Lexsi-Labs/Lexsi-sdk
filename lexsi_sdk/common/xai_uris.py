@@ -76,6 +76,7 @@ RUN_MODEL_ON_DATA_URI = f"{API_VERSION_V2}/ai-models/run_model_on_data"
 DOWNLOAD_TAG_DATA_URI = f"{API_VERSION_V2}/ai-models/download_tag_data"
 MODEL_SUMMARY_URI = f"{API_VERSION_V2}/project/get_model_perfermance"
 PROJECT_OVERVIEW_TEXT_URI = f"{API_VERSION_V2}/ai-models/project_overview"
+MODEL_OVERVIEW_URI = f"{API_VERSION_V2}/ai-models/model_overview"
 MODEL_SVG_URI = f"{API_VERSION_V2}/project/get_model_svg_plot"
 MODEL_INFERENCES_URI = f"{API_VERSION_V2}/ai-models/get_all_tags_for_models"
 UPLOAD_DATA_PROJECT_URI = f"{API_VERSION_V2}/project/case-register"
@@ -146,6 +147,7 @@ GET_SYNTHETIC_PROMPT_URI = f"{API_VERSION_V2}/synthetics/get_synthetics_promts"
 # Events
 POLL_EVENTS = f"{API_VERSION_V2}/events/poll"
 FETCH_EVENTS = f"{API_VERSION_V2}/events/fetch"
+STOP_EVENT_URI = f"{API_VERSION_V2}/events/stop"
 
 # Organization
 USER_ORGANIZATION_URI = f"{API_VERSION_V2}/organization/user_organization"
