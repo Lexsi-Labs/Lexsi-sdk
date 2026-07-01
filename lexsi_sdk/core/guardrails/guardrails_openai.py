@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from datetime import datetime, timedelta
 from typing import Any, Callable, Dict, List, Optional, TypedDict, Union
-from lexsi_sdk.common.xai_uris import GUARDRAILS_GET, GUARDRAILS_RUN
+from lexsi_sdk.common.xai_uris import GUARDRAILS_GET, GUARDRAILS_RUN_AGENT
 from lexsi_sdk.core.project import Project
 from opentelemetry import trace
 import asyncio
@@ -189,10 +189,10 @@ class OpenAIAgentsGuardrail:
                             )
                             return current_content, tripwire_triggered, output_info
 
-                        payload = {"input_data": current_content, "guardrails": guardrail_flows}
+                        payload = {"input_data": current_content, "guardrails": guardrail_flows, "project_name": self.project_name}
 
                         start_time = datetime.now()
-                        response = self.client.post(GUARDRAILS_RUN, payload=payload)
+                        response = self.client.post(GUARDRAILS_RUN_AGENT, payload=payload)
                         end_time = datetime.now()
 
                         response["start_time"] = start_time.isoformat()

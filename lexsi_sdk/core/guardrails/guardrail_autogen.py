@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from autogen import ConversableAgent, UserProxyAgent
 from autogen_agentchat.agents import AssistantAgent
 from lexsi_sdk.core.project import Project
-from lexsi_sdk.common.xai_uris import GUARDRAILS_GET, GUARDRAILS_RUN
+from lexsi_sdk.common.xai_uris import GUARDRAILS_GET, GUARDRAILS_RUN_AGENT
 from opentelemetry import trace, context
 
 
@@ -173,10 +173,10 @@ class GuardrailSupervisor:
                     )
                     return []
 
-                payload = {"input_data": content, "guardrails": guardrail_flows}
+                payload = {"input_data": content, "guardrails": guardrail_flows, "project_name": self.project_name}
 
                 start_time = datetime.now()
-                response = self.api_client.post(GUARDRAILS_RUN, payload=payload)
+                response = self.api_client.post(GUARDRAILS_RUN_AGENT, payload=payload)
                 end_time = datetime.now()
 
                 if not response.get("success", False):
