@@ -12,11 +12,12 @@ import plotly.graph_objects as go
 import base64
 from PIL import Image
 from lexsi_sdk.common.types import InferenceCompute, InferenceSettings
-from lexsi_sdk.common.utils import normalize_time, poll_events
+from lexsi_sdk.common.utils import fetch_event_metrics, normalize_time, poll_events
 from lexsi_sdk.common.xai_uris import (
     AVAILABLE_GUARDRAILS_URI,
     CONFIGURE_GUARDRAILS_URI,
     DELETE_GUARDRAILS_URI,
+    FETCH_EVENTS,
     FINETUNE_MODEL_URI,
     GET_AVAILABLE_TEXT_MODELS_URI,
     GET_GUARDRAILS_URI,
@@ -27,6 +28,7 @@ from lexsi_sdk.common.xai_uris import (
     PRUNING_MODEL_URI,
     QUANTIZE_MODELS_URI,
     SESSIONS_URI,
+    STOP_EVENT_URI,
     TEXT_MODEL_INFERENCE_SETTINGS_URI,
     TRACES_URI,
     UPDATE_ACTIVE_INFERENCE_MODEL_URI,
@@ -907,6 +909,7 @@ class TextProject(Project):
         node: DedicatedGPUNodeValues,
         assets: Optional[dict] = None,
         config: Optional[dict] = None,
+        plot: bool = True,
     ) -> str:
         """Fine-tune a model using the provided training data and settings.
 
@@ -914,6 +917,9 @@ class TextProject(Project):
         :param node: Dedicated GPU node configuration for fine-tuning.
         :param assets: Assets required for fine-tuning, such as hugging face secrets.
         :param config: Configuration settings for fine-tuning, including hyperparameters, training settings,
+        :param plot: When True (default), live model/system metrics are plotted in
+            notebook environments; when False, raw metric summaries are printed
+            instead even where plotting is possible.
         :return: response with fine-tuning details.
         """
         
@@ -927,11 +933,50 @@ class TextProject(Project):
             }
         }
         res = self.api_client.post(FINETUNE_MODEL_URI, payload)
-        
+
         if not res["success"]:
             raise Exception(res.get("details", "Model Fine-tuning Failed"))
-        
-        poll_events(self.api_client, self.project_name, res["event_id"])
+
+        poll_events(self.api_client, self.project_name, res["event_id"], plot=plot)
+
+    def stop_model_training(self, model_name: str) -> str:
+        """Stop a running model-training job (fine-tuning, quantization, etc.).
+
+        Locates the in-progress training/processing event for ``model_name`` (the
+        generated model name, e.g. ``meta-llama-Llama-3.2-1B-rl-dpo_v3``, as
+        listed by the model list / :meth:`model_metrics`), terminates the GPU
+        server running it, and marks the job as terminated. Requires
+        admin/manager access to the project.
+
+        :param model_name: Name of the model whose training job to stop.
+        :return: Confirmation message from the API.
+        """
+        res = self.api_client.post(
+            FETCH_EVENTS,
+            {
+                "project_name": self.project_name,
+                "task_name": ["fine_tune_model", "quantize_model", "prune_model"],
+            },
+        )
+        if not res["success"]:
+            raise Exception(res.get("details", "Failed to fetch training events"))
+
+        event_id = next(
+            (
+                event.get("_id")
+                for event in (res.get("details") or [])
+                if (event.get("config") or {}).get("model_name") == model_name
+                or (event.get("params") or {}).get("model_name") == model_name
+            ),
+            None,
+        )
+        if not event_id:
+            raise Exception(f"No training job found for model '{model_name}'")
+
+        res = self.api_client.post(STOP_EVENT_URI, payload={"event_id": event_id})
+        if not res["success"]:
+            raise Exception(res.get("details", "Failed to stop the training job"))
+        return res.get("details")
 
     def remove_guardrail_from_model(self, model_name: str, apply_on: str = "input") -> str:
         """Remove a guardrail from a specific model.
@@ -987,6 +1032,56 @@ class TextProject(Project):
             raise Exception(res.get("details", "Model Fine-tuning Failed"))
         
         poll_events(self.api_client, self.project_name, res["event_id"])
+        
+        
+    def model_metrics(
+        self,
+        model_name: str,
+        return_metrics: Optional[bool] = False,
+        plot: bool = True,
+    ) -> dict | None:
+        """Fetch and plot the system and model metrics for a finetuned model.
+
+        Mirrors :meth:`model_logs` but for metrics: it locates the finetuning
+        event for ``model_name`` and replays its metrics from the ``events/poll``
+        stream (the same source used for live metrics during training), then
+        renders the system and model metric charts — one subplot per metric — in
+        a notebook, or prints the final values otherwise.
+
+        :param model_name: Name of the finetuned model to retrieve metrics for.
+        :param return_metrics: When True, return the metrics dict for
+            programmatic use. Defaults to False so notebooks show only the charts
+            instead of also echoing the raw series.
+        :param plot: When True (default), metrics are plotted in notebook
+            environments; when False, raw metric summaries are printed instead
+            even where plotting is possible.
+        :return: dict with ``model_metrics`` and ``system_metrics`` series when
+            ``return_metrics`` is True, otherwise None.
+        """
+        res = self.api_client.post(
+            FETCH_EVENTS,
+            {"project_name": self.project_name, "task_name": ["fine_tune_model"]},
+        )
+        if not res["success"]:
+            raise Exception(res.get("details", "Failed to fetch finetuning events"))
+
+        # Events come back newest-first; match the finetuning event for this model.
+        event_id = next(
+            (
+                event.get("_id")
+                for event in (res.get("details") or [])
+                if (event.get("config") or {}).get("model_name") == model_name
+                or (event.get("params") or {}).get("model_name") == model_name
+            ),
+            None,
+        )
+        if not event_id:
+            raise Exception(f"No finetuning event found for model '{model_name}'")
+
+        metrics = fetch_event_metrics(self.api_client, self.project_name, event_id, plot=plot)
+        if return_metrics:
+            return metrics
+
 
 class CaseText(BaseModel):
     """Explainability view for text-based cases. Supports token-level importance, attention visualization, and LLM output analysis."""
