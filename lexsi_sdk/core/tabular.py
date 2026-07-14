@@ -2587,6 +2587,9 @@ class TabularProject(Project):
 
         if training_strategy in ["ensemble"] and isinstance(model, str):
             raise Exception(f"Model is required as list for {training_strategy} training strategy")
+        
+        if training_strategy in ["ensemble"] and isinstance(model, list) and len(model) < 2:
+            raise Exception(f"Two or more models are required for ensemble")
             
         Validate.value_against_list("model", model, available_models)
 
@@ -2594,18 +2597,6 @@ class TabularProject(Project):
             *project_config["metadata"]["feature_exclude"],
             *project_config["metadata"]["feature_include"],
         ]
-
-        if tunning_strategy != "inference" and compute_type and "gova" not in compute_type:
-            custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
-            available_custom_batch_servers = custom_batch_servers.get("details", []) + custom_batch_servers.get("available_gpu_custom_servers", [])
-            Validate.value_against_list(
-                "pod",
-                compute_type,
-                [
-                    server["instance_name"]
-                    for server in available_custom_batch_servers
-                ],
-            )
 
         if data_config:
             if data_config.get("feature_exclude"):
@@ -2671,73 +2662,6 @@ class TabularProject(Project):
                     ["shap", "lime"],
                 )
 
-        if model_config:
-            model_params = self.api_client.get(MODEL_PARAMETERS_URI)
-            model_name = f"{model}_{project_config['project_type']}".lower()
-            model_parameters = model_params.get(model_name)
-
-            if model_parameters:
-
-                def validate_params(param_group, config_group):
-                    """Validate config values against model parameter constraints.
-                    Checks select options and numeric min/max bounds, raising exceptions on invalid values.
-
-                    :param param_group: Parameter definition dict (select/input types with constraints).
-                    :param config_group: User-supplied config dict to validate against `param_group`.
-                    :raises Exception: If any value violates the declared constraints.
-                    """
-                    if config_group:
-                        for param_name, param_value in config_group.items():
-                            model_param = param_group.get(param_name)
-                            if not model_param:
-                                # raise Exception(
-                                #     f"Invalid model config for {model_type} \n {json.dumps(model_parameters)}"
-                                # )
-                                continue
-
-                            param_type = model_param["type"]
-
-                            if param_type == "select":
-                                Validate.value_against_list(
-                                    param_name, param_value, model_param["value"]
-                                )
-                            elif param_type == "input":
-                                if param_value > model_param["max"]:
-                                    raise Exception(
-                                        f"{param_name} value cannot be greater than {model_param['max']}"
-                                    )
-                                if param_value < model_param["min"]:
-                                    raise Exception(
-                                        f"{param_name} value cannot be less than {model_param['min']}"
-                                    )
-
-                if model in ["TabPFN","TabICL","TabDPT","OrionMSP", "OrionBix","Mitra", "ContextTab"]:
-                    validate_params(
-                        model_parameters.get("model_params", {}), model_config
-                    )
-                    validate_params(
-                        model_parameters.get("tunning_params", {}), tunning_config
-                    )
-                    validate_params(
-                        model_parameters.get("processor_params", {}), processor_config
-                    )
-                    validate_params(
-                        model_parameters.get("peft_params", {}), peft_config
-                    )
-                else:
-                    validate_params(model_parameters, model_config)
-        if finetune_mode:
-            Validate.value_against_list(
-                "finetune_mode",
-                finetune_mode,
-                ["meta-learning", "sft"],
-            )
-        if tunning_strategy:
-            Validate.value_against_list(
-                "tunning_strategy",
-                tunning_strategy,
-                ["base-ft", "inference", "peft", "finetune"],
-            )
         data_conf = data_config or {}
 
         feature_exclude = [
