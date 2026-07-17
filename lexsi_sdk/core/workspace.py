@@ -169,7 +169,7 @@ class Workspace(BaseModel):
             return TabularProject(api_client=self.api_client, **project)
         elif project.get("metadata", {}).get("modality") == "image":
             return ImageProject(api_client=self.api_client, **project)
-        elif project.get("metadata", {}).get("modality") == "text":
+        elif project.get("metadata", {}).get("modality") in ["text", "mason"]:
             return TextProject(api_client=self.api_client, **project)
         elif project.get("metadata", {}).get("modality") == "agent":
             return AgentProject(api_client=self.api_client, **project)
