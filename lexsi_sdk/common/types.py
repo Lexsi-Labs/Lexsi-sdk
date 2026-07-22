@@ -202,7 +202,7 @@ class ProjectConfig(TypedDict):
     :type xai_method: Optional[list[str]]
     """
 
-    model_name: Optional[str] = None
+    model: Optional[str] = None
     unique_identifier: str
     true_label: str
     tag: str

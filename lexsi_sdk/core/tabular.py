@@ -427,8 +427,11 @@ class TabularProject(Project):
                 "instance_type": compute_type,
                 "sample_percentage": config.get("sample_percentage", None),
             }
+            if config.get("model"):
+                payload["metadata"]["model"] = config.get("model")
+
             if config.get("model_name"):
-                payload["metadata"]["model_name"] = config.get("model_name")
+                payload["metadata"]["model"] = config.get("model_name")
 
             if config.get("xai_method"):
                 payload["metadata"]["explainability_method"] = config.get(
