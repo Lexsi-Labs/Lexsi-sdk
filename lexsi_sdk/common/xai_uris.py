@@ -213,6 +213,7 @@ MODEL_LOGS_URI = f"{API_VERSION_V2}/ai-models/get_model_logs"
 
 GUARDRAILS_LIB = f"guardrails/library"
 GUARDRAILS_RUN = f"guardrails/run-parallel"
+GUARDRAILS_RUN_AGENT = f"guardrails/run-parallel-agent"
 GUARDRAILS_CREATE = f"guardrails/create"
 GUARDRAILS_APPLY_TO_MODEL = f"guardrails/apply-to-models"
 GUARDRAILS_LIST = f"guardrails"
