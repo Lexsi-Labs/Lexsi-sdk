@@ -5,7 +5,7 @@ from io import BytesIO
 from typing import Optional, List, Dict, Any, Union, Literal
 
 import httpx
-from lexsi_sdk.common.types import DedicatedGPUNodeValues, InferenceCompute, InferenceSettings
+from lexsi_sdk.common.types import BatchCPUInstanceType, DedicatedGPUNodeValues, InferenceCompute, InferenceSettings
 from pydantic import BaseModel
 from pydantic import BaseModel
 import plotly.graph_objects as go
@@ -19,6 +19,7 @@ from lexsi_sdk.common.xai_uris import (
     DELETE_GUARDRAILS_URI,
     FETCH_EVENTS,
     FINETUNE_MODEL_URI,
+    RUN_CURATION_URI,
     GET_AVAILABLE_TEXT_MODELS_URI,
     GET_GUARDRAILS_URI,
     INITIALIZE_TEXT_MODEL_URI,
@@ -936,6 +937,59 @@ class TextProject(Project):
 
         if not res["success"]:
             raise Exception(res.get("details", "Model Fine-tuning Failed"))
+
+        poll_events(self.api_client, self.project_name, res["event_id"], plot=plot)
+
+    def run_curation(
+        self,
+        config: dict,
+        node: BatchCPUInstanceType,
+        models: Optional[dict] = None,
+        output_tag: Optional[str] = None,
+        plot: bool = True,
+    ) -> str:
+        """Run a CuratorKIT data-curation job on an AWS Batch CPU node.
+
+        Curation reads a source dataset (an uploaded Lexsi ``tag`` or a Hugging
+        Face Hub dataset), runs the CuratorKIT pipeline (dedup, cleaning,
+        schema/quality gates, optional generation), and writes the curated
+        dataset back as a new tag plus downloadable export files.
+
+        :param config: CuratorKIT configuration. Selects the source and every
+            pipeline knob. Source is chosen via ``config["source_type"]``
+            (``"tag"`` with ``config["tag"]``, or ``"huggingface"`` with
+            ``config["hf_dataset"]``). Other common keys: ``generation_task``,
+            ``dedup``, ``schema_gate``, ``hallucination_threshold``,
+            ``reward_threshold``, ``export_formats``, ``max_samples``,
+            ``enable_checkpoint``. Do not put API keys here — models are
+            resolved server-side from ``models``.
+        :param node: Batch CPU node size for the job (e.g. ``"small"``,
+            ``"medium"``, ``"large"``). Curation is orchestration + API calls,
+            so a CPU node is correct; LLM inference runs on the selected models'
+            own endpoints.
+        :param models: Per-stage model selection mapping stage -> project model
+            name, e.g. ``{"generator": "...", "judge": "...", "reward": "..."}``.
+            The backend resolves each to its endpoint/key. Required when
+            ``config["generation_task"]`` or any LLM gate is set.
+        :param output_tag: Tag for the curated output dataset. Auto-derived from
+            the source when omitted.
+        :param plot: When True (default), the job's live progress/metrics are
+            plotted in notebook environments; when False, summaries are printed.
+        :return: response with curation details.
+        """
+        payload = {
+            "project_name": self.project_name,
+            "config": config,
+            "models": models or {},
+            "output_tag": output_tag,
+            "compute": {
+                "node": node
+            },
+        }
+        res = self.api_client.post(RUN_CURATION_URI, payload)
+
+        if not res["success"]:
+            raise Exception(res.get("details", "Data Curation Failed"))
 
         poll_events(self.api_client, self.project_name, res["event_id"], plot=plot)
 
