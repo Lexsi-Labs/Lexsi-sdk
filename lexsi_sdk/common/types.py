@@ -202,7 +202,7 @@ class ProjectConfig(TypedDict):
     :type xai_method: Optional[list[str]]
     """
 
-    model_name: Optional[str] = None
+    model: Optional[str] = None
     unique_identifier: str
     true_label: str
     tag: str
@@ -711,6 +711,31 @@ class ProcessorParams(TypedDict, total=False):
     imputation_strategy: Optional[Literal["mean", "median", "mode", "knn"]]
     scaling_strategy: Optional[Literal["standard", "minmax", "robust"]]
     resampling_strategy: Optional[Literal["smote", "random_oversample", "none"]]
+
+
+class EnsembleConfg(TypedDict):
+    ensemble_strategy: Optional[str] = None
+    metric: Optional[str] = None
+    meta_learner: Optional[str] = None
+    weight_scheme: Optional[str] = None
+    cv_folds: Optional[int] = None
+    holdout_fraction: Optional[float] = None
+    greedy_ensemble_size: Optional[int] = None
+    include_gbdt_baselines: Optional[bool] = None
+    n_cascade_levels: Optional[int] = None
+    n_seeds: Optional[int] = None
+    base_seed: Optional[int] = None
+
+
+class DistillationConfig(TypedDict):
+    student: Optional[str] = None
+    gbdt_backend: Optional[str] = None
+    temperature: Optional[float] = None
+    alpha: Optional[float] = None
+    n_folds: Optional[int] = None
+    adaptive_temperature: Optional[bool] = None
+    confidence_weighting: Optional[bool] = None
+    student_params: Optional[dict] = None
 
 class SyntheticDataConfig(TypedDict):
     """

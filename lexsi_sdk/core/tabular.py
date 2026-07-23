@@ -8,7 +8,7 @@ import pandas as pd
 from lexsi_sdk.core.alert import Alert
 from lexsi_sdk.common.constants import BIAS_MONITORING_DASHBOARD_REQUIRED_FIELDS, DATA_DRIFT_DASHBOARD_REQUIRED_FIELDS, DATA_DRIFT_STAT_TESTS, MODEL_PERF_DASHBOARD_REQUIRED_FIELDS, MODEL_TYPES, SYNTHETIC_MODELS_DEFAULT_HYPER_PARAMS, TARGET_DRIFT_DASHBOARD_REQUIRED_FIELDS, TARGET_DRIFT_STAT_TESTS
 from lexsi_sdk.common.monitoring import BiasMonitoringPayload, DataDriftPayload, ModelPerformancePayload, TargetDriftPayload
-from lexsi_sdk.common.types import CatBoostParams, DataConfig, FoundationalModelParams, InferenceCompute, LightGBMParams, PEFTParams, ProcessorParams, ProjectConfig, RandomForestParams, SyntheticDataConfig, SyntheticModelHyperParams, TuningParams, XGBoostParams
+from lexsi_sdk.common.types import CatBoostParams, DataConfig, DistillationConfig, EnsembleConfg, FoundationalModelParams, InferenceCompute, LightGBMParams, PEFTParams, ProcessorParams, ProjectConfig, RandomForestParams, SyntheticDataConfig, SyntheticModelHyperParams, TuningParams, XGBoostParams
 from lexsi_sdk.common.utils import normalize_time, poll_events
 from lexsi_sdk.common.validation import Validate
 from lexsi_sdk.common.xai_uris import ALL_DATA_FILE_URI, AVAILABLE_BATCH_SERVERS_URI, AVAILABLE_SYNTHETIC_CUSTOM_SERVERS_URI, CASE_DTREE_URI, CASE_INFO_TEXT_URI, CASE_INFO_URI, CREATE_OBSERVATION_URI, CREATE_POLICY_URI, CREATE_SYNTHETIC_PROMPT_URI, DELETE_CASE_URI, DELETE_SYNTHETIC_MODEL_URI, DELETE_SYNTHETIC_TAG_URI, DOWNLOAD_DASHBOARD_LOGS_URI, DOWNLOAD_SYNTHETIC_DATA_URI, DOWNLOAD_TAG_DATA_URI, DUPLICATE_OBSERVATION_URI, DUPLICATE_POLICY_URI, GENERATE_DASHBOARD_URI, GET_CASES_URI, GET_DASHBOARD_SCORE_URI, GET_DATA_DIAGNOSIS_URI, GET_DATA_DRIFT_DIAGNOSIS_URI, GET_DATA_SUMMARY_URI, GET_FEATURE_IMPORTANCE_URI, GET_LABELS_URI, GET_MODELS_URI, GET_OBSERVATION_PARAMS_URI, GET_OBSERVATIONS_URI, GET_POLICIES_URI, GET_POLICY_PARAMS_URI, GET_PROJECT_CONFIG, GET_SYNTHETIC_DATA_TAGS_URI, GET_SYNTHETIC_MODEL_DETAILS_URI, GET_SYNTHETIC_MODEL_PARAMS_URI, GET_SYNTHETIC_MODELS_URI, GET_SYNTHETIC_PROMPT_URI, LIST_DATA_CONNECTORS, MODEL_INFERENCE_SETTINGS_URI, MODEL_INFERENCES_URI, MODEL_PARAMETERS_URI, MODEL_SUMMARY_URI, PROJECT_OVERVIEW_TEXT_URI, RUN_DATA_DRIFT_DIAGNOSIS_URI, RUN_MODEL_ON_DATA_URI, SEARCH_CASE_URI, TABULAR_ML, TEXT_MODEL_INFERENCE_SETTINGS_URI, TRAIN_MODEL_URI, TRAIN_SYNTHETIC_MODEL_URI, UPDATE_ACTIVE_INFERENCE_MODEL_URI, UPDATE_OBSERVATION_URI, UPDATE_POLICY_URI, UPDATE_SYNTHETIC_PROMPT_URI, UPLOAD_DATA_FILE_URI, UPLOAD_DATA_PROJECT_URI, UPLOAD_DATA_URI, UPLOAD_FILE_DATA_CONNECTORS, AVAILABLE_BATCH_SERVERS_URI, CREATE_TRIGGER_URI, DASHBOARD_LOGS_URI, DELETE_TRIGGER_URI, DUPLICATE_MONITORS_URI, EXECUTED_TRIGGER_URI, GENERATE_DASHBOARD_URI, GET_DASHBOARD_SCORE_URI, GET_DASHBOARD_URI, GET_EXECUTED_TRIGGER_INFO, GET_MODEL_TYPES_URI, GET_MODELS_URI, GET_MONITORS_ALERTS, GET_PROJECT_CONFIG, GET_TRIGGERS_URI, LIST_DATA_CONNECTORS, MODEL_PARAMETERS_URI, MODEL_PERFORMANCE_DASHBOARD_URI, UPLOAD_DATA_FILE_INFO_URI, UPLOAD_DATA_FILE_URI, UPLOAD_DATA_URI, UPLOAD_DATA_WITH_CHECK_URI, UPLOAD_FILE_DATA_CONNECTORS, UPLOAD_MODEL_URI, EXPLAINABILITY_SUMMARY, GET_TRIGGERS_DAYS_URI
@@ -427,8 +427,11 @@ class TabularProject(Project):
                 "instance_type": compute_type,
                 "sample_percentage": config.get("sample_percentage", None),
             }
+            if config.get("model"):
+                payload["metadata"]["model"] = config.get("model")
+
             if config.get("model_name"):
-                payload["metadata"]["model_name"] = config.get("model_name")
+                payload["metadata"]["model"] = config.get("model_name")
 
             if config.get("xai_method"):
                 payload["metadata"]["explainability_method"] = config.get(
@@ -2400,7 +2403,8 @@ class TabularProject(Project):
     
     def train_model(
         self,
-        model_type: str,
+        training_strategy: str,
+        model: Union[List[str], str],
         compute_type: str,
         data_config: Optional[DataConfig] = None,
         model_config: Optional[Union[XGBoostParams, LightGBMParams, CatBoostParams, RandomForestParams, FoundationalModelParams]] = None,
@@ -2409,6 +2413,8 @@ class TabularProject(Project):
         processor_config: Optional[ProcessorParams] = None,
         finetune_mode: Optional[str] = None,
         tunning_strategy: Optional[str] = None,
+        ensemble_config: Optional[EnsembleConfg] = None,
+        distillation_config: Optional[DistillationConfig] = None 
     ) -> str:
 
         """
@@ -2575,26 +2581,25 @@ class TabularProject(Project):
         if project_config == "Not Found":
             raise Exception("Upload files first")
 
+        Validate.value_against_list("training_strategy", training_strategy, ["simple", "ensemble", "distillation"])
+
         available_models = self.available_models()
 
-        Validate.value_against_list("model_type", model_type, available_models)
+        if training_strategy in ["simple", "distillation"] and isinstance(model, list):
+            raise Exception(f"Model is required as string for {training_strategy} training strategy")
+
+        if training_strategy in ["ensemble"] and isinstance(model, str):
+            raise Exception(f"Model is required as list for {training_strategy} training strategy")
+        
+        if training_strategy in ["ensemble"] and isinstance(model, list) and len(model) < 2:
+            raise Exception(f"Two or more models are required for ensemble")
+            
+        Validate.value_against_list("model", model, available_models)
 
         all_unique_features = [
             *project_config["metadata"]["feature_exclude"],
             *project_config["metadata"]["feature_include"],
         ]
-
-        if tunning_strategy != "inference" and compute_type and "gova" not in compute_type:
-            custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
-            available_custom_batch_servers = custom_batch_servers.get("details", []) + custom_batch_servers.get("available_gpu_custom_servers", [])
-            Validate.value_against_list(
-                "pod",
-                compute_type,
-                [
-                    server["instance_name"]
-                    for server in available_custom_batch_servers
-                ],
-            )
 
         if data_config:
             if data_config.get("feature_exclude"):
@@ -2660,73 +2665,6 @@ class TabularProject(Project):
                     ["shap", "lime"],
                 )
 
-        if model_config:
-            model_params = self.api_client.get(MODEL_PARAMETERS_URI)
-            model_name = f"{model_type}_{project_config['project_type']}".lower()
-            model_parameters = model_params.get(model_name)
-
-            if model_parameters:
-
-                def validate_params(param_group, config_group):
-                    """Validate config values against model parameter constraints.
-                    Checks select options and numeric min/max bounds, raising exceptions on invalid values.
-
-                    :param param_group: Parameter definition dict (select/input types with constraints).
-                    :param config_group: User-supplied config dict to validate against `param_group`.
-                    :raises Exception: If any value violates the declared constraints.
-                    """
-                    if config_group:
-                        for param_name, param_value in config_group.items():
-                            model_param = param_group.get(param_name)
-                            if not model_param:
-                                # raise Exception(
-                                #     f"Invalid model config for {model_type} \n {json.dumps(model_parameters)}"
-                                # )
-                                continue
-
-                            param_type = model_param["type"]
-
-                            if param_type == "select":
-                                Validate.value_against_list(
-                                    param_name, param_value, model_param["value"]
-                                )
-                            elif param_type == "input":
-                                if param_value > model_param["max"]:
-                                    raise Exception(
-                                        f"{param_name} value cannot be greater than {model_param['max']}"
-                                    )
-                                if param_value < model_param["min"]:
-                                    raise Exception(
-                                        f"{param_name} value cannot be less than {model_param['min']}"
-                                    )
-
-                if model_type in ["TabPFN","TabICL","TabDPT","OrionMSP", "OrionBix","Mitra", "ContextTab"]:
-                    validate_params(
-                        model_parameters.get("model_params", {}), model_config
-                    )
-                    validate_params(
-                        model_parameters.get("tunning_params", {}), tunning_config
-                    )
-                    validate_params(
-                        model_parameters.get("processor_params", {}), processor_config
-                    )
-                    validate_params(
-                        model_parameters.get("peft_params", {}), peft_config
-                    )
-                else:
-                    validate_params(model_parameters, model_config)
-        if finetune_mode:
-            Validate.value_against_list(
-                "finetune_mode",
-                finetune_mode,
-                ["meta-learning", "sft"],
-            )
-        if tunning_strategy:
-            Validate.value_against_list(
-                "tunning_strategy",
-                tunning_strategy,
-                ["base-ft", "inference", "peft", "finetune"],
-            )
         data_conf = data_config or {}
 
         feature_exclude = [
@@ -2779,7 +2717,8 @@ class TabularProject(Project):
             "true_label": true_label,
             "pred_label": pred_label,
             "metadata": {
-                "model_name": model_type,
+                "training_strategy": training_strategy,
+                "model": model,
                 "model_parameters": model_config,
                 "feature_include": feature_include,
                 "feature_exclude": feature_exclude,
@@ -2812,6 +2751,10 @@ class TabularProject(Project):
             payload["metadata"]["finetune_mode"] = finetune_mode
         if tunning_strategy:
             payload["metadata"]["tunning_strategy"] = tunning_strategy
+        if ensemble_config and training_strategy == "ensemble":
+            payload["metadata"] = {**payload["metadata"], **ensemble_config}
+        if distillation_config and training_strategy == "distillation":
+            payload["metadata"] = {**payload["metadata"], **distillation_config}
 
         if compute_type:
             payload["instance_type"] = compute_type

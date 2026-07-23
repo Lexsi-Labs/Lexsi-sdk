@@ -388,7 +388,6 @@ class Project(BaseModel):
         staged_models = res["details"]["staged"]
 
         staged_models_df = pd.DataFrame(staged_models)
-        staged_models_df = staged_models_df.drop(columns=['model_provider'])
         staged_models_df = staged_models_df[
             ~staged_models_df["status"].isin(["inactive", "failed"])
         ]
