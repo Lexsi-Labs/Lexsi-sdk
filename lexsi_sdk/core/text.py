@@ -943,12 +943,12 @@ class TextProject(Project):
     def run_curation(
         self,
         config: dict,
-        node: BatchCPUInstanceType,
+        pod: BatchCPUInstanceType,
         models: Optional[dict] = None,
         output_tag: Optional[str] = None,
         plot: bool = True,
     ) -> str:
-        """Run a CuratorKIT data-curation job on an AWS Batch CPU node.
+        """Run a CuratorKIT data-curation job on an AWS Batch CPU pod.
 
         Curation reads a source dataset (an uploaded Lexsi ``tag`` or a Hugging
         Face Hub dataset), runs the CuratorKIT pipeline (dedup, cleaning,
@@ -963,9 +963,9 @@ class TextProject(Project):
             ``reward_threshold``, ``export_formats``, ``max_samples``,
             ``enable_checkpoint``. Do not put API keys here — models are
             resolved server-side from ``models``.
-        :param node: Batch CPU node size for the job (e.g. ``"small"``,
+        :param pod: Batch CPU pod size for the job (e.g. ``"small"``,
             ``"medium"``, ``"large"``). Curation is orchestration + API calls,
-            so a CPU node is correct; LLM inference runs on the selected models'
+            so a CPU pod is correct; LLM inference runs on the selected models'
             own endpoints.
         :param models: Per-stage model selection mapping stage -> project model
             name, e.g. ``{"generator": "...", "judge": "...", "reward": "..."}``.
@@ -982,9 +982,7 @@ class TextProject(Project):
             "config": config,
             "models": models or {},
             "output_tag": output_tag,
-            "compute": {
-                "node": node
-            },
+            "instance_type": pod,
         }
         res = self.api_client.post(RUN_CURATION_URI, payload)
 
