@@ -1362,7 +1362,10 @@ class TabularProject(Project):
         :rtype: pd.DataFrame"""
         url = f"{GET_MONITORS_ALERTS}?project_name={self.project_name}&monitor_id={monitor_id}&time={time}"
         res = self.api_client.get(url)
-        data = pd.DataFrame(res.get("details"))
+        try:
+            data = pd.DataFrame(res.get("details"))
+        except Exception:
+            return res.get("details", "Failed to get alerts for the monitor")
         return data
 
     def get_model_performance(self, model_name: str = None) -> Dashboard:
