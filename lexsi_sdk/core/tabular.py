@@ -2918,7 +2918,7 @@ class TabularProject(Project):
 
         paylod = {
             "project_name": self.project_name,
-            "unique_identifier": [unique_identifier],
+            "unique_identifier": [unique_identifier] if unique_identifier else [],
             "start_date": start_date,
             "end_date": end_date,
             "tag": tag,
