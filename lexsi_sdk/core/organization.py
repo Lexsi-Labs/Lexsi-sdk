@@ -676,7 +676,7 @@ class Organization(BaseModel):
             if data["details"]["guardrails"]:
                 return pd.DataFrame(data["details"]["guardrails"])
         except:
-            return dict(data["details"])
+            return data["details"]
 
     def delete_guardrail(self, group_id: str) -> str:
         """Soft-delete a guardrail (marks it as `is_deleted=true`).
