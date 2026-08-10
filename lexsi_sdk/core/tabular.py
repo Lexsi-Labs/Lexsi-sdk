@@ -3545,7 +3545,6 @@ class TabularProject(Project):
             "models": models,
             "priority": priority,
         }
-        print(payload)
 
         res = self.api_client.post(CREATE_POLICY_URI, payload)
         if not res["success"]:

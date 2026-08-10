@@ -1125,8 +1125,6 @@ def build_expression(expression_string, features):
             metadata_expression.append(log_operator)
             configuration.append(logical_operators[log_operator])
 
-    print(f"Configuration: {configuration}")
-    print(f"Metadata Expression: {metadata_expression}")
     return configuration, metadata_expression
 
 
@@ -1146,7 +1144,6 @@ def validate_configuration(
         if isinstance(expression, str):
             if expression not in ["(", ")", *params.get("logical_operators")]:
                 raise Exception(f"{expression} not a valid logical operator")
-        print(f"Validating expression: {expression}")
         if isinstance(expression, dict):
             # validate column name
             Validate.value_against_list(
