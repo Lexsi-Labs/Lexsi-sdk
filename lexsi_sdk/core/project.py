@@ -1052,7 +1052,7 @@ def build_expression(expression_string):
         "in": "_ISIN",
         "notin": "_NOTIN",
         "contains": "_CONTAINS",
-        "notcontains": "_DOESNOTCONTAINS    "
+        "notcontains": "_DOESNOTCONTAINS"
     }
     logical_operators = {"and": "_AND", "or": "_OR"}
 
@@ -1060,8 +1060,7 @@ def build_expression(expression_string):
     configuration = []
     string_to_be_parsed = expression_string
 
-    matches = re.findall(r"(\w+)\s*([!=<>]+)\s*(\w+)", expression_string)
-
+    matches = re.findall(r"(\w+)\s*(notcontains|contains|notin|in|==|!=|<=|>=|<|>)\s*(\w+)", expression_string)
     total_opening_parentheses = re.findall(r"\(", expression_string)
     total_closing_parentheses = re.findall(r"\)", expression_string)
 
@@ -1167,6 +1166,10 @@ def validate_configuration(
                     "_ISEQ": "==",
                     "_GRT": ">",
                     "_LST": "<",
+                    "_ISIN": "in",
+                    "_NOTIN": "notin",
+                    "_CONTAINS": "contains",
+                    "_DOESNOTCONTAINS": "notcontains"
                 }
                 res = api_client.get(
                     f"{VALIDATE_POLICY_URI}?project_name={project_name}&column1_name={expression.get('column')}&column2_name={expression.get('value')}&operation={condition_operators[expression.get('expression')]}"
@@ -1193,6 +1196,10 @@ def validate_configuration(
                         "_ISEQ": "==",
                         "_GRT": ">",
                         "_LST": "<",
+                        "_ISIN": "in",
+                        "_NOTIN": "notin",
+                        "_CONTAINS": "contains",
+                        "_DOESNOTCONTAINS": "notcontains"
                     }
                     res = api_client.get(
                         f"{VALIDATE_POLICY_URI}?project_name={project_name}&column1_name={expression.get('column')}&column2_name={expression.get('value')}&operation={condition_operators[expression.get('expression')]}"
