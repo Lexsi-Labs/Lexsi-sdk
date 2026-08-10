@@ -3517,11 +3517,11 @@ class TabularProject(Project):
         :param priority: Priority of the policy. Lower number indicates higher priority. Defaults to 5
         :return: response
         """
-        configuration, expression = build_expression(expression)
-
         policy_params = self.api_client.get(
             f"{GET_POLICY_PARAMS_URI}?project_name={self.project_name}"
         )
+
+        configuration, expression = build_expression(expression, policy_params["details"]["features"])
 
         validate_configuration(
             configuration, policy_params["details"], self.project_name, self.api_client
@@ -3545,6 +3545,7 @@ class TabularProject(Project):
             "models": models,
             "priority": priority,
         }
+        print(payload)
 
         res = self.api_client.post(CREATE_POLICY_URI, payload)
         if not res["success"]:

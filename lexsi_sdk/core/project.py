@@ -1038,11 +1038,12 @@ def generate_expression(expression):
     return generated_expression
 
 
-def build_expression(expression_string):
+def build_expression(expression_string, features):
     """Parse a human expression string into configuration and metadata tokens.
     Maps operators to backend enums and preserves parentheses/logical operator ordering.
 
     :param expression_string: Expression string like `A == 1 and B !== 2`.
+    :param features: List of available features.
     :return: `(configuration, metadata_expression)` token lists."""
     condition_operators = {
         "!==": "_NOTEQ",
@@ -1060,7 +1061,7 @@ def build_expression(expression_string):
     configuration = []
     string_to_be_parsed = expression_string
 
-    matches = re.findall(r"(\w+)\s*(notcontains|contains|notin|in|==|!=|<=|>=|<|>)\s*(\w+)", expression_string)
+    matches = re.findall(r"(\w+)\s*(notcontains|contains|notin|in|==|!==|<=|>=|<|>)\s*(\w+)", expression_string)
     total_opening_parentheses = re.findall(r"\(", expression_string)
     total_closing_parentheses = re.findall(r"\)", expression_string)
 
@@ -1081,6 +1082,7 @@ def build_expression(expression_string):
             {
                 "column": column,
                 "value": value,
+                "type": "feature_to" if value in features else "raw_feature",
                 "expression": expression,
             }
         )
@@ -1088,6 +1090,7 @@ def build_expression(expression_string):
             {
                 "column": column,
                 "value": value,
+                "type": "feature_to" if value in features else "raw_feature",
                 "expression": condition_operators[expression],
             }
         )
@@ -1122,6 +1125,8 @@ def build_expression(expression_string):
             metadata_expression.append(log_operator)
             configuration.append(logical_operators[log_operator])
 
+    print(f"Configuration: {configuration}")
+    print(f"Metadata Expression: {metadata_expression}")
     return configuration, metadata_expression
 
 
@@ -1141,7 +1146,7 @@ def validate_configuration(
         if isinstance(expression, str):
             if expression not in ["(", ")", *params.get("logical_operators")]:
                 raise Exception(f"{expression} not a valid logical operator")
-
+        print(f"Validating expression: {expression}")
         if isinstance(expression, dict):
             # validate column name
             Validate.value_against_list(
