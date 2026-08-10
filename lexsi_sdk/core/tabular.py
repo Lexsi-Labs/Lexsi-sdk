@@ -3213,7 +3213,7 @@ class TabularProject(Project):
             linked_features,
             list(observation_params["details"]["features"].keys()),
         )
-        configuration, expression = build_expression(expression)
+        configuration, expression = build_expression(expression, observation_params["details"]["features"])
 
         validate_configuration(
             configuration,
@@ -3283,7 +3283,7 @@ class TabularProject(Project):
 
         if expression:
             Validate.string("expression", expression)
-            configuration, expression = build_expression(expression)
+            configuration, expression = build_expression(expression, observation_params["details"]["features"])
             validate_configuration(
                 configuration,
                 observation_params["details"],
@@ -3603,7 +3603,7 @@ class TabularProject(Project):
 
         if expression:
             Validate.string("expression", expression)
-            configuration, expression = build_expression(expression)
+            configuration, expression = build_expression(expression, policy_params["details"]["features"])
             validate_configuration(
                 configuration,
                 policy_params["details"],
@@ -4043,9 +4043,9 @@ class TabularProject(Project):
         if not name:
             raise Exception("name is required")
 
-        configuration, expression = build_expression(expression)
-
         prompt_params = self.get_observation_params()
+        configuration, expression = build_expression(expression, prompt_params["details"]["features"])
+
         validate_configuration(
             configuration, prompt_params, self.project_name, self.api_client
         )
