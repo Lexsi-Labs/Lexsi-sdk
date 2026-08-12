@@ -1362,7 +1362,10 @@ class TabularProject(Project):
         :rtype: pd.DataFrame"""
         url = f"{GET_MONITORS_ALERTS}?project_name={self.project_name}&monitor_id={monitor_id}&time={time}"
         res = self.api_client.get(url)
-        data = pd.DataFrame(res.get("details"))
+        try:
+            data = pd.DataFrame(res.get("details"))
+        except Exception:
+            return res.get("details", "Failed to get alerts for the monitor")
         return data
 
     def get_model_performance(self, model_name: str = None) -> Dashboard:
@@ -2918,7 +2921,7 @@ class TabularProject(Project):
 
         paylod = {
             "project_name": self.project_name,
-            "unique_identifier": [unique_identifier],
+            "unique_identifier": [unique_identifier] if unique_identifier else [],
             "start_date": start_date,
             "end_date": end_date,
             "tag": tag,
@@ -3210,7 +3213,7 @@ class TabularProject(Project):
             linked_features,
             list(observation_params["details"]["features"].keys()),
         )
-        configuration, expression = build_expression(expression)
+        configuration, expression = build_expression(expression, observation_params["details"]["features"])
 
         validate_configuration(
             configuration,
@@ -3280,7 +3283,7 @@ class TabularProject(Project):
 
         if expression:
             Validate.string("expression", expression)
-            configuration, expression = build_expression(expression)
+            configuration, expression = build_expression(expression, observation_params["details"]["features"])
             validate_configuration(
                 configuration,
                 observation_params["details"],
@@ -3514,11 +3517,11 @@ class TabularProject(Project):
         :param priority: Priority of the policy. Lower number indicates higher priority. Defaults to 5
         :return: response
         """
-        configuration, expression = build_expression(expression)
-
         policy_params = self.api_client.get(
             f"{GET_POLICY_PARAMS_URI}?project_name={self.project_name}"
         )
+
+        configuration, expression = build_expression(expression, policy_params["details"]["features"])
 
         validate_configuration(
             configuration, policy_params["details"], self.project_name, self.api_client
@@ -3599,7 +3602,7 @@ class TabularProject(Project):
 
         if expression:
             Validate.string("expression", expression)
-            configuration, expression = build_expression(expression)
+            configuration, expression = build_expression(expression, policy_params["details"]["features"])
             validate_configuration(
                 configuration,
                 policy_params["details"],
@@ -4039,9 +4042,9 @@ class TabularProject(Project):
         if not name:
             raise Exception("name is required")
 
-        configuration, expression = build_expression(expression)
-
         prompt_params = self.get_observation_params()
+        configuration, expression = build_expression(expression, prompt_params["details"]["features"])
+
         validate_configuration(
             configuration, prompt_params, self.project_name, self.api_client
         )
