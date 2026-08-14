@@ -1010,7 +1010,7 @@ class TextProject(Project):
         if not event_id:
             res = self.api_client.post(
                 FETCH_EVENTS,
-                {"project_name": self.project_name, "task_name": ["run_curation"]},
+                {"project_name": self.project_name, "task_name": ["curate_data"]},
             )
             if not res["success"]:
                 raise Exception(res.get("details", "Failed to fetch curation events"))
