@@ -947,7 +947,7 @@ class TextProject(Project):
         models: Optional[dict] = None,
         output_tag: Optional[str] = None,
         plot: bool = True,
-    ) -> str:
+    ) -> dict:
         """Run a CuratorKIT data-curation job on an AWS Batch CPU pod.
 
         Curation reads a source dataset (an uploaded Lexsi ``tag`` or a Hugging
@@ -975,7 +975,8 @@ class TextProject(Project):
             the source when omitted.
         :param plot: When True (default), the job's live progress/metrics are
             plotted in notebook environments; when False, summaries are printed.
-        :return: response with curation details.
+        :return: response with curation details, including the ``event_id`` that
+            :meth:`curation_status` can re-attach to.
         """
         payload = {
             "project_name": self.project_name,
@@ -990,6 +991,37 @@ class TextProject(Project):
             raise Exception(res.get("details", "Data Curation Failed"))
 
         poll_events(self.api_client, self.project_name, res["event_id"], plot=plot)
+
+        return res
+
+    def curation_status(self, event_id: Optional[str] = None) -> None:
+        """Re-attach to a curation job and stream its progress until it ends.
+
+        The job runs server-side, so interrupting the polling started by
+        :meth:`run_curation` does not stop it. Use this to pick the stream back
+        up: pass the ``event_id`` from :meth:`run_curation`, or omit it to
+        attach to the project's most recent curation job. A job that has already
+        finished replays its logs and metrics in one shot.
+
+        :param event_id: Curation event id. Defaults to the latest curation
+            event for the project.
+        :return: None. Raises if the job failed or no curation event was found.
+        """
+        if not event_id:
+            res = self.api_client.post(
+                FETCH_EVENTS,
+                {"project_name": self.project_name, "task_name": ["run_curation"]},
+            )
+            if not res["success"]:
+                raise Exception(res.get("details", "Failed to fetch curation events"))
+
+            event_id = next(
+                (event.get("_id") for event in (res.get("details") or [])), None
+            )
+            if not event_id:
+                raise Exception("No curation job found for this project")
+
+        poll_events(self.api_client, self.project_name, event_id)
 
     def stop_model_training(self, model_name: str) -> str:
         """Stop a running model-training job (fine-tuning, quantization, etc.).
