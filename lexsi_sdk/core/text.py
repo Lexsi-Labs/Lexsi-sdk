@@ -7,7 +7,6 @@ from typing import Optional, List, Dict, Any, Union, Literal
 import httpx
 from lexsi_sdk.common.types import DedicatedGPUNodeValues, InferenceCompute, InferenceSettings
 from pydantic import BaseModel
-from pydantic import BaseModel
 import plotly.graph_objects as go
 import base64
 from PIL import Image
@@ -44,7 +43,19 @@ from lexsi_sdk.common.xai_uris import (
     GUARDRAILS_APPLY_TO_MODEL,
     GUARDRAILS_RUN,
     GUARDRAILS_REMOVE_FROM_MODEL,
-
+    CATALOG_URI,
+    CATALOG_SCORERS_URI,
+    CATALOG_ADAPTERS_URI,
+    CATALOG_ANNOTATORS_URI,
+    CATALOG_GUARD_PROFILES_URI,
+    EVALS_RUN_URI,
+    EVALS_VALIDATE_URI,
+    RUNS_URI,
+    RUNS_STATUS_URI,
+    RUNS_PREDICTIONS_URI,
+    COMPARE_URI,
+    BENCHMARKS_URI,
+    BENCHMARKS_RUN_URI,
 )
 from lexsi_sdk.core.project import Project
 import pandas as pd
@@ -1081,6 +1092,222 @@ class TextProject(Project):
         metrics = fetch_event_metrics(self.api_client, self.project_name, event_id, plot=plot)
         if return_metrics:
             return metrics
+
+    def get_full_catalog(self) -> pd.DataFrame:
+        """Return the full catalog of scorers, adapters, annotators, and guard profiles.
+
+        :return: a DataFrame containing all catalog items with a 'type' column
+        """
+        res = self.api_client.get(CATALOG_URI)
+        if not res["success"]:
+            raise Exception(res.get("details"))
+        details = res.get("details", {})
+        dfs = [
+            pd.DataFrame(items).assign(type=cat_type)
+            for cat_type, items in details.items()
+            if isinstance(items, list) and items
+        ]
+        return pd.concat(dfs, ignore_index=True) if dfs else pd.DataFrame()
+
+    def get_scorers(self) -> pd.DataFrame:
+        """Return a DataFrame listing all registered scorers.
+
+        :return: a DataFrame containing scorer details
+        """
+        res = self.api_client.get(CATALOG_SCORERS_URI)
+        if not res["success"]:
+            raise Exception(res.get("details"))
+        return pd.DataFrame(res.get("details"))
+
+    def get_adapters(self) -> pd.DataFrame:
+        """Return a DataFrame listing all registered adapters.
+
+        :return: a DataFrame containing adapter details
+        """
+        res = self.api_client.get(CATALOG_ADAPTERS_URI)
+        if not res["success"]:
+            raise Exception(res.get("details"))
+        return pd.DataFrame(res.get("details"))
+
+    def get_annotators(self) -> pd.DataFrame:
+        """Return a DataFrame listing all registered annotators.
+
+        :return: a DataFrame containing annotator details
+        """
+        res = self.api_client.get(CATALOG_ANNOTATORS_URI)
+        if not res["success"]:
+            raise Exception(res.get("details"))
+        return pd.DataFrame(res.get("details"))
+
+    def get_guard_profiles(self) -> pd.DataFrame:
+        """Return a DataFrame listing all available guard profiles.
+
+        :return: a DataFrame containing guard profile details
+        """
+        res = self.api_client.get(CATALOG_GUARD_PROFILES_URI)
+        if not res["success"]:
+            raise Exception(res.get("details"))
+        return pd.DataFrame(res.get("details"))
+
+    def run_eval(
+        self,
+        config: dict,
+        pod: str,
+        samples: Optional[List[Dict[str, Any]]] = None,
+    ) -> dict:
+        """Start an evaluation run. Returns an event_id for polling.
+
+        :param config: Evaluation configuration dictionary
+        :param pod: The pod type for evaluation
+        :param samples: Optional list of sample dictionaries for evaluation
+        :return: API response with event_id for polling
+        """
+        payload = {**config, "compute_type": pod, "project_name": self.project_name}
+        if samples:
+            payload["samples"] = samples
+        res = self.api_client.post(EVALS_RUN_URI, payload=payload)
+        if not res["success"]:
+            raise Exception(res.get("details"))
+        poll_events(
+            api_client=self.api_client,
+            project_name=self.project_name,
+            event_id=res.get("details", {}).get("event_id"),
+        )
+        return {"success": True, "details": "Evaluation Completed Successfully"}
+
+    def validate_eval_config(self, config: dict) -> dict:
+        """Validate an evaluation configuration without running it.
+
+        :param config: Evaluation configuration dictionary to validate
+        :return: validation results including warnings
+        """
+        payload = {"config": config, "project_name": self.project_name}
+        res = self.api_client.post(EVALS_VALIDATE_URI, payload=payload)
+        if not res["success"]:
+            raise Exception(res.get("details"))
+        return res.get("details")
+
+    def list_runs(self) -> pd.DataFrame:
+        """Return a DataFrame listing all evaluation runs for this project.
+
+        :return: a DataFrame containing run summaries
+        """
+        res = self.api_client.get(f"{RUNS_URI}?project_name={self.project_name}")
+        if not res["success"]:
+            raise Exception(res.get("details"))
+        return pd.DataFrame(res.get("details"))
+
+    def get_run_status(self, event_id: str) -> dict:
+        """Poll the status of a long-running evaluation job.
+
+        :param event_id: The event ID returned by run_eval
+        :return: status information including progress and logs
+        """
+        res = self.api_client.get(f"{RUNS_STATUS_URI}/{event_id}")
+        if not res["success"]:
+            raise Exception(res.get("details"))
+        return res.get("details")
+
+    def get_run(self, run_id: str) -> dict:
+        """Return the full RunResult for a specific evaluation run.
+
+        :param run_id: The unique identifier of the run
+        :return: complete run result including stats, predictions, and metrics
+        """
+        res = self.api_client.get(f"{RUNS_URI}/{run_id}?project_name={self.project_name}")
+        if not res["success"]:
+            raise Exception(res.get("details"))
+        return res.get("details")
+
+    def get_run_predictions(
+        self,
+        run_id: str,
+        correct: Optional[bool] = None,
+        offset: int = 0,
+        limit: int = 100,
+    ) -> dict:
+        """Return paginated predictions/answers for a specific run.
+
+        :param run_id: The unique identifier of the run
+        :param correct: Optional filter for correct/incorrect predictions
+        :param offset: Pagination offset
+        :param limit: Maximum number of predictions to return
+        :return: paginated predictions data
+        """
+        params = f"project_name={self.project_name}&offset={offset}&limit={limit}"
+        if correct is not None:
+            params += f"&correct={str(correct).lower()}"
+        res = self.api_client.get(f"{RUNS_URI}/{run_id}/predictions?{params}")
+        if not res["success"]:
+            raise Exception(res.get("details"))
+        return res.get("details")
+
+    def run_comparison(
+        self,
+        run_ids: Optional[List[str]] = None,
+        baseline_run_id: Optional[str] = None,
+        candidate_run_id: Optional[str] = None,
+    ) -> dict:
+        """Compare two evaluation runs and return deltas, grades, and significance.
+
+        :param run_ids: List of two run IDs to compare
+        :param baseline_run_id: ID of the baseline run
+        :param candidate_run_id: ID of the candidate run
+        :return: comparison results including deltas, grade, retention, and significance
+        """
+        payload = {"project_name": self.project_name}
+        if run_ids:
+            payload["run_ids"] = run_ids
+        elif baseline_run_id and candidate_run_id:
+            payload["baseline_run_id"] = baseline_run_id
+            payload["candidate_run_id"] = candidate_run_id
+        else:
+            raise ValueError("Either run_ids or both baseline_run_id and candidate_run_id must be provided")
+        res = self.api_client.post(COMPARE_URI, payload=payload)
+        if not res["success"]:
+            raise Exception(res.get("details"))
+        return res.get("details")
+
+    def list_comparisons(self) -> pd.DataFrame:
+        """Return a DataFrame listing all saved comparisons for this project.
+
+        :return: a DataFrame containing comparison summaries
+        """
+        res = self.api_client.get(f"{COMPARE_URI}?project_name={self.project_name}")
+        if not res["success"]:
+            raise Exception(res.get("details"))
+        return pd.DataFrame(res.get("details"))
+
+    def list_benchmarks(self) -> pd.DataFrame:
+        """Return a DataFrame listing all available benchmark tasks.
+
+        :return: a DataFrame containing benchmark task details
+        """
+        res = self.api_client.get(BENCHMARKS_URI)
+        if not res["success"]:
+            raise Exception(res.get("details"))
+        return pd.DataFrame(res.get("details"))
+
+    def run_benchmark(
+        self,
+        task: str,
+        model_spec: dict,
+    ) -> dict:
+        """Start a benchmark run using lm-eval. Returns an event_id for polling.
+
+        :param task: Benchmark task name (e.g., "ARC-Challenge", "GSM8K", "MMLU")
+        :param model_spec: Model specification dictionary for the benchmark
+        :return: API response with event_id for polling
+        """
+        payload = {
+            "task": task,
+            "model_spec": model_spec,
+            "project_name": self.project_name,
+        }
+        res = self.api_client.post(BENCHMARKS_RUN_URI, payload=payload)
+        if not res["success"]:
+            raise Exception(res.get("details"))
+        return res.get("details")
 
 
 class CaseText(BaseModel):
