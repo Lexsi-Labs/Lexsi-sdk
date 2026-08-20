@@ -1162,7 +1162,7 @@ class TextProject(Project):
         :param samples: Optional list of sample dictionaries for evaluation
         :return: API response with event_id for polling
         """
-        payload = {**config, "compute_type": pod, "project_name": self.project_name}
+        payload = {**config, "compute": {"pod": pod}, "project_name": self.project_name}
         if samples:
             payload["samples"] = samples
         res = self.api_client.post(EVALS_RUN_URI, payload=payload)
@@ -1174,6 +1174,37 @@ class TextProject(Project):
             event_id=res.get("details", {}).get("event_id"),
         )
         return {"success": True, "details": "Evaluation Completed Successfully"}
+
+    def run_benchmark(
+        self,
+        config: dict,
+        node: DedicatedGPUNodeValues,
+        model_name: str,
+    ) -> dict:
+        """Start a benchmark run using lm-eval. Returns an event_id for polling.
+
+        :param task: Benchmark task name (e.g., "ARC-Challenge", "GSM8K", "MMLU")
+        :param model_spec: Model specification dictionary for the benchmark
+        :return: API response with event_id for polling
+        """
+        payload = {
+            **config,
+            "model_name": model_name,
+            "project_name": self.project_name,
+            "compute": {
+                "node": node
+            }
+        }
+        res = self.api_client.post(BENCHMARKS_RUN_URI, payload=payload)
+        if not res["success"]:
+            raise Exception(res.get("details"))
+        poll_events(
+            api_client=self.api_client,
+            project_name=self.project_name,
+            event_id=res.get("details", {}).get("event_id"),
+        )
+        return {"success": True, "details": "Benchmarking Completed Successfully"}
+       
 
     def validate_eval_config(self, config: dict) -> dict:
         """Validate an evaluation configuration without running it.
@@ -1278,7 +1309,7 @@ class TextProject(Project):
             raise Exception(res.get("details"))
         return pd.DataFrame(res.get("details"))
 
-    def list_benchmarks(self) -> pd.DataFrame:
+    def available_benchmarks(self) -> pd.DataFrame:
         """Return a DataFrame listing all available benchmark tasks.
 
         :return: a DataFrame containing benchmark task details
@@ -1287,27 +1318,6 @@ class TextProject(Project):
         if not res["success"]:
             raise Exception(res.get("details"))
         return pd.DataFrame(res.get("details"))
-
-    def run_benchmark(
-        self,
-        task: str,
-        model_spec: dict,
-    ) -> dict:
-        """Start a benchmark run using lm-eval. Returns an event_id for polling.
-
-        :param task: Benchmark task name (e.g., "ARC-Challenge", "GSM8K", "MMLU")
-        :param model_spec: Model specification dictionary for the benchmark
-        :return: API response with event_id for polling
-        """
-        payload = {
-            "task": task,
-            "model_spec": model_spec,
-            "project_name": self.project_name,
-        }
-        res = self.api_client.post(BENCHMARKS_RUN_URI, payload=payload)
-        if not res["success"]:
-            raise Exception(res.get("details"))
-        return res.get("details")
 
 
 class CaseText(BaseModel):
