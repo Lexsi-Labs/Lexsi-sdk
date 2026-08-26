@@ -19,6 +19,7 @@ from lexsi_sdk.common.xai_uris import (
     DELETE_GUARDRAILS_URI,
     FETCH_EVENTS,
     FINETUNE_MODEL_URI,
+    LIST_CURATION_RUNS_URI,
     RUN_CURATION_URI,
     GET_AVAILABLE_TEXT_MODELS_URI,
     GET_GUARDRAILS_URI,
@@ -993,6 +994,22 @@ class TextProject(Project):
         poll_events(self.api_client, self.project_name, res["event_id"], plot=plot)
 
         return res
+
+    def list_curation_runs(self) -> pd.DataFrame:
+        """List all curation runs for this project.
+
+        Each row includes the curation ID, status, submitted configuration,
+        execution summary, message, and creation timestamp. Use ``task_id`` as
+        the ``event_id`` for :meth:`curation_status` when inspecting a specific
+        older run.
+        """
+        res = self.api_client.get(
+            f"{LIST_CURATION_RUNS_URI}?project_name={self.project_name}"
+        )
+        if not res["success"]:
+            raise Exception(res.get("details", "Failed to fetch curation runs"))
+
+        return pd.DataFrame(res.get("details") or [])
 
     def curation_status(self, event_id: Optional[str] = None) -> None:
         """Re-attach to a curation job and stream its progress until it ends.
