@@ -1222,6 +1222,8 @@ class TextProject(Project):
         res = self.api_client.post(BENCHMARKS_RUN_URI, payload=payload)
         if not res["success"]:
             raise Exception(res.get("details"))
+        if res.get("details", {}).get("existing_run", False):
+            return res
         poll_events(
             api_client=self.api_client,
             project_name=self.project_name,
