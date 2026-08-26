@@ -1154,6 +1154,13 @@ class TextProject(Project):
         config: dict,
         pod: str,
         samples: Optional[List[Dict[str, Any]]] = None,
+        tag: Optional[str] = None,
+        input_column: Optional[str] = None,
+        target_column: Optional[str] = None,
+        actual_output_column: Optional[str] = None,
+        choices_column: Optional[str] = None,
+        retrieval_context_column: Optional[str] = None,
+        task_column: Optional[str] = None
     ) -> dict:
         """Start an evaluation run. Returns an event_id for polling.
 
@@ -1165,9 +1172,26 @@ class TextProject(Project):
         payload = {**config, "compute": {"pod": pod}, "project_name": self.project_name}
         if samples:
             payload["samples"] = samples
+        if tag:
+            payload["tag"] = tag
+        if input_column:
+            payload["input_column"] = input_column
+        if target_column:
+            payload["target_column"] = target_column
+        if actual_output_column:
+            payload["actual_output_column"] = actual_output_column
+        if choices_column:
+            payload["choices_column"] = choices_column
+        if retrieval_context_column:
+            payload["retrieval_context_column"] = retrieval_context_column
+        if task_column:
+            payload["task_column"] = task_column
+
         res = self.api_client.post(EVALS_RUN_URI, payload=payload)
         if not res["success"]:
             raise Exception(res.get("details"))
+        if res.get("details", {}).get("existing_run", False):
+            return res
         poll_events(
             api_client=self.api_client,
             project_name=self.project_name,
@@ -1206,13 +1230,46 @@ class TextProject(Project):
         return {"success": True, "details": "Benchmarking Completed Successfully"}
        
 
-    def validate_eval_config(self, config: dict) -> dict:
+    def validate_eval_config(
+        self,
+        config: dict,
+        samples: Optional[list] = [],
+        tag: Optional[str] = None,
+        input_column: Optional[str] = None,
+        target_column: Optional[str] = None,
+        actual_output_column: Optional[str] = None,
+        choices_column: Optional[str] = None,
+        retrieval_context_column: Optional[str] = None,
+        task_column: Optional[str] = None
+    ) -> dict:
         """Validate an evaluation configuration without running it.
 
         :param config: Evaluation configuration dictionary to validate
+        :param samples: List of sample dictionaries for validation
+        :param tag: Optional tag to associate with the evaluation
+        :param input_column: Optional input column name from the dataset
+        :param target_column: Optional target column name from the dataset
+        :param actual_output_column: Optional actual output column name from the dataset
+        :param choices_column: Optional choices column name from the dataset
+        :param retrieval_context_column: Optional retrieval context column name from the dataset
+        :param task_column: Optional task column name from the dataset
         :return: validation results including warnings
         """
-        payload = {"config": config, "project_name": self.project_name}
+        payload = {**config, "project_name": self.project_name, "samples": samples}
+        if tag:
+            payload["tag"] = tag
+        if input_column:
+            payload["input_column"] = input_column
+        if target_column:
+            payload["target_column"] = target_column
+        if actual_output_column:
+            payload["actual_output_column"] = actual_output_column
+        if choices_column:
+            payload["choices_column"] = choices_column
+        if retrieval_context_column:
+            payload["retrieval_context_column"] = retrieval_context_column
+        if task_column:
+            payload["task_column"] = task_column
         res = self.api_client.post(EVALS_VALIDATE_URI, payload=payload)
         if not res["success"]:
             raise Exception(res.get("details"))
@@ -1275,21 +1332,16 @@ class TextProject(Project):
 
     def run_comparison(
         self,
-        run_ids: Optional[List[str]] = None,
-        baseline_run_id: Optional[str] = None,
-        candidate_run_id: Optional[str] = None,
+        baseline_run_id: str,
+        candidate_run_id: str,
     ) -> dict:
         """Compare two evaluation runs and return deltas, grades, and significance.
-
-        :param run_ids: List of two run IDs to compare
         :param baseline_run_id: ID of the baseline run
         :param candidate_run_id: ID of the candidate run
         :return: comparison results including deltas, grade, retention, and significance
         """
         payload = {"project_name": self.project_name}
-        if run_ids:
-            payload["run_ids"] = run_ids
-        elif baseline_run_id and candidate_run_id:
+        if baseline_run_id and candidate_run_id:
             payload["baseline_run_id"] = baseline_run_id
             payload["candidate_run_id"] = candidate_run_id
         else:
