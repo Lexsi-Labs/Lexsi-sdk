@@ -58,19 +58,19 @@ from IPython.display import SVG, display
 class TextProject(Project):
     """Specialized project abstraction for text and LLM-based workloads. Supports sessions, messages, traces, guardrails, and token-level explainability."""
 
-    def sessions(self) -> pd.DataFrame:
+    def sessions(self, page: Optional[int] = 1) -> pd.DataFrame:
         """Return a DataFrame listing all conversation sessions for this text project.
         Each row corresponds to a single session metadata record.
 
         :return: a DataFrame containing the conversation session metadata
         """
-        res = self.api_client.get(f"{SESSIONS_URI}?project_name={self.project_name}")
+        res = self.api_client.get(f"{SESSIONS_URI}?project_name={self.project_name}&page={page}")
         if not res["success"]:
             raise Exception(res.get("details"))
 
         return pd.DataFrame(res.get("details"))
 
-    def messages(self, session_id: str) -> pd.DataFrame:
+    def messages(self, session_id: str, page: Optional[int] = 1) -> pd.DataFrame:
         """Return a DataFrame listing all messages in a given session. Requires the session_id.
         Each row corresponds to a single message record.
 
@@ -79,7 +79,7 @@ class TextProject(Project):
         :return: a DataFrame containing all messages for the specified session
         """
         res = self.api_client.get(
-            f"{MESSAGES_URI}?project_name={self.project_name}&session_id={session_id}"
+            f"{MESSAGES_URI}?project_name={self.project_name}&session_id={session_id}&page={page}"
         )
         if not res["success"]:
             raise Exception(res.get("details"))
