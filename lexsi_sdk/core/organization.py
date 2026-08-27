@@ -251,8 +251,8 @@ class Organization(BaseModel):
         :param sftp_config: hostname, port, username and password for sftp connection
         :return: response
         """
-        if not self.organization_id:
-            return "No Organization id found"
+        # if not self.organization_id:
+        #     return "No Organization id found"
         if data_connector_type.lower() == "s3":
             if not s3_config:
                 return "No configuration for S3 found"
@@ -470,8 +470,8 @@ class Organization(BaseModel):
         """
         if not data_connector_name:
             return "Missing argument data_connector_name"
-        if not self.organization_id:
-            return "No Organization id found"
+        # if not self.organization_id:
+        #     return "No Organization id found"
 
         url = build_url(LIST_BUCKETS, data_connector_name, None, self.organization_id)
         res = self.api_client.get(url)
@@ -494,8 +494,8 @@ class Organization(BaseModel):
         """
         if not data_connector_name:
             return "Missing argument data_connector_name"
-        if not self.organization_id:
-            return "No Organization id found"
+        # if not self.organization_id:
+        #     return "No Organization id found"
 
         def get_connector() -> str | pd.DataFrame:
             """Retrieve connector metadata for the given link service name.
