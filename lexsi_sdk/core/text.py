@@ -68,7 +68,7 @@ class TextProject(Project):
         if not res["success"]:
             raise Exception(res.get("details"))
 
-        return pd.DataFrame(res.get("details"))
+        return pd.DataFrame(res.get("details").get("sessions"))
 
     def messages(self, session_id: str, page: Optional[int] = 1) -> pd.DataFrame:
         """Return a DataFrame listing all messages in a given session. Requires the session_id.
@@ -84,7 +84,7 @@ class TextProject(Project):
         if not res["success"]:
             raise Exception(res.get("details"))
 
-        return pd.DataFrame(res.get("details"))
+        return pd.DataFrame(res.get("details").get("session_messages"))
 
     def traces(self, trace_id: str) -> pd.DataFrame:
         """Retrieve the execution traces for a given trace ID and return them as a DataFrame.
