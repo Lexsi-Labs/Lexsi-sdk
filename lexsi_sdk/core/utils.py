@@ -15,6 +15,8 @@ def build_url(base_url, data_connector_name, project_name, organization_id):
         url = f"{base_url}?project_name={project_name}&link_service_name={data_connector_name}"
     elif organization_id:
         url = f"{base_url}?organization_id={organization_id}&link_service_name={data_connector_name}"
+    else:
+        url = f"{base_url}?link_service_name={data_connector_name}"
     return url
 
 
