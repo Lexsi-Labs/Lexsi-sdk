@@ -172,6 +172,8 @@ class Workspace(BaseModel):
         elif project.get("metadata", {}).get("modality") == "text":
             return TextProject(api_client=self.api_client, **project)
         elif project.get("metadata", {}).get("modality") == "agent":
+            if project.get("metadata", {}).get("project_type") == "arya-xai-builder":
+                return "Lexsi Builder projects are not supported in the SDK."
             return AgentProject(api_client=self.api_client, **project)
 
         return Project(api_client=self.api_client, **project)
