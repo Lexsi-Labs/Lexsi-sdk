@@ -19,30 +19,30 @@ import pandas as pd
 class AgentProject(Project):
     """Project abstraction for agent-based workflows. Enables tracing, guardrail enforcement, tool invocation tracking, and agent execution analysis."""
 
-    def sessions(self) -> pd.DataFrame:
+    def sessions(self, page: Optional[int] = 1) -> pd.DataFrame:
         """Return a DataFrame listing all conversation sessions for this agent project.
 
         :return: response
         """
-        res = self.api_client.get(f"{SESSIONS_URI}?project_name={self.project_name}")
+        res = self.api_client.get(f"{SESSIONS_URI}?project_name={self.project_name}&page={page}")
         if not res["success"]:
             raise Exception(res.get("details"))
 
-        return pd.DataFrame(res.get("details"))
+        return pd.DataFrame(res.get("details").get("sessions"))
 
-    def messages(self, session_id: str) -> pd.DataFrame:
+    def messages(self, session_id: str, page: Optional[str] = 1) -> pd.DataFrame:
         """Return a DataFrame listing all messages for a given session. Requires the session_id.
 
         :param session_id: id of the session
         :return: response
         """
         res = self.api_client.get(
-            f"{MESSAGES_URI}?project_name={self.project_name}&session_id={session_id}"
+            f"{MESSAGES_URI}?project_name={self.project_name}&session_id={session_id}&page={page}"
         )
         if not res["success"]:
             raise Exception(res.get("details"))
 
-        return pd.DataFrame(res.get("details"))
+        return pd.DataFrame(res.get("details").get("session_messages"))
 
     def traces(self, trace_id: str) -> pd.DataFrame:
         """Retrieve execution traces for a given trace ID for agent conversations. Returns a DataFrame of trace details.
