@@ -208,6 +208,8 @@ RUN_IMAGE_GENERATION = f"gateway/v1/images/generations"
 RUN_CREATE_EMBEDDING = f"gateway/v1/embeddings"
 RUN_COMPLETION = f"gateway/v1/completions"
 FINETUNE_MODEL_URI = f"{API_VERSION_V2}/ai-models/run_fine_tuning"
+RUN_CURATION_URI = f"{API_VERSION_V2}/ai-models/run_curation"
+LIST_CURATION_RUNS_URI = f"{API_VERSION_V2}/ai-models/curation_runs"
 PRUNING_MODEL_URI = f"{API_VERSION_V2}/ai-models/run_pruning_on_model"
 MODEL_LOGS_URI = f"{API_VERSION_V2}/ai-models/get_model_logs"
 
