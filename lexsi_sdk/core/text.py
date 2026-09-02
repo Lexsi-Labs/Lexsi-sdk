@@ -1197,7 +1197,6 @@ class TextProject(Project):
             project_name=self.project_name,
             event_id=res.get("details", {}).get("event_id"),
         )
-        return {"success": True, "details": "Evaluation Completed Successfully"}
 
     def run_benchmark(
         self,
@@ -1229,8 +1228,6 @@ class TextProject(Project):
             project_name=self.project_name,
             event_id=res.get("details", {}).get("event_id"),
         )
-        return {"success": True, "details": "Benchmarking Completed Successfully"}
-       
 
     def validate_eval_config(
         self,
