@@ -199,13 +199,15 @@ class TextProject(Project):
         self, 
         model_provider: str, 
         model_name: str, 
-        model_task_type:str, 
-        model_architecture: str,  
+        model_task_type: Optional[str] = None, 
+        model_architecture: Optional[str] = None,  
         inference_compute: Optional[InferenceCompute] = None,
         inference_settings: Optional[InferenceSettings] = None,
         assets: Optional[dict] = None,
         requirements_file: Optional[str] = None,
-        app_file: Optional[str] = None
+        app_file: Optional[str] = None,
+        model_url: Optional[str] = None,
+        source_project_name: Optional[str] = None,
     ) -> str:
         """Initialize a text model for the project, specifying the model provider, model name, task type, model type (classification/regression), inference compute settings, inference settings, and optional assets. Polls for completion and returns when done.
 
@@ -222,11 +224,14 @@ class TextProject(Project):
             - ``Mistral``
             - ``AWS Bedrock``
             - ``Open Router``
+            - ``Lexsi``
+            - ``Self Hosted``
 
         :param model_name: name of the model to be initialized
             (e.g., meta-llama/Llama-3.2-1B-Instruct).
+            For Self Hosted, this is the model ID returned by the server's /v1/models endpoint.
 
-        :param model_task_type: task type of model
+        :param model_task_type: task type of model. Required for all providers except Lexsi and Self Hosted.
             **Model Task Types**
             - ``question-answering``
             - ``summarization``
@@ -235,7 +240,7 @@ class TextProject(Project):
             - ``text2text-generation``
             - ``token-classification``
 
-        :param model_architecture: architecture of the model to be initialized
+        :param model_architecture: architecture of the model to be initialized. Required for all providers except Lexsi and Self Hosted.
             **Model Architecture**
             - ``bert``
             - ``llm``
@@ -252,6 +257,7 @@ class TextProject(Project):
         :param assets: assets required for the model, including provider credentials, access tokens,
             or other secrets needed at runtime
             (e.g., {"HF_TOKEN":"hf_njbjkfdsnjfkdnskbfk"}).
+            For Self Hosted, use {"SELF_HOSTED_API_KEY": "<api-key>"} if the server requires authentication.
 
         :param requirements_file: file path for the requirements file
             a YAML file defining the runtime environment, including base Docker image,
@@ -274,18 +280,30 @@ class TextProject(Project):
             a Python application file that implements the model inference logic,
             including how inputs are processed and how predictions are generated and returned
 
+        :param model_url: URL of the OpenAI-compatible server. Required for Self Hosted provider.
+
+        :param source_project_name: name of the source project to import from. Required for Lexsi provider.
+
         :return: response
         """
         data = {
             "model_provider": model_provider,
             "model_name": model_name,
-            "model_task_type": model_task_type,
             "project_name": self.project_name,
-            "model_type": model_architecture,
-            "inference_compute": inference_compute,
-            "inference_settings": inference_settings,
             "assets": assets
         }
+        if model_task_type is not None:
+            data["model_task_type"] = model_task_type
+        if model_architecture is not None:
+            data["model_type"] = model_architecture
+        if inference_compute is not None:
+            data["inference_compute"] = inference_compute
+        if inference_settings is not None:
+            data["inference_settings"] = inference_settings
+        if model_url is not None:
+            data["model_url"] = model_url
+        if source_project_name is not None:
+            data["source_project_name"] = source_project_name
         if inference_compute:
             if inference_compute.get("custom_server_config", {}):
                 server_config = inference_compute.get("custom_server_config", {})
