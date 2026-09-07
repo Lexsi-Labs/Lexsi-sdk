@@ -20,6 +20,7 @@ from lexsi_sdk.common.xai_uris import (
     FETCH_EVENTS,
     FINETUNE_MODEL_URI,
     GET_AVAILABLE_TEXT_MODELS_URI,
+    SEARCH_TEXT_MODELS_URI,
     GET_GUARDRAILS_URI,
     INITIALIZE_TEXT_MODEL_URI,
     LIST_DATA_CONNECTORS,
@@ -338,6 +339,59 @@ class TextProject(Project):
         if not res.get("success"):
             raise Exception(res.get("details", "Model Initialization Failed"))
         poll_events(self.api_client, self.project_name, res["event_id"])
+
+    def search_text_models(
+        self,
+        provider_name: str,
+        model_name: Optional[str] = "",
+        key: Optional[str] = None,
+        limit: int = 500,
+        organization_id: Optional[str] = None,
+        url: Optional[str] = None,
+    ) -> pd.DataFrame:
+        """Search for available text models from a given provider.
+        Returns a DataFrame of matching models.
+
+        :param provider_name: model provider name to search
+            **Model Providers**
+            - ``Hugging Face``
+            - ``OpenAI``
+            - ``Anthropic``
+            - ``Groq``
+            - ``Grok``
+            - ``Gemini``
+            - ``Together``
+            - ``Replicate``
+            - ``Mistral``
+            - ``AWS Bedrock``
+            - ``Open Router``
+            - ``Lexsi``
+            - ``Self Hosted``
+
+        :param model_name: optional model name to filter/search for
+        :param key: optional API key for the provider (uses configured key if not provided)
+        :param limit: maximum number of models to return (default 500)
+        :param organization_id: optional organization ID, required for Lexsi provider
+        :param url: optional server URL, required for Self Hosted provider
+        :return: a DataFrame of matching models
+        """
+        query_params = f"provider_name={provider_name}&limit={limit}"
+        if model_name:
+            query_params += f"&model_name={model_name}"
+        if key:
+            query_params += f"&key={key}"
+        if organization_id:
+            query_params += f"&organization_id={organization_id}"
+        if url:
+            query_params += f"&url={url}"
+        if provider_name == "Lexsi":
+            query_params += f"&project_name={self.project_name}"
+
+        res = self.api_client.get(f"{SEARCH_TEXT_MODELS_URI}?{query_params}")
+        if not res["success"]:
+            raise Exception(res.get("details", "Failed to search models"))
+
+        return pd.DataFrame(res.get("details", []))
 
     def model_inference_settings(
         self,
