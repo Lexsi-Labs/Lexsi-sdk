@@ -367,7 +367,6 @@ class TextProject(Project):
         model_name: Optional[str] = "",
         key: Optional[str] = None,
         limit: int = 500,
-        organization_id: Optional[str] = None,
         url: Optional[str] = None,
     ) -> pd.DataFrame:
         """Search for available text models from a given provider.
@@ -392,7 +391,6 @@ class TextProject(Project):
         :param model_name: optional model name to filter/search for
         :param key: optional API key for the provider (uses configured key if not provided)
         :param limit: maximum number of models to return (default 500)
-        :param organization_id: optional organization ID, required for Lexsi provider
         :param url: optional server URL, required for Self Hosted provider
         :return: a DataFrame of matching models
         """
@@ -401,12 +399,12 @@ class TextProject(Project):
             query_params += f"&model_name={model_name}"
         if key:
             query_params += f"&key={key}"
-        if organization_id:
-            query_params += f"&organization_id={organization_id}"
         if url:
             query_params += f"&url={url}"
         if provider_name == "Lexsi":
             query_params += f"&project_name={self.project_name}"
+            if self.organization_id:
+                query_params += f"&organization_id={self.organization_id}"
 
         res = self.api_client.get(f"{SEARCH_TEXT_MODELS_URI}?{query_params}")
         if not res["success"]:
