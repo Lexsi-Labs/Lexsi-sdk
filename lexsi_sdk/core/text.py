@@ -22,6 +22,7 @@ from lexsi_sdk.common.xai_uris import (
     GET_AVAILABLE_TEXT_MODELS_URI,
     SEARCH_TEXT_MODELS_URI,
     GET_WORKSPACES_DETAILS_URI,
+    GET_WORKSPACES_URI,
     GET_GUARDRAILS_URI,
     INITIALIZE_TEXT_MODEL_URI,
     LIST_DATA_CONNECTORS,
@@ -313,8 +314,18 @@ class TextProject(Project):
                 raise ValueError("source_workspace_name is required for Lexsi provider.")
             if not source_project_name:
                 raise ValueError("source_project_name is required for Lexsi provider.")
+            workspaces = self.api_client.get(f"{GET_WORKSPACES_URI}?organization_id={self.organization_id}")
+            source_workspace = next(
+                filter(
+                    lambda w: w.get("user_workspace_name") == source_workspace_name,
+                    workspaces.get("details", []),
+                ),
+                None,
+            )
+            if not source_workspace:
+                raise Exception(f"Source workspace '{source_workspace_name}' not found.")
             workspace = self.api_client.get(
-                f"{GET_WORKSPACES_DETAILS_URI}?workspace_name={source_workspace_name}"
+                f"{GET_WORKSPACES_DETAILS_URI}?workspace_name={source_workspace['workspace_name']}"
             )
             source_project = next(
                 filter(
