@@ -326,8 +326,6 @@ class TextProject(Project):
             if not source_project:
                 raise Exception(f"Source project '{source_project_name}' not found in workspace '{source_workspace_name}'.")
             data["source_project_name"] = source_project["project_name"]
-        elif source_project_name is not None:
-            data["source_project_name"] = source_project_name
         if inference_compute:
             if inference_compute.get("custom_server_config", {}):
                 server_config = inference_compute.get("custom_server_config", {})
