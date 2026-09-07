@@ -21,6 +21,7 @@ from lexsi_sdk.common.xai_uris import (
     FINETUNE_MODEL_URI,
     GET_AVAILABLE_TEXT_MODELS_URI,
     SEARCH_TEXT_MODELS_URI,
+    GET_WORKSPACES_DETAILS_URI,
     GET_GUARDRAILS_URI,
     INITIALIZE_TEXT_MODEL_URI,
     LIST_DATA_CONNECTORS,
@@ -208,6 +209,7 @@ class TextProject(Project):
         requirements_file: Optional[str] = None,
         app_file: Optional[str] = None,
         model_url: Optional[str] = None,
+        source_workspace_name: Optional[str] = None,
         source_project_name: Optional[str] = None,
     ) -> str:
         """Initialize a text model for the project, specifying the model provider, model name, task type, model type (classification/regression), inference compute settings, inference settings, and optional assets. Polls for completion and returns when done.
@@ -283,7 +285,10 @@ class TextProject(Project):
 
         :param model_url: URL of the OpenAI-compatible server. Required for Self Hosted provider.
 
-        :param source_project_name: name of the source project to import from. Required for Lexsi provider.
+        :param source_workspace_name: workspace name where the source project exists. Required for Lexsi provider.
+
+        :param source_project_name: display name of the source project to import from. Required for Lexsi provider.
+            The SDK resolves this to the internal project name automatically.
 
         :return: response
         """
@@ -303,7 +308,25 @@ class TextProject(Project):
             data["inference_settings"] = inference_settings
         if model_url is not None:
             data["model_url"] = model_url
-        if source_project_name is not None:
+        if model_provider == "Lexsi":
+            if not source_workspace_name:
+                raise ValueError("source_workspace_name is required for Lexsi provider.")
+            if not source_project_name:
+                raise ValueError("source_project_name is required for Lexsi provider.")
+            workspace = self.api_client.get(
+                f"{GET_WORKSPACES_DETAILS_URI}?workspace_name={source_workspace_name}"
+            )
+            source_project = next(
+                filter(
+                    lambda p: p.get("user_project_name") == source_project_name,
+                    workspace.get("data", {}).get("projects", []),
+                ),
+                None,
+            )
+            if not source_project:
+                raise Exception(f"Source project '{source_project_name}' not found in workspace '{source_workspace_name}'.")
+            data["source_project_name"] = source_project["project_name"]
+        elif source_project_name is not None:
             data["source_project_name"] = source_project_name
         if inference_compute:
             if inference_compute.get("custom_server_config", {}):
