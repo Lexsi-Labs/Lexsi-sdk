@@ -2584,7 +2584,7 @@ class TabularProject(Project):
         if project_config == "Not Found":
             raise Exception("Upload files first")
 
-        Validate.value_against_list("training_strategy", training_strategy, ["simple", "ensemble", "distillation"])
+        Validate.value_against_list("training_strategy", training_strategy, ["simple", "ensemble", "distillation", "leaderboard"])
 
         available_models = self.available_models()
 
@@ -2596,7 +2596,9 @@ class TabularProject(Project):
         
         if training_strategy in ["ensemble"] and isinstance(model, list) and len(model) < 2:
             raise Exception(f"Two or more models are required for ensemble")
-            
+
+        if training_strategy in ["leaderboard"] and isinstance(model, list) and len(model) < 2:
+            raise Exception(f"Two or more models are required for leaderboard")
         Validate.value_against_list("model", model, available_models)
 
         all_unique_features = [
@@ -2665,7 +2667,7 @@ class TabularProject(Project):
                 Validate.value_against_list(
                     "xai_method",
                     data_config["xai_method"],
-                    ["shap", "lime"],
+                    ["shap", "lime", "support_set"],
                 )
 
         data_conf = data_config or {}
@@ -4265,6 +4267,7 @@ class CaseTabular(BaseModel):
     lime_feature_importance: Optional[Dict] = {}
     ig_features_importance: Optional[Dict] = {}
     dlb_feature_importance: Optional[Dict] = {}
+    support_set_attribution: Optional[Dict] = {}
     similar_cases: List
     is_automl_prediction: Optional[bool] = False
     model_name: str
@@ -4438,6 +4441,16 @@ class CaseTabular(BaseModel):
             legend_y=1.1,
         )
         fig.show(config={"displaylogo": False})
+
+    def xai_support_set(self):
+        """Display the support set attribution for the case as a table, showing the top support rows and their influence scores."""
+        if not self.support_set_attribution:
+            return "No Support Set Attribution for the case"
+        support_set_df = pd.DataFrame(self.support_set_attribution.get("top_support_rows", []))
+        if support_set_df.empty:
+            return "No Support Set Attribution for the case"
+        support_set_df = support_set_df.rename(columns={"support_index": "Training Row", "influence": "Influence"})
+        return support_set_df
 
     def xai_prediction_path(self):
         """Display the model’s prediction path as a sequence of decision nodes for the case, typically visualized as an SVG or plot."""
