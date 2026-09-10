@@ -739,6 +739,17 @@ class DistillationConfig(TypedDict):
     confidence_weighting: Optional[bool] = None
     student_params: Optional[dict] = None
 
+class  LeaderboardConfig(TypedDict):
+    """
+    Configuration for leaderboard evaluation.
+
+    :param rank_by: The metric by which to rank models.
+    :type rank_by: str
+
+    """
+
+    rank_by: Optional[str] = None
+
 class SyntheticDataConfig(TypedDict):
     """
     Configuration required when generating synthetic data.

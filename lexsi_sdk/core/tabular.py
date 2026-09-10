@@ -8,7 +8,7 @@ import pandas as pd
 from lexsi_sdk.core.alert import Alert
 from lexsi_sdk.common.constants import BIAS_MONITORING_DASHBOARD_REQUIRED_FIELDS, DATA_DRIFT_DASHBOARD_REQUIRED_FIELDS, DATA_DRIFT_STAT_TESTS, MODEL_PERF_DASHBOARD_REQUIRED_FIELDS, MODEL_TYPES, SYNTHETIC_MODELS_DEFAULT_HYPER_PARAMS, TARGET_DRIFT_DASHBOARD_REQUIRED_FIELDS, TARGET_DRIFT_STAT_TESTS
 from lexsi_sdk.common.monitoring import BiasMonitoringPayload, DataDriftPayload, ModelPerformancePayload, TargetDriftPayload
-from lexsi_sdk.common.types import CatBoostParams, DataConfig, DistillationConfig, EnsembleConfg, FoundationalModelParams, InferenceCompute, LightGBMParams, PEFTParams, ProcessorParams, ProjectConfig, RandomForestParams, SyntheticDataConfig, SyntheticModelHyperParams, TuningParams, XGBoostParams
+from lexsi_sdk.common.types import CatBoostParams, DataConfig, DistillationConfig, EnsembleConfg, FoundationalModelParams, InferenceCompute, LeaderboardConfig, LightGBMParams, PEFTParams, ProcessorParams, ProjectConfig, RandomForestParams, SyntheticDataConfig, SyntheticModelHyperParams, TuningParams, XGBoostParams
 from lexsi_sdk.common.utils import normalize_time, poll_events
 from lexsi_sdk.common.validation import Validate
 from lexsi_sdk.common.xai_uris import ALL_DATA_FILE_URI, AVAILABLE_BATCH_SERVERS_URI, AVAILABLE_SYNTHETIC_CUSTOM_SERVERS_URI, CASE_DTREE_URI, CASE_INFO_TEXT_URI, CASE_INFO_URI, CREATE_OBSERVATION_URI, CREATE_POLICY_URI, CREATE_SYNTHETIC_PROMPT_URI, DELETE_CASE_URI, DELETE_SYNTHETIC_MODEL_URI, DELETE_SYNTHETIC_TAG_URI, DOWNLOAD_DASHBOARD_LOGS_URI, DOWNLOAD_SYNTHETIC_DATA_URI, DOWNLOAD_TAG_DATA_URI, DUPLICATE_OBSERVATION_URI, DUPLICATE_POLICY_URI, GENERATE_DASHBOARD_URI, GET_CASES_URI, GET_DASHBOARD_SCORE_URI, GET_DATA_DIAGNOSIS_URI, GET_DATA_DRIFT_DIAGNOSIS_URI, GET_DATA_SUMMARY_URI, GET_FEATURE_IMPORTANCE_URI, GET_LABELS_URI, GET_MODELS_URI, GET_OBSERVATION_PARAMS_URI, GET_OBSERVATIONS_URI, GET_POLICIES_URI, GET_POLICY_PARAMS_URI, GET_PROJECT_CONFIG, GET_SYNTHETIC_DATA_TAGS_URI, GET_SYNTHETIC_MODEL_DETAILS_URI, GET_SYNTHETIC_MODEL_PARAMS_URI, GET_SYNTHETIC_MODELS_URI, GET_SYNTHETIC_PROMPT_URI, LIST_DATA_CONNECTORS, MODEL_INFERENCE_SETTINGS_URI, MODEL_INFERENCES_URI, MODEL_PARAMETERS_URI, MODEL_SUMMARY_URI, PROJECT_OVERVIEW_TEXT_URI, RUN_DATA_DRIFT_DIAGNOSIS_URI, RUN_MODEL_ON_DATA_URI, SEARCH_CASE_URI, TABULAR_ML, TEXT_MODEL_INFERENCE_SETTINGS_URI, TRAIN_MODEL_URI, TRAIN_SYNTHETIC_MODEL_URI, UPDATE_ACTIVE_INFERENCE_MODEL_URI, UPDATE_OBSERVATION_URI, UPDATE_POLICY_URI, UPDATE_SYNTHETIC_PROMPT_URI, UPLOAD_DATA_FILE_URI, UPLOAD_DATA_PROJECT_URI, UPLOAD_DATA_URI, UPLOAD_FILE_DATA_CONNECTORS, AVAILABLE_BATCH_SERVERS_URI, CREATE_TRIGGER_URI, DASHBOARD_LOGS_URI, DELETE_TRIGGER_URI, DUPLICATE_MONITORS_URI, EXECUTED_TRIGGER_URI, GENERATE_DASHBOARD_URI, GET_DASHBOARD_SCORE_URI, GET_DASHBOARD_URI, GET_EXECUTED_TRIGGER_INFO, GET_MODEL_TYPES_URI, GET_MODELS_URI, GET_MONITORS_ALERTS, GET_PROJECT_CONFIG, GET_TRIGGERS_URI, LIST_DATA_CONNECTORS, MODEL_PARAMETERS_URI, MODEL_PERFORMANCE_DASHBOARD_URI, UPLOAD_DATA_FILE_INFO_URI, UPLOAD_DATA_FILE_URI, UPLOAD_DATA_URI, UPLOAD_DATA_WITH_CHECK_URI, UPLOAD_FILE_DATA_CONNECTORS, UPLOAD_MODEL_URI, EXPLAINABILITY_SUMMARY, GET_TRIGGERS_DAYS_URI
@@ -2417,7 +2417,8 @@ class TabularProject(Project):
         finetune_mode: Optional[str] = None,
         tunning_strategy: Optional[str] = None,
         ensemble_config: Optional[EnsembleConfg] = None,
-        distillation_config: Optional[DistillationConfig] = None 
+        distillation_config: Optional[DistillationConfig] = None,
+        leaderboard_config: Optional[LeaderboardConfig] = None,
     ) -> str:
 
         """
@@ -2760,6 +2761,8 @@ class TabularProject(Project):
             payload["metadata"] = {**payload["metadata"], **ensemble_config}
         if distillation_config and training_strategy == "distillation":
             payload["metadata"] = {**payload["metadata"], **distillation_config}
+        if leaderboard_config and training_strategy == "leaderboard":
+            payload["metadata"] = {**payload["metadata"], **leaderboard_config}
 
         if compute_type:
             payload["instance_type"] = compute_type
