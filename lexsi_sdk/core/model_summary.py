@@ -1,3 +1,4 @@
+import pandas as pd
 from lexsi_sdk.client.client import APIClient
 from lexsi_sdk.common.xai_uris import GET_PROJECT_CONFIG, MODEL_SVG_URI
 from typing import Dict, Optional
@@ -85,6 +86,20 @@ class ModelSummary(BaseModel):
         )
 
         fig.show(config={"displaylogo": False})
+
+    def support_attribution(self):
+        """Display the support set attribution for the case as a table, showing the top support rows and their influence scores."""
+        if not self.model_results.get("GFI", {}).get("support_set_attribution", {}):
+            return "No Support Set Attribution for the case"
+        support_set_df = pd.DataFrame(
+            self.model_results.get("GFI", {}).get("support_set_attribution", {}).get("top_support_rows", [])
+        )
+        if support_set_df.empty:
+            return "No Support Set Attribution for the case"
+        support_set_df = support_set_df.rename(
+            columns={"support_index": "Training Row", "influence": "Influence"}
+        )
+        return support_set_df
 
     def prediction_path(self):
         """Display the model’s prediction path as an SVG for the current case, retrieving it from the API."""
