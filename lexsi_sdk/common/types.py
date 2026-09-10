@@ -280,6 +280,8 @@ class DataConfig(TypedDict):
     unique_identifier: Optional[str]
     true_label: Optional[str]
     pred_label: Optional[str]
+    support_set_mechanism: Optional[str]
+    max_support_rows: Optional[int]
 
 
 class XGBoostParams(TypedDict, total=False):
