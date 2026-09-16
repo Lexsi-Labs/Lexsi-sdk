@@ -22,6 +22,9 @@ from lexsi_sdk.common.xai_uris import (
     LIST_CURATION_RUNS_URI,
     RUN_CURATION_URI,
     GET_AVAILABLE_TEXT_MODELS_URI,
+    SEARCH_TEXT_MODELS_URI,
+    GET_WORKSPACES_DETAILS_URI,
+    GET_WORKSPACES_URI,
     GET_GUARDRAILS_URI,
     INITIALIZE_TEXT_MODEL_URI,
     LIST_DATA_CONNECTORS,
@@ -201,13 +204,16 @@ class TextProject(Project):
         self, 
         model_provider: str, 
         model_name: str, 
-        model_task_type:str, 
-        model_architecture: str,  
+        model_task_type: Optional[str] = None, 
+        model_architecture: Optional[str] = None,  
         inference_compute: Optional[InferenceCompute] = None,
         inference_settings: Optional[InferenceSettings] = None,
         assets: Optional[dict] = None,
         requirements_file: Optional[str] = None,
-        app_file: Optional[str] = None
+        app_file: Optional[str] = None,
+        model_url: Optional[str] = None,
+        source_workspace_name: Optional[str] = None,
+        source_project_name: Optional[str] = None,
     ) -> str:
         """Initialize a text model for the project, specifying the model provider, model name, task type, model type (classification/regression), inference compute settings, inference settings, and optional assets. Polls for completion and returns when done.
 
@@ -224,11 +230,14 @@ class TextProject(Project):
             - ``Mistral``
             - ``AWS Bedrock``
             - ``Open Router``
+            - ``Lexsi``
+            - ``Self Hosted``
 
         :param model_name: name of the model to be initialized
             (e.g., meta-llama/Llama-3.2-1B-Instruct).
+            For Self Hosted, this is the model ID returned by the server's /v1/models endpoint.
 
-        :param model_task_type: task type of model
+        :param model_task_type: task type of model. Required for all providers except Lexsi and Self Hosted.
             **Model Task Types**
             - ``question-answering``
             - ``summarization``
@@ -237,7 +246,7 @@ class TextProject(Project):
             - ``text2text-generation``
             - ``token-classification``
 
-        :param model_architecture: architecture of the model to be initialized
+        :param model_architecture: architecture of the model to be initialized. Required for all providers except Lexsi and Self Hosted.
             **Model Architecture**
             - ``bert``
             - ``llm``
@@ -254,6 +263,7 @@ class TextProject(Project):
         :param assets: assets required for the model, including provider credentials, access tokens,
             or other secrets needed at runtime
             (e.g., {"HF_TOKEN":"hf_njbjkfdsnjfkdnskbfk"}).
+            For Self Hosted, use {"SELF_HOSTED_API_KEY": "<api-key>"} if the server requires authentication.
 
         :param requirements_file: file path for the requirements file
             a YAML file defining the runtime environment, including base Docker image,
@@ -276,18 +286,59 @@ class TextProject(Project):
             a Python application file that implements the model inference logic,
             including how inputs are processed and how predictions are generated and returned
 
+        :param model_url: URL of the OpenAI-compatible server. Required for Self Hosted provider.
+
+        :param source_workspace_name: workspace name where the source project exists. Required for Lexsi provider.
+
+        :param source_project_name: display name of the source project to import from. Required for Lexsi provider.
+            The SDK resolves this to the internal project name automatically.
+
         :return: response
         """
         data = {
             "model_provider": model_provider,
             "model_name": model_name,
-            "model_task_type": model_task_type,
             "project_name": self.project_name,
-            "model_type": model_architecture,
-            "inference_compute": inference_compute,
-            "inference_settings": inference_settings,
             "assets": assets
         }
+        if model_task_type is not None:
+            data["model_task_type"] = model_task_type
+        if model_architecture is not None:
+            data["model_type"] = model_architecture
+        if inference_compute is not None:
+            data["inference_compute"] = inference_compute
+        if inference_settings is not None:
+            data["inference_settings"] = inference_settings
+        if model_url is not None:
+            data["model_url"] = model_url
+        if model_provider == "Lexsi":
+            if not source_workspace_name:
+                raise ValueError("source_workspace_name is required for Lexsi provider.")
+            if not source_project_name:
+                raise ValueError("source_project_name is required for Lexsi provider.")
+            workspaces = self.api_client.get(f"{GET_WORKSPACES_URI}?organization_id={self.organization_id}")
+            source_workspace = next(
+                filter(
+                    lambda w: w.get("user_workspace_name") == source_workspace_name,
+                    workspaces.get("details", []),
+                ),
+                None,
+            )
+            if not source_workspace:
+                raise Exception(f"Source workspace '{source_workspace_name}' not found.")
+            workspace = self.api_client.get(
+                f"{GET_WORKSPACES_DETAILS_URI}?workspace_name={source_workspace['workspace_name']}"
+            )
+            source_project = next(
+                filter(
+                    lambda p: p.get("user_project_name") == source_project_name,
+                    workspace.get("data", {}).get("projects", []),
+                ),
+                None,
+            )
+            if not source_project:
+                raise Exception(f"Source project '{source_project_name}' not found in workspace '{source_workspace_name}'.")
+            data["source_project_name"] = source_project["project_name"]
         if inference_compute:
             if inference_compute.get("custom_server_config", {}):
                 server_config = inference_compute.get("custom_server_config", {})
@@ -322,6 +373,57 @@ class TextProject(Project):
         if not res.get("success"):
             raise Exception(res.get("details", "Model Initialization Failed"))
         poll_events(self.api_client, self.project_name, res["event_id"])
+
+    def search_text_models(
+        self,
+        provider_name: str,
+        model_name: Optional[str] = "",
+        key: Optional[str] = None,
+        limit: int = 500,
+        url: Optional[str] = None,
+    ) -> pd.DataFrame:
+        """Search for available text models from a given provider.
+        Returns a DataFrame of matching models.
+
+        :param provider_name: model provider name to search
+            **Model Providers**
+            - ``Hugging Face``
+            - ``OpenAI``
+            - ``Anthropic``
+            - ``Groq``
+            - ``Grok``
+            - ``Gemini``
+            - ``Together``
+            - ``Replicate``
+            - ``Mistral``
+            - ``AWS Bedrock``
+            - ``Open Router``
+            - ``Lexsi``
+            - ``Self Hosted``
+
+        :param model_name: optional model name to filter/search for
+        :param key: optional API key for the provider (uses configured key if not provided)
+        :param limit: maximum number of models to return (default 500)
+        :param url: optional server URL, required for Self Hosted provider
+        :return: a DataFrame of matching models
+        """
+        query_params = f"provider_name={provider_name}&limit={limit}"
+        if model_name:
+            query_params += f"&model_name={model_name}"
+        if key:
+            query_params += f"&key={key}"
+        if url:
+            query_params += f"&url={url}"
+        if provider_name == "Lexsi":
+            query_params += f"&project_name={self.project_name}"
+            if self.organization_id:
+                query_params += f"&organization_id={self.organization_id}"
+
+        res = self.api_client.get(f"{SEARCH_TEXT_MODELS_URI}?{query_params}")
+        if not res["success"]:
+            raise Exception(res.get("details", "Failed to search models"))
+
+        return pd.DataFrame(res.get("details", []))
 
     def model_inference_settings(
         self,
