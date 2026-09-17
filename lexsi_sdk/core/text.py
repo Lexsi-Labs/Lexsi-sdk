@@ -49,7 +49,11 @@ from lexsi_sdk.common.xai_uris import (
     CATALOG_ANNOTATORS_URI,
     CATALOG_GUARD_PROFILES_URI,
     EVALS_RUN_URI,
+    EVALS_REJUDGE_URI,
+    EVALS_ADD_MODEL_URI,
     EVALS_VALIDATE_URI,
+    EVALS_CONFIGS_URI,
+    EVALS_CONFIG_URI,
     RUNS_URI,
     RUNS_STATUS_URI,
     RUNS_PREDICTIONS_URI,
@@ -1164,7 +1168,10 @@ class TextProject(Project):
     ) -> dict:
         """Start an evaluation run. Returns an event_id for polling.
 
-        :param config: Evaluation configuration dictionary
+        :param config: Evaluation configuration dictionary.
+            ``model_name`` may be a single string **or a list of strings** —
+            when a list is given the API creates one run per model and returns
+            a list of results.
         :param pod: The pod type for evaluation
         :param samples: Optional list of sample dictionaries for evaluation
         :return: API response with event_id for polling
@@ -1203,11 +1210,14 @@ class TextProject(Project):
         config: dict,
         node: DedicatedGPUNodeValues,
         model_name: str,
+        config_name: Optional[str] = None,
     ) -> dict:
         """Start a benchmark run using lm-eval. Returns an event_id for polling.
 
-        :param task: Benchmark task name (e.g., "ARC-Challenge", "GSM8K", "MMLU")
-        :param model_spec: Model specification dictionary for the benchmark
+        :param config: dict with task, num_fewshot, limit, etc.
+        :param node: GPU node type (e.g., "xlargeT4", "xlargeA10G")
+        :param model_name: Model name registered in the project
+        :param config_name: Optional label for the run. Defaults to task name.
         :return: API response with event_id for polling
         """
         payload = {
@@ -1218,6 +1228,8 @@ class TextProject(Project):
                 "node": node
             }
         }
+        if config_name:
+            payload["config_name"] = config_name
         res = self.api_client.post(BENCHMARKS_RUN_URI, payload=payload)
         if not res["success"]:
             raise Exception(res.get("details"))
@@ -1228,6 +1240,176 @@ class TextProject(Project):
             project_name=self.project_name,
             event_id=res.get("details", {}).get("event_id"),
         )
+
+    def add_model_for_benchmark(
+        self,
+        config_name: str,
+        model_name: str,
+        pod: str,
+    ) -> dict:
+        """Run a new model on the latest benchmark run for a config_name.
+
+        Calls ``POST /benchmarks/add-model``. Fetches the source run's task,
+        num_fewshot, and limit, then launches a fresh benchmark with the new model.
+
+        :param config_name: Config name to re-run. The latest run under this config is used as source.
+        :param model_name: New model name to run.
+        :param pod: Compute node type (GPU server).
+        :return: dict with event_id from the new benchmark.
+        """
+        payload = {
+            "project_name": self.project_name,
+            "config_name": config_name,
+            "model_name": model_name,
+            "pod": pod,
+        }
+        res = self.api_client.post(f"{BENCHMARKS_URI}/add-model", payload=payload)
+        if not res["success"]:
+            raise Exception(res.get("details"))
+        poll_events(
+            api_client=self.api_client,
+            project_name=self.project_name,
+            event_id=res.get("details", {}).get("event_id"),
+        )
+
+    def rejudge(
+        self,
+        config_name: str,
+        scorers: list,
+        model_name: Optional[Union[str, List[str]]] = None,
+        pod: Optional[str] = None,
+        annotators: Optional[list] = None,
+        extract_with: Optional[str] = None,
+        execution_mode: Optional[str] = None,
+        adapter: Optional[str] = None,
+    ) -> dict:
+        """Re-run an eval with different scorers and/or a different model.
+
+        Calls ``POST /evals/rejudge``. Finds the latest run under the given
+        config_name, loads its predictions, and re-runs the evaluation pipeline
+        with the supplied scorers. When *model_name* is given the model-under-test
+        is replaced and outputs are regenerated; otherwise the original predictions
+        are re-scored in precomputed mode.
+
+        :param config_name: Config name to rejudge. The latest run under this config is used as source.
+        :param scorers: New list of scorer names/dicts (required).
+        :param model_name: Optional new model name (str) or list of model names.
+        :param pod: Compute pod override.
+        :param annotators: Optional new annotators list.
+        :param extract_with: Optional extract_with value.
+        :param execution_mode: Override execution_mode ("precomputed" | "generate").
+        :param adapter: Override adapter name.
+        :return: dict with run_id from the new evaluation.
+        """
+        payload: Dict[str, Any] = {
+            "project_name": self.project_name,
+            "config_name": config_name,
+            "scorers": scorers,
+        }
+        if model_name is not None:
+            payload["model_name"] = model_name
+        if pod:
+            payload["compute"] = {"pod": pod}
+        if annotators is not None:
+            payload["annotators"] = annotators
+        if extract_with is not None:
+            payload["extract_with"] = extract_with
+        if execution_mode is not None:
+            payload["execution_mode"] = execution_mode
+        if adapter is not None:
+            payload["adapter"] = adapter
+
+        res = self.api_client.post(EVALS_REJUDGE_URI, payload=payload)
+        if not res["success"]:
+            raise Exception(res.get("details"))
+        if res.get("details", {}).get("existing_run", False):
+            return res
+        poll_events(
+            api_client=self.api_client,
+            project_name=self.project_name,
+            event_id=res.get("details", {}).get("event_id"),
+        )
+
+    def add_model(self, config_name: str, model_name: Union[str, List[str]], pod: str) -> dict:
+        """'+ Add model' — run a new model on the latest run for a config_name.
+
+        Calls ``POST /evals/add-model``. Fetches the source run's samples and
+        config, then launches a fresh evaluation with the new model.
+
+        :param config_name: Config name to re-run. The latest run under this config is used as source.
+        :param model_name: New model name (str) or list of model names.
+        :param pod: Compute pod type.
+        :return: dict with event_id from the new evaluation.
+        """
+        payload: Dict[str, Any] = {
+            "project_name": self.project_name,
+            "config_name": config_name,
+            "model_name": model_name,
+            "pod": pod,
+        }
+        res = self.api_client.post(EVALS_ADD_MODEL_URI, payload=payload)
+        if not res["success"]:
+            raise Exception(res.get("details"))
+        poll_events(
+            api_client=self.api_client,
+            project_name=self.project_name,
+            event_id=res.get("details", {}).get("event_id"),
+        )
+
+    def save_eval_config(self, name: str, spec: dict, kind: str = "dataset",
+                         config_id: Optional[str] = None) -> dict:
+        """Save or update an eval configuration.
+
+        :param name: Name for the saved setup.
+        :param spec: The full form state / run template dict.
+        :param kind: "dataset" or "benchmark".
+        :param config_id: If provided, update existing config; otherwise create new.
+        :return: dict with config_id.
+        """
+        payload = {"project_name": self.project_name, "name": name, "kind": kind, "spec": spec}
+        if config_id:
+            res = self.api_client.put(f"{EVALS_CONFIGS_URI}/{config_id}", payload=payload)
+        else:
+            res = self.api_client.post(EVALS_CONFIGS_URI, payload=payload)
+        if not res["success"]:
+            raise Exception(res.get("details"))
+        return res.get("details")
+
+    def get_eval_config(self, config_id: str) -> dict:
+        """Retrieve a saved eval configuration by ID.
+
+        :param config_id: The ID of the saved EvalConfig.
+        :return: dict with config details including the spec.
+        """
+        res = self.api_client.get(
+            f"{EVALS_CONFIGS_URI}/{config_id}?project_name={self.project_name}")
+        if not res["success"]:
+            raise Exception(res.get("details"))
+        return res.get("details")
+
+    def list_eval_configs(self) -> pd.DataFrame:
+        """List all saved eval configurations for this project.
+
+        :return: DataFrame of saved configs with run counts.
+        """
+        res = self.api_client.get(f"{EVALS_CONFIGS_URI}?project_name={self.project_name}")
+        if not res["success"]:
+            raise Exception(res.get("details"))
+        return pd.DataFrame(res.get("details"))
+
+    def delete_eval_config(self, config_id: str, delete_runs: bool = False) -> dict:
+        """Delete a saved eval configuration.
+
+        :param config_id: The ID of the config to delete.
+        :param delete_runs: If True, also delete all runs under this config.
+        :return: dict confirming deletion.
+        """
+        res = self.api_client.delete(
+            f"{EVALS_CONFIGS_URI}/{config_id}"
+            f"?project_name={self.project_name}&delete_runs={str(delete_runs).lower()}")
+        if not res["success"]:
+            raise Exception(res.get("details"))
+        return res.get("details")
 
     def validate_eval_config(
         self,
@@ -1274,15 +1456,50 @@ class TextProject(Project):
             raise Exception(res.get("details"))
         return res.get("details")
 
-    def list_runs(self) -> pd.DataFrame:
+    def list_runs(self, config_name: Optional[str] = None) -> pd.DataFrame:
         """Return a DataFrame listing all evaluation runs for this project.
 
-        :return: a DataFrame containing run summaries
+        :param config_name: Optional filter — only return runs with this config_name label.
+        :return: a DataFrame containing run summaries (run_id, config_name, model_spec, headline, etc.)
         """
-        res = self.api_client.get(f"{RUNS_URI}?project_name={self.project_name}")
+        params = f"project_name={self.project_name}"
+        if config_name:
+            params += f"&config_name={config_name}"
+        res = self.api_client.get(f"{RUNS_URI}?{params}")
         if not res["success"]:
             raise Exception(res.get("details"))
         return pd.DataFrame(res.get("details"))
+
+    def get_all_evaluations(self) -> pd.DataFrame:
+        """Return a DataFrame of unique config_names with run metadata.
+
+        Covers both evals and benchmarks. Each row includes:
+        - config_name: the label
+        - type: "eval" or "benchmark"
+        - run_count: how many runs share this config_name
+        - latest_run_id: the most recent run_id
+        - latest_headline: headline metrics from the latest run
+        - latest_created_at: timestamp of the latest run
+
+        :return: DataFrame with one row per (config_name, type).
+        """
+        params = f"project_name={self.project_name}"
+        res = self.api_client.get(f"{RUNS_URI}/configs?{params}")
+        if not res["success"]:
+            raise Exception(res.get("details"))
+        return pd.DataFrame(res.get("details"))
+
+    def get_config(self, config_name: str) -> dict:
+        """Get the latest run for a given config_name.
+
+        :param config_name: The config name to fetch.
+        :return: dict with the latest run details.
+        """
+        params = f"project_name={self.project_name}&config_name={config_name}"
+        res = self.api_client.get(f"{EVALS_CONFIG_URI}?{params}")
+        if not res["success"]:
+            raise Exception(res.get("details"))
+        return res.get("details")
 
     def get_run_status(self, event_id: str) -> dict:
         """Poll the status of a long-running evaluation job.
@@ -1331,34 +1548,59 @@ class TextProject(Project):
 
     def run_comparison(
         self,
-        baseline_run_id: str,
-        candidate_run_id: str,
+        run_ids: list,
+        metric: Optional[str] = None,
     ) -> dict:
-        """Compare two evaluation runs and return deltas, grades, and significance.
-        :param baseline_run_id: ID of the baseline run
-        :param candidate_run_id: ID of the candidate run
-        :return: comparison results including deltas, grade, retention, and significance
+        """Compare multiple runs — pairwise or leaderboard.
+
+        All runs must share the same config_name. The config_name is auto-detected
+        from the runs and used to store the comparison.
+
+        - **2 run_ids**: returns pairwise comparison (deltas, grade, retention, significance).
+        - **3+ run_ids**: returns a leaderboard sorted by *metric* (or the first headline metric).
+
+        :param run_ids: List of run_ids to compare (at least 2).
+        :param metric: Optional metric name to sort the leaderboard by.
+        :return: comparison results or leaderboard.
         """
-        payload = {"project_name": self.project_name}
-        if baseline_run_id and candidate_run_id:
-            payload["baseline_run_id"] = baseline_run_id
-            payload["candidate_run_id"] = candidate_run_id
-        else:
-            raise ValueError("Either run_ids or both baseline_run_id and candidate_run_id must be provided")
+        if not run_ids or len(run_ids) < 2:
+            raise ValueError("At least 2 run_ids are required.")
+        payload = {
+            "project_name": self.project_name,
+            "run_ids": run_ids,
+        }
+        if metric:
+            payload["metric"] = metric
         res = self.api_client.post(COMPARE_URI, payload=payload)
         if not res["success"]:
             raise Exception(res.get("details"))
         return res.get("details")
 
-    def list_comparisons(self) -> pd.DataFrame:
+    def list_comparisons(self, config_name: Optional[str] = None) -> pd.DataFrame:
         """Return a DataFrame listing all saved comparisons for this project.
 
-        :return: a DataFrame containing comparison summaries
+        :param config_name: Optional config_name to filter comparisons.
+        :return: a DataFrame containing comparison summaries with headline metrics.
         """
-        res = self.api_client.get(f"{COMPARE_URI}?project_name={self.project_name}")
+        params = f"project_name={self.project_name}"
+        if config_name:
+            params += f"&config_name={config_name}"
+        res = self.api_client.get(f"{COMPARE_URI}?{params}")
         if not res["success"]:
             raise Exception(res.get("details"))
         return pd.DataFrame(res.get("details"))
+
+    def get_comparison(self, comparison_id: str) -> dict:
+        """Get full comparison result including leaderboard or pairwise deltas.
+
+        :param comparison_id: The comparison ID from run_comparison or list_comparisons.
+        :return: dict with full comparison result.
+        """
+        params = f"project_name={self.project_name}"
+        res = self.api_client.get(f"{COMPARE_URI}/{comparison_id}?{params}")
+        if not res["success"]:
+            raise Exception(res.get("details"))
+        return res.get("details")
 
     def available_benchmarks(self) -> pd.DataFrame:
         """Return a DataFrame listing all available benchmark tasks.
