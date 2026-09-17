@@ -6,7 +6,7 @@ info:
     Core endpoints surfaced in the docs. Replace servers and adjust schemas as needed for your environment.
 
 servers:
-  - url: https://apiv1.lexsi.ai
+  - url: https://api.lexsi.ai
 
 components:
   securitySchemes:

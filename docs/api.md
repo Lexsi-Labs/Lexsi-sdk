@@ -7,7 +7,7 @@ Use these ready-to-run curl with your Lexsi API key. Replace the placeholder val
 ### Health check
 
 ```bash
-curl -X GET "https://apiv1.lexsi.ai/healthcheck"
+curl -X GET "https://api.lexsi.ai/healthcheck"
 ```
 
 ## Tabular Modality API
@@ -15,7 +15,7 @@ curl -X GET "https://apiv1.lexsi.ai/healthcheck"
 ### Generate Prediction and Explainability
 
 ```bash
-curl --http2 -X POST "https://apiv1.lexsi.ai/v2/project/case-register" \
+curl --http2 -X POST "https://api.lexsi.ai/v2/project/case-register" \
    -H "x-api-token: <$X_API_TOKEN>" \
    -H "Content-Type: application/x-www-form-urlencoded" \
    --data-urlencode "client_id=<$USERNAME>" \
@@ -51,7 +51,7 @@ curl --http2 -X POST "https://apiv1.lexsi.ai/v2/project/case-register" \
 
 
 ```bash
-curl --http2 -X POST "https://apiv1.lexsi.ai/v2/project/case-register" \
+curl --http2 -X POST "https://api.lexsi.ai/v2/project/case-register" \
    -H "x-api-token: <$X_API_TOKEN>" \
    -F "client_id=<$USERNAME>" \
    -F "project_name=<$PROJECT_NAME>" \
@@ -80,7 +80,7 @@ curl --http2 -X POST "https://apiv1.lexsi.ai/v2/project/case-register" \
 ### Text Generation
 
 ```bash
-curl --http2 -X POST "https://apiv1.lexsi.ai/gateway/v1/text/generation" \
+curl --http2 -X POST "https://api.lexsi.ai/gateway/v1/text/generation" \
   --header "x-api-token: <$API_TOKEN>" \
   --header "Content-Type: application/json" \
   --data '{
@@ -115,7 +115,7 @@ curl --http2 -X POST "https://apiv1.lexsi.ai/gateway/v1/text/generation" \
 ### Chat completions
 
 ```bash
-curl --request POST 'https://apiv1.lexsi.ai/gateway/v1/chat/completions' \
+curl --request POST 'https://api.lexsi.ai/gateway/v1/chat/completions' \
   --header "x-api-token: <$API_TOKEN>" \
   --header 'Content-Type: application/json' \
   --data "{
@@ -152,7 +152,7 @@ curl --request POST 'https://apiv1.lexsi.ai/gateway/v1/chat/completions' \
 ### Completions
 
 ```bash
-curl --request POST 'https://apiv1.lexsi.ai/gateway/v1/completions' \
+curl --request POST 'https://api.lexsi.ai/gateway/v1/completions' \
   --header "x-api-token: <$API_TOKEN>" \
   --header 'Content-Type: application/json' \
   --data "{
@@ -184,7 +184,7 @@ curl --request POST 'https://apiv1.lexsi.ai/gateway/v1/completions' \
 ### Embeddings
 
 ```bash
-curl -X POST "https://apiv1.lexsi.ai/gateway/v1/embeddings" \
+curl -X POST "https://api.lexsi.ai/gateway/v1/embeddings" \
   -H "Authorization: Bearer $LEXSI_API_KEY" \
   -H "Content-Type: application/json" \
   -d "{
@@ -202,7 +202,7 @@ curl -X POST "https://apiv1.lexsi.ai/gateway/v1/embeddings" \
 ### Image generation
 
 ```bash
-curl -X POST "https://apiv1.lexsi.ai/gateway/v1/images/generations" \
+curl -X POST "https://api.lexsi.ai/gateway/v1/images/generations" \
   -H "Authorization: Bearer $LEXSI_API_KEY" \
   -H "Content-Type: application/json" \
   -d "{

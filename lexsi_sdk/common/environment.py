@@ -41,7 +41,7 @@ class Environment(BaseModel):
 
         :return: base url
         """
-        return os.getenv("XAI_API_URL", "https://apiv1.lexsi.ai")
+        return os.getenv("XAI_API_URL", "https://api.lexsi.ai")
 
     def get_debug(self) -> bool:
         """get debug flag
