@@ -28,7 +28,7 @@ class Tracer:
     def __init__(self):
         """Initialize exporter endpoint from environment.
         Stores configuration and prepares the object for use."""
-        self.base_url = os.getenv("XAI_API_URL", "https://apiv1.lexsi.ai")
+        self.base_url = os.getenv("XAI_API_URL", "https://api.lexsi.ai")
         self.endpoint = f"{self.base_url}"
 
     def setup_langchain_tracing(self, project: object, session_id: str = None) -> None:
