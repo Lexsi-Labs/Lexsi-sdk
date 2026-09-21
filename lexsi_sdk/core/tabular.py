@@ -4043,7 +4043,7 @@ class TabularProject(Project):
             raise Exception("name is required")
 
         prompt_params = self.get_observation_params()
-        configuration, expression = build_expression(expression, prompt_params["details"]["features"])
+        configuration, expression = build_expression(expression, prompt_params["features"])
 
         validate_configuration(
             configuration, prompt_params, self.project_name, self.api_client
@@ -4057,7 +4057,6 @@ class TabularProject(Project):
         }
 
         res = self.api_client.post(CREATE_SYNTHETIC_PROMPT_URI, payload)
-
         if not res["success"]:
             raise Exception(res["details"])
 
