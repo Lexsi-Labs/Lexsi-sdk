@@ -184,7 +184,8 @@ class Workspace(BaseModel):
         modality: str,
         project_type: Optional[str] = '',
         server_type: Optional[str] = None,
-        server_config: Optional[CustomServerConfig] = CustomServerConfig()
+        server_config: Optional[CustomServerConfig] = CustomServerConfig(),
+        deployment_config: Optional[DeploymentConfig] = DeploymentConfig(),
     ) -> Project:
         """Create a new project within the workspace. Requires project_name, modality (e.g., tabular, text, image), project_type (e.g., classification), and optional project_sub_type and server_type. Returns the created Project object.
 
@@ -233,6 +234,9 @@ class Workspace(BaseModel):
                 server_config["start"] = normalize_time(server_config.get("start"))
                 server_config["stop"] = normalize_time(server_config.get("stop"))
             payload["server_config"] = server_config if server_config else {}
+
+            if deployment_config:
+                payload["deployment_config"] = deployment_config 
 
         res = self.api_client.post(CREATE_PROJECT_URI, payload)
 

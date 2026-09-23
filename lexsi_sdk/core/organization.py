@@ -14,7 +14,7 @@ from lexsi_sdk.common.xai_uris import (
     UPDATE_ORGANIZATION_URI
 )
 from lexsi_sdk.core.workspace import Workspace
-from lexsi_sdk.common.types import CustomServerConfig, GCSConfig, S3Config, GDriveConfig, SFTPConfig
+from lexsi_sdk.common.types import CustomServerConfig, DeploymentConfig, GCSConfig, S3Config, GDriveConfig, SFTPConfig
 from lexsi_sdk.common.xai_uris import (
     AVAILABLE_CUSTOM_SERVERS_URI,
     CREATE_DATA_CONNECTORS,
@@ -166,7 +166,11 @@ class Organization(BaseModel):
         return workspace
 
     def create_workspace(
-        self, workspace_name: str, server_type: Optional[str] = None, server_config: Optional[CustomServerConfig] = CustomServerConfig()
+        self, 
+        workspace_name: str, 
+        server_type: Optional[str] = None, 
+        server_config: Optional[CustomServerConfig] = CustomServerConfig(),
+        deployment_config: Optional[DeploymentConfig] = DeploymentConfig()
     ) -> Workspace:
         """Create a new workspace within the organization. Accepts a workspace name and an optional server_type to specify the compute instance. Returns a Workspace object for the newly created workspace.
 
@@ -202,6 +206,9 @@ class Organization(BaseModel):
                 server_config["start"] = normalize_time(server_config.get("start"))
                 server_config["stop"] = normalize_time(server_config.get("stop"))
             payload["server_config"] = server_config if server_config else {}
+
+            if deployment_config:
+                payload["deployment_config"] = deployment_config
 
         if self.organization_id:
             payload["organization_id"] = self.organization_id
