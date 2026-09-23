@@ -6,6 +6,7 @@ from typing import Dict, List, Optional, Union
 from lexsi_sdk.client.client import APIClient
 from lexsi_sdk.common.types import (
     CustomServerConfig,
+    DeploymentConfig,
     ProjectConfig,
     GCSConfig,
     S3Config,
@@ -208,7 +209,12 @@ class Project(BaseModel):
 
         return res["message"]
 
-    def update_server(self, server_type: str, server_config: Optional[CustomServerConfig] = CustomServerConfig()) -> str:
+    def update_server(
+        self, 
+        server_type: str, 
+        server_config: Optional[CustomServerConfig] = CustomServerConfig(),
+        deployment_config: Optional[DeploymentConfig] = DeploymentConfig(),
+    ) -> str:
         """Update the dedicated server for the project by specifying a new instance type.
         :param server_type: dedicated instance to run workloads
             for all available instances check lexsi.available_node_servers()
@@ -257,6 +263,7 @@ class Project(BaseModel):
                 "update_project": {
                     "project_name": self.user_project_name,
                     "instance_type": server_type,
+                    "deployment_config": deployment_config,
                 },
                 "update_operational_hours": server_config if server_config else {},
             },

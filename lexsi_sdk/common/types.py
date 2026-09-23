@@ -973,6 +973,9 @@ class CustomServerConfig(TypedDict):
     op_hours: Optional[bool] = None
     auto_start: bool = False
 
+class DeploymentConfig(TypedDict):
+    region: Optional[str] = None
+
 class InferenceCompute(TypedDict):
     """
     Inference compute selection payload.
@@ -995,7 +998,7 @@ class InferenceCompute(TypedDict):
 
     compute_type: Union[DedicatedCPUNodeValues, DedicatedGPUNodeValues, ServerlessTypeValues]
     custom_server_config: Optional[CustomServerConfig] = CustomServerConfig()
-
+    deployment_config: Optional[DeploymentConfig] = DeploymentConfig()
 
 class InferenceSettings(TypedDict):
     """

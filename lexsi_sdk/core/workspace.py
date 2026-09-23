@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from typing import Optional
 from lexsi_sdk.client.client import APIClient
 from lexsi_sdk.common.enums import UserRole
-from lexsi_sdk.common.types import CustomServerConfig
+from lexsi_sdk.common.types import CustomServerConfig, DeploymentConfig
 from lexsi_sdk.common.utils import normalize_time
 from lexsi_sdk.common.validation import Validate
 from lexsi_sdk.common.xai_uris import (
@@ -313,7 +313,12 @@ class Workspace(BaseModel):
 
         return res["message"]
 
-    def update_server(self, server_type: str, server_config: Optional[CustomServerConfig] = CustomServerConfig()) -> str:
+    def update_server(
+        self, 
+        server_type: str, 
+        server_config: Optional[CustomServerConfig] = CustomServerConfig(),
+        deployment_config: Optional[DeploymentConfig] = DeploymentConfig(),
+    ) -> str:
         """Change the compute instance type for the workspace by specifying a new server_type. Valid values depend on available custom servers.
         :param server_type: dedicated instance to run workloads
             for all available instances check lexsi.available_node_servers()
@@ -363,6 +368,7 @@ class Workspace(BaseModel):
                 "update_workspace": {
                     "workspace_name": self.user_workspace_name,
                     "instance_type": server_type,
+                    "deployment_config": deployment_config,
                 },
                 "update_operational_hours": server_config if server_config else {},
             },
