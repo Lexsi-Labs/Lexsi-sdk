@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 import io
 from io import BytesIO
 from typing import Optional, List, Dict, Any, Union, Literal
+from urllib.parse import urlencode
 
 import httpx
 from lexsi_sdk.common.types import DedicatedGPUNodeValues, InferenceCompute, InferenceSettings
@@ -1164,9 +1165,13 @@ class TextProject(Project):
         actual_output_column: Optional[str] = None,
         choices_column: Optional[str] = None,
         retrieval_context_column: Optional[str] = None,
-        task_column: Optional[str] = None
+        task_column: Optional[str] = None,
+        adapter_file: Optional[str] = None,
+        annotator_file: Optional[str] = None,
+        custom_adapter_name: Optional[str] = None,
+        custom_annotator_name: Optional[str] = None,
     ) -> dict:
-        """Start an evaluation run. Returns an event_id for polling.
+        """Start an evaluation run. Waits and returns run_id, event_id, status, and existing_run.
 
         :param config: Evaluation configuration dictionary.
             ``model_name`` may be a single string **or a list of strings** —
@@ -1174,10 +1179,21 @@ class TextProject(Project):
             a list of results.
         :param pod: The pod type for evaluation
         :param samples: Optional list of sample dictionaries for evaluation
-        :return: API response with event_id for polling
+        :param adapter_file: Optional local Python file path for an adapter component.
+        :param annotator_file: Optional local Python file path for an annotator component.
+        :param custom_adapter_name: Name of the adapter declared by adapter_file.
+        :param custom_annotator_name: Name of the annotator declared by annotator_file.
+        :return: dict with run_id, event_id, status, and existing_run
         """
+        if not isinstance(config.get("config_name"), str) or not config["config_name"].strip():
+            raise ValueError("config_name is required")
+        from pathlib import Path
         payload = {**config, "compute": {"pod": pod}, "project_name": self.project_name}
-        if samples:
+        if adapter_file:
+            payload["custom_adapter_name"] = custom_adapter_name or Path(adapter_file).stem
+        if annotator_file:
+            payload["custom_annotator_name"] = custom_annotator_name or Path(annotator_file).stem
+        if samples is not None:
             payload["samples"] = samples
         if tag:
             payload["tag"] = tag
@@ -1194,7 +1210,23 @@ class TextProject(Project):
         if task_column:
             payload["task_column"] = task_column
 
-        res = self.api_client.post(EVALS_RUN_URI, payload=payload)
+        file_paths = {
+            field: path
+            for field, path in (("adapter_file", adapter_file), ("annotator_file", annotator_file))
+            if path is not None
+        }
+
+        if file_paths:
+            from contextlib import ExitStack
+            if "data" in file_paths:
+                raise ValueError("data is reserved for the JSON configuration")
+            with ExitStack() as stack:
+                files = {"data": (None, json.dumps(payload))}
+                for field, path in file_paths.items():
+                    files[field] = (Path(path).name, stack.enter_context(open(path, "rb")), "text/x-python")
+                res = self.api_client.file(EVALS_RUN_URI, files)
+        else:
+            res = self.api_client.post(EVALS_RUN_URI, payload=payload)
         if not res["success"]:
             raise Exception(res.get("details"))
         if res.get("details", {}).get("existing_run", False):
@@ -1208,24 +1240,28 @@ class TextProject(Project):
     def run_benchmark(
         self,
         config: dict,
-        node: DedicatedGPUNodeValues,
-        model_name: str,
-        config_name: Optional[str] = None,
+        config_name: str,
+        pod: Optional[str] = None,
+        model_name: Optional[str] = None,
     ) -> dict:
-        """Start a benchmark run using lm-eval. Returns an event_id for polling.
+        """Start a benchmark run using lm-eval. Waits and returns run_id, event_id, status, and existing_run.
 
         :param config: dict with task, num_fewshot, limit, etc.
-        :param node: GPU node type (e.g., "xlargeT4", "xlargeA10G")
+        :param pod: CPU custom server name from the compute registry.
         :param model_name: Model name registered in the project
-        :param config_name: Optional label for the run. Defaults to task name.
-        :return: API response with event_id for polling
+        :param config_name: Required label for the run.
+        :return: dict with run_id, event_id, status, and existing_run
         """
+        if not model_name:
+            raise ValueError("model_name is required")
+        if not isinstance(config_name, str) or not config_name.strip():
+            raise ValueError("config_name is required")
         payload = {
             **config,
             "model_name": model_name,
             "project_name": self.project_name,
             "compute": {
-                "node": node
+                "pod": pod
             }
         }
         if config_name:
@@ -1245,7 +1281,7 @@ class TextProject(Project):
         self,
         config_name: str,
         model_name: str,
-        pod: str,
+        pod: Optional[str] = None,
     ) -> dict:
         """Run a new model on the latest benchmark run for a config_name.
 
@@ -1254,8 +1290,8 @@ class TextProject(Project):
 
         :param config_name: Config name to re-run. The latest run under this config is used as source.
         :param model_name: New model name to run.
-        :param pod: Compute node type (GPU server).
-        :return: dict with event_id from the new benchmark.
+        :param pod: CPU custom server name from the compute registry.
+        :return: dict with run_id, event_id, status, and existing_run.
         """
         payload = {
             "project_name": self.project_name,
@@ -1266,6 +1302,8 @@ class TextProject(Project):
         res = self.api_client.post(f"{BENCHMARKS_URI}/add-model", payload=payload)
         if not res["success"]:
             raise Exception(res.get("details"))
+        if res.get("details", {}).get("existing_run", False):
+            return res
         poll_events(
             api_client=self.api_client,
             project_name=self.project_name,
@@ -1282,6 +1320,8 @@ class TextProject(Project):
         extract_with: Optional[str] = None,
         execution_mode: Optional[str] = None,
         adapter: Optional[str] = None,
+        adapter_params: Optional[dict] = None,
+        run_config: Optional[dict] = None,
     ) -> dict:
         """Re-run an eval with different scorers and/or a different model.
 
@@ -1299,6 +1339,7 @@ class TextProject(Project):
         :param extract_with: Optional extract_with value.
         :param execution_mode: Override execution_mode ("precomputed" | "generate").
         :param adapter: Override adapter name.
+        :param workspace_name: Optional workspace scope for the source run.
         :return: dict with run_id from the new evaluation.
         """
         payload: Dict[str, Any] = {
@@ -1318,7 +1359,10 @@ class TextProject(Project):
             payload["execution_mode"] = execution_mode
         if adapter is not None:
             payload["adapter"] = adapter
-
+        if adapter_params is not None:
+            payload["adapter_params"] = adapter_params
+        if run_config is not None:
+            payload["run_config"] = run_config
         res = self.api_client.post(EVALS_REJUDGE_URI, payload=payload)
         if not res["success"]:
             raise Exception(res.get("details"))
@@ -1339,7 +1383,7 @@ class TextProject(Project):
         :param config_name: Config name to re-run. The latest run under this config is used as source.
         :param model_name: New model name (str) or list of model names.
         :param pod: Compute pod type.
-        :return: dict with event_id from the new evaluation.
+        :return: dict with run_id, event_id, status, and existing_run.
         """
         payload: Dict[str, Any] = {
             "project_name": self.project_name,
@@ -1350,6 +1394,8 @@ class TextProject(Project):
         res = self.api_client.post(EVALS_ADD_MODEL_URI, payload=payload)
         if not res["success"]:
             raise Exception(res.get("details"))
+        if res.get("details", {}).get("existing_run", False):
+            return res
         poll_events(
             api_client=self.api_client,
             project_name=self.project_name,
@@ -1397,18 +1443,15 @@ class TextProject(Project):
             raise Exception(res.get("details"))
         return pd.DataFrame(res.get("details"))
 
-    def delete_eval_config(self, config_id: str, delete_runs: bool = False) -> dict:
-        """Delete a saved eval configuration.
+    def stop_eval_run(self, run_id: str) -> dict:
+        """Stop evaluation run.
 
-        :param config_id: The ID of the config to delete.
-        :param delete_runs: If True, also delete all runs under this config.
-        :return: dict confirming deletion.
+        :param run_id: The unique identifier of the run to stop.
+        :return: dict with confirmation of the stop action.
         """
-        res = self.api_client.delete(
-            f"{EVALS_CONFIGS_URI}/{config_id}"
-            f"?project_name={self.project_name}&delete_runs={str(delete_runs).lower()}")
+        res = self.api_client.post(STOP_EVENT_URI, payload={"event_id": run_id})
         if not res["success"]:
-            raise Exception(res.get("details"))
+            raise Exception(res.get("details", "Failed to stop the training job"))
         return res.get("details")
 
     def validate_eval_config(
@@ -1456,10 +1499,11 @@ class TextProject(Project):
             raise Exception(res.get("details"))
         return res.get("details")
 
-    def list_runs(self, config_name: Optional[str] = None) -> pd.DataFrame:
+    def list_runs(self, config_name: Optional[str] = None, include_stuck: bool = False) -> pd.DataFrame:
         """Return a DataFrame listing all evaluation runs for this project.
 
         :param config_name: Optional filter — only return runs with this config_name label.
+        :param include_stuck: Include pending/running rows without fingerprints (also includes active jobs).
         :return: a DataFrame containing run summaries (run_id, config_name, model_spec, headline, etc.)
         """
         params = f"project_name={self.project_name}"
@@ -1468,7 +1512,10 @@ class TextProject(Project):
         res = self.api_client.get(f"{RUNS_URI}?{params}")
         if not res["success"]:
             raise Exception(res.get("details"))
-        return pd.DataFrame(res.get("details"))
+        rows = res.get("details") or []
+        if not include_stuck:
+            rows = [r for r in rows if not (r.get("status") == "running" and not r.get("fingerprint"))]
+        return pd.DataFrame(rows)
 
     def get_all_evaluations(self) -> pd.DataFrame:
         """Return a DataFrame of unique config_names with run metadata.
@@ -1512,13 +1559,20 @@ class TextProject(Project):
             raise Exception(res.get("details"))
         return res.get("details")
 
-    def get_run(self, run_id: str) -> dict:
-        """Return the full RunResult for a specific evaluation run.
+    def get_run(self, run_id: str, include_predictions: bool = True, full: bool = False, config_name: Optional[str] = None) -> dict:
+        """Get a run; full=True includes raw stats.values for AuditKit reconstruction.
 
-        :param run_id: The unique identifier of the run
-        :return: complete run result including stats, predictions, and metrics
+        include_predictions=False omits the answer rows. Supply config_name when
+        the same run content exists in multiple configurations.
         """
-        res = self.api_client.get(f"{RUNS_URI}/{run_id}?project_name={self.project_name}")
+        params = {
+            "project_name": self.project_name, 
+            "include_predictions": str(include_predictions).lower(),
+            "full": str(full).lower()
+        }
+        if config_name is not None:
+            params["config_name"] = config_name
+        res = self.api_client.get(f"{RUNS_URI}/{run_id}?{urlencode(params)}")
         if not res["success"]:
             raise Exception(res.get("details"))
         return res.get("details")
