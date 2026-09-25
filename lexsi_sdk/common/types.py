@@ -280,6 +280,8 @@ class DataConfig(TypedDict):
     unique_identifier: Optional[str]
     true_label: Optional[str]
     pred_label: Optional[str]
+    support_set_mechanism: Optional[str]
+    max_support_rows: Optional[int]
 
 
 class XGBoostParams(TypedDict, total=False):
@@ -736,6 +738,17 @@ class DistillationConfig(TypedDict):
     adaptive_temperature: Optional[bool] = None
     confidence_weighting: Optional[bool] = None
     student_params: Optional[dict] = None
+
+class  LeaderboardConfig(TypedDict):
+    """
+    Configuration for leaderboard evaluation.
+
+    :param rank_by: The metric by which to rank models.
+    :type rank_by: str
+
+    """
+
+    rank_by: Optional[str] = None
 
 class SyntheticDataConfig(TypedDict):
     """
