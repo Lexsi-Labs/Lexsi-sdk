@@ -1166,10 +1166,15 @@ class TextProject(Project):
         choices_column: Optional[str] = None,
         retrieval_context_column: Optional[str] = None,
         task_column: Optional[str] = None,
-        adapter_file: Optional[str] = None,
-        annotator_file: Optional[str] = None,
-        custom_adapter_name: Optional[str] = None,
-        custom_annotator_name: Optional[str] = None,
+        adapter_file: Optional[Union[str, List[str]]] = None,
+        annotator_file: Optional[Union[str, List[str]]] = None,
+        custom_adapter_name: Optional[Union[str, List[str]]] = None,
+        custom_annotator_name: Optional[Union[str, List[str]]] = None,
+        adapter_files: Optional[Dict[str, str]] = None,
+        annotator_files: Optional[Dict[str, str]] = None,
+        scorer_file: Optional[Union[str, List[str]]] = None,
+        custom_scorer_name: Optional[Union[str, List[str]]] = None,
+        scorer_files: Optional[Dict[str, str]] = None,
     ) -> dict:
         """Start an evaluation run. Waits and returns run_id, event_id, status, and existing_run.
 
@@ -1179,20 +1184,47 @@ class TextProject(Project):
             a list of results.
         :param pod: The pod type for evaluation
         :param samples: Optional list of sample dictionaries for evaluation
-        :param adapter_file: Optional local Python file path for an adapter component.
-        :param annotator_file: Optional local Python file path for an annotator component.
-        :param custom_adapter_name: Name of the adapter declared by adapter_file.
-        :param custom_annotator_name: Name of the annotator declared by annotator_file.
+        :param adapter_files: Map registered adapter names to local Python file paths.
+            Uploaded custom adapters run separately when adapter is omitted or "custom".
+            Use config["adapters"] for per-custom-adapter params; built-in adapter stays single.
+        :param annotator_files: Map annotator names to Python paths. Set names and
+            per-annotator params in config["annotators"].
+        :param adapter_file: A local Python path or list of paths, paired with custom_adapter_name.
+        :param annotator_file: A local Python path or list of paths, paired with custom_annotator_name.
+        :param custom_adapter_name: Adapter name or list of names, in the same order as adapter_file.
+        :param custom_annotator_name: Annotator name or list of names, in the same order as annotator_file.
+        :param scorer_file: Python file or list of files defining AuditKit metrics or decorated scorers.
+        :param custom_scorer_name: Scorer name or matching ordered list of names.
+        :param scorer_files: Alternative map of scorer names to local Python paths.
         :return: dict with run_id, event_id, status, and existing_run
         """
         if not isinstance(config.get("config_name"), str) or not config["config_name"].strip():
             raise ValueError("config_name is required")
         from pathlib import Path
         payload = {**config, "compute": {"pod": pod}, "project_name": self.project_name}
-        if adapter_file:
-            payload["custom_adapter_name"] = custom_adapter_name or Path(adapter_file).stem
-        if annotator_file:
-            payload["custom_annotator_name"] = custom_annotator_name or Path(annotator_file).stem
+        component_uploads = []
+        for field, paths, name_key, names in (
+            ("adapter_file", adapter_file, "custom_adapter_name", custom_adapter_name),
+            ("annotator_file", annotator_file, "custom_annotator_name", custom_annotator_name),
+            ("scorer_file", scorer_file, "custom_scorer_name", custom_scorer_name),
+        ):
+            if paths is None:
+                if names is not None:
+                    raise ValueError(f"{name_key} requires {field}")
+                continue
+            paths = paths if isinstance(paths, list) else [paths]
+            if not paths:
+                raise ValueError(f"{field} must not be empty")
+            names = ([Path(path).stem for path in paths] if names is None
+                     else names if isinstance(names, list) else [names])
+            if len(names) != len(paths):
+                raise ValueError(f"{name_key} and {field} must have the same length")
+            if any(not isinstance(name, str) or not name.strip() for name in names):
+                raise ValueError(f"{name_key} must contain non-empty names")
+            if len(set(names)) != len(names):
+                raise ValueError(f"{name_key} must contain unique names")
+            payload[name_key] = names if len(names) > 1 else names[0]
+            component_uploads.extend((field, path) for path in paths)
         if samples is not None:
             payload["samples"] = samples
         if tag:
@@ -1210,20 +1242,26 @@ class TextProject(Project):
         if task_column:
             payload["task_column"] = task_column
 
-        file_paths = {
-            field: path
-            for field, path in (("adapter_file", adapter_file), ("annotator_file", annotator_file))
-            if path is not None
-        }
+        file_paths = {}
 
-        if file_paths:
+        for key, paths in (("adapter_files", adapter_files), ("annotator_files", annotator_files), ("scorer_files", scorer_files)):
+            if paths:
+                payload[key] = {}
+                for index, (name, path) in enumerate(paths.items()):
+                    field = f"{key}_{index}"
+                    payload[key][name] = field
+                    file_paths[field] = path
+
+        if file_paths or component_uploads:
             from contextlib import ExitStack
             if "data" in file_paths:
                 raise ValueError("data is reserved for the JSON configuration")
             with ExitStack() as stack:
-                files = {"data": (None, json.dumps(payload))}
-                for field, path in file_paths.items():
-                    files[field] = (Path(path).name, stack.enter_context(open(path, "rb")), "text/x-python")
+                files = [("data", (None, json.dumps(payload)))]
+                for field, path in [*component_uploads, *file_paths.items()]:
+                    files.append((field, (Path(path).name, stack.enter_context(open(path, "rb")), "text/x-python")))
+                if len({field for field, _ in files}) == len(files):
+                    files = dict(files)
                 res = self.api_client.file(EVALS_RUN_URI, files)
         else:
             res = self.api_client.post(EVALS_RUN_URI, payload=payload)
@@ -1246,7 +1284,9 @@ class TextProject(Project):
     ) -> dict:
         """Start a benchmark run using lm-eval. Waits and returns run_id, event_id, status, and existing_run.
 
-        :param config: dict with task, num_fewshot, limit, etc.
+        :param config: dict with task, num_fewshot, limit, etc. task accepts a
+            string or list of benchmark names. The backend executes each task
+            sequentially using the same parameters and stores separate results.
         :param pod: CPU custom server name from the compute registry.
         :param model_name: Model name registered in the project
         :param config_name: Required label for the run.
