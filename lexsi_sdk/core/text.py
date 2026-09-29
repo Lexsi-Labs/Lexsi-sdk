@@ -61,6 +61,9 @@ from lexsi_sdk.common.xai_uris import (
     COMPARE_URI,
     BENCHMARKS_URI,
     BENCHMARKS_RUN_URI,
+    EVALS_RUN_ALL_URI,
+    EVALS_SETTINGS_URI,
+    BENCHMARKS_RUN_ALL_URI,
 )
 from lexsi_sdk.core.project import Project
 import pandas as pd
@@ -1349,6 +1352,53 @@ class TextProject(Project):
             project_name=self.project_name,
             event_id=res.get("details", {}).get("event_id"),
         )
+
+    def update_config_settings(
+        self,
+        config: dict,
+        pod: Optional[str] = None,
+        samples: Optional[List[Dict[str, Any]]] = None,
+    ) -> dict:
+        """Update supplied settings and rerun; omitted fields retain saved values."""
+        if not isinstance(config.get("config_name"), str) or not config["config_name"].strip():
+            raise ValueError("config_name is required")
+        if pod is not None and (not isinstance(pod, str) or not pod.strip() or pod.strip().lower() == "local"):
+            raise ValueError("pod must be a valid compute node; local is not supported")
+        payload = {**config, "project_name": self.project_name}
+        if pod is not None:
+            payload["compute"] = {"pod": pod}
+        if samples is not None:
+            payload["samples"] = samples
+        res = self.api_client.put(EVALS_SETTINGS_URI, payload=payload)
+        if not res["success"]:
+            raise Exception(res.get("details"))
+        runs = (res.get("details") or {}).get("runs", [])
+        if runs:
+            event_id = (runs[-1].get("details") or {}).get("event_id")
+            if event_id:
+                poll_events(api_client=self.api_client, project_name=self.project_name, event_id=event_id)
+
+    def run_all(self, config_name: str, pod: str, run_type: Optional[str] = None) -> dict:
+        """Rerun all saved runs and poll the last submitted event; the API detects the type."""
+        if not isinstance(pod, str) or not pod.strip() or pod.strip().lower() == "local":
+            raise ValueError("pod must be a valid compute node; local is not supported")
+        if run_type is None:
+            run_type = "eval"  # The API resolves the saved config type.
+        if run_type not in {"eval", "benchmark"}:
+            raise ValueError("run_type must be 'eval' or 'benchmark'")
+        uri = EVALS_RUN_ALL_URI if run_type == "eval" else BENCHMARKS_RUN_ALL_URI
+        res = self.api_client.post(uri, payload={
+            "project_name": self.project_name,
+            "config_name": config_name,
+            "compute": {"pod": pod},
+        })
+        if not res["success"]:
+            raise Exception(res.get("details"))
+        runs = (res.get("details") or {}).get("runs", [])
+        if runs:
+            event_id = (runs[-1].get("details") or {}).get("event_id")
+            if event_id:
+                poll_events(api_client=self.api_client, project_name=self.project_name, event_id=event_id)
 
     def rejudge(
         self,
