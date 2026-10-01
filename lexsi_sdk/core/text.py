@@ -1320,39 +1320,6 @@ class TextProject(Project):
             event_id=res.get("details", {}).get("event_id"),
         )
 
-    def add_model_for_benchmark(
-        self,
-        config_name: str,
-        model_name: str,
-        pod: Optional[str] = None,
-    ) -> dict:
-        """Run a new model on the latest benchmark run for a config_name.
-
-        Calls ``POST /benchmarks/add-model``. Fetches the source run's task,
-        num_fewshot, and limit, then launches a fresh benchmark with the new model.
-
-        :param config_name: Config name to re-run. The latest run under this config is used as source.
-        :param model_name: New model name to run.
-        :param pod: CPU custom server name from the compute registry.
-        :return: dict with run_id, event_id, status, and existing_run.
-        """
-        payload = {
-            "project_name": self.project_name,
-            "config_name": config_name,
-            "model_name": model_name,
-            "pod": pod,
-        }
-        res = self.api_client.post(f"{BENCHMARKS_URI}/add-model", payload=payload)
-        if not res["success"]:
-            raise Exception(res.get("details"))
-        if res.get("details", {}).get("existing_run", False):
-            return res
-        poll_events(
-            api_client=self.api_client,
-            project_name=self.project_name,
-            event_id=res.get("details", {}).get("event_id"),
-        )
-
     def update_config_settings(
         self,
         config: dict,
@@ -1378,7 +1345,7 @@ class TextProject(Project):
             if event_id:
                 poll_events(api_client=self.api_client, project_name=self.project_name, event_id=event_id)
 
-    def run_all(self, config_name: str, pod: str, run_type: Optional[str] = None) -> dict:
+    def rerun_config(self, config_name: str, pod: str, run_type: Optional[str] = None) -> dict:
         """Rerun all saved runs and poll the last submitted event; the API detects the type."""
         if not isinstance(pod, str) or not pod.strip() or pod.strip().lower() == "local":
             raise ValueError("pod must be a valid compute node; local is not supported")
@@ -1400,7 +1367,7 @@ class TextProject(Project):
             if event_id:
                 poll_events(api_client=self.api_client, project_name=self.project_name, event_id=event_id)
 
-    def rejudge(
+    def rejudge_config(
         self,
         config_name: str,
         scorers: list,
@@ -1464,7 +1431,7 @@ class TextProject(Project):
             event_id=res.get("details", {}).get("event_id"),
         )
 
-    def add_model(self, config_name: str, model_name: Union[str, List[str]], pod: str) -> dict:
+    def add_model_to_config(self, config_name: str, model_name: Union[str, List[str]], pod: str) -> dict:
         """'+ Add model' — run a new model on the latest run for a config_name.
 
         Calls ``POST /evals/add-model``. Fetches the source run's samples and
@@ -1492,38 +1459,7 @@ class TextProject(Project):
             event_id=res.get("details", {}).get("event_id"),
         )
 
-    def save_eval_config(self, name: str, spec: dict, kind: str = "dataset",
-                         config_id: Optional[str] = None) -> dict:
-        """Save or update an eval configuration.
-
-        :param name: Name for the saved setup.
-        :param spec: The full form state / run template dict.
-        :param kind: "dataset" or "benchmark".
-        :param config_id: If provided, update existing config; otherwise create new.
-        :return: dict with config_id.
-        """
-        payload = {"project_name": self.project_name, "name": name, "kind": kind, "spec": spec}
-        if config_id:
-            res = self.api_client.put(f"{EVALS_CONFIGS_URI}/{config_id}", payload=payload)
-        else:
-            res = self.api_client.post(EVALS_CONFIGS_URI, payload=payload)
-        if not res["success"]:
-            raise Exception(res.get("details"))
-        return res.get("details")
-
-    def get_eval_config(self, config_id: str) -> dict:
-        """Retrieve a saved eval configuration by ID.
-
-        :param config_id: The ID of the saved EvalConfig.
-        :return: dict with config details including the spec.
-        """
-        res = self.api_client.get(
-            f"{EVALS_CONFIGS_URI}/{config_id}?project_name={self.project_name}")
-        if not res["success"]:
-            raise Exception(res.get("details"))
-        return res.get("details")
-
-    def list_eval_configs(self) -> pd.DataFrame:
+    def list_evals(self) -> pd.DataFrame:
         """List all saved eval configurations for this project.
 
         :return: DataFrame of saved configs with run counts.
