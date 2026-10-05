@@ -1525,7 +1525,7 @@ class TextProject(Project):
             raise Exception(res.get("details"))
         return res.get("details")
 
-    def list_runs(self, config_name: Optional[str] = None, include_stuck: bool = False) -> pd.DataFrame:
+    def list_runs(self, config_name: str, include_stuck: bool = False) -> pd.DataFrame:
         """Return a DataFrame listing all evaluation runs for this project.
 
         :param config_name: Optional filter — only return runs with this config_name label.
@@ -1585,7 +1585,7 @@ class TextProject(Project):
             raise Exception(res.get("details"))
         return res.get("details")
 
-    def get_run(self, run_id: str, include_predictions: bool = True, full: bool = False, config_name: Optional[str] = None) -> dict:
+    def get_run(self, run_id: str) -> dict:
         """Get a run; full=True includes raw stats.values for AuditKit reconstruction.
 
         include_predictions=False omits the answer rows. Supply config_name when
@@ -1593,11 +1593,9 @@ class TextProject(Project):
         """
         params = {
             "project_name": self.project_name, 
-            "include_predictions": str(include_predictions).lower(),
-            "full": str(full).lower()
+            "include_predictions": True,
+            "full": True
         }
-        if config_name is not None:
-            params["config_name"] = config_name
         res = self.api_client.get(f"{RUNS_URI}/{run_id}?{urlencode(params)}")
         if not res["success"]:
             raise Exception(res.get("details"))
