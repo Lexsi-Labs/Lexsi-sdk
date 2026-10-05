@@ -1051,7 +1051,7 @@ class TextProject(Project):
         output_tag: Optional[str] = None,
         resume_from_task_id: Optional[str] = None,
         plot: bool = True,
-    ) -> dict:
+    ) -> None:
         """Run a CuratorKIT data-curation job on an AWS Batch CPU pod.
 
         Curation reads a source dataset (an uploaded Lexsi ``tag`` or a Hugging
@@ -1086,8 +1086,9 @@ class TextProject(Project):
             backend expects it.
         :param plot: When True (default), the job's live progress/metrics are
             plotted in notebook environments; when False, summaries are printed.
-        :return: response with curation details, including the ``event_id`` that
-            :meth:`curation_status` can re-attach to.
+        :return: None. The ``event_id`` is printed as soon as the job is
+            accepted (before the logs stream) and can be passed to
+            :meth:`curation_status` to re-attach later.
         """
         payload_config = dict(config)
         if output_tag:
@@ -1107,9 +1108,10 @@ class TextProject(Project):
         if not res["success"]:
             raise Exception(res.get("details", "Data Curation Failed"))
 
-        poll_events(self.api_client, self.project_name, res["event_id"], plot=plot)
+        event_id = res["event_id"]
+        print(f"event_id: {event_id}")
 
-        return res
+        poll_events(self.api_client, self.project_name, event_id, plot=plot)
 
     def list_curation_runs(self) -> pd.DataFrame:
         """List all curation runs for this project.
