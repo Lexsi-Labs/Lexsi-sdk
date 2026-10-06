@@ -1339,11 +1339,7 @@ class TextProject(Project):
         res = self.api_client.put(EVALS_SETTINGS_URI, payload=payload)
         if not res["success"]:
             raise Exception(res.get("details"))
-        runs = (res.get("details") or {}).get("runs", [])
-        if runs:
-            event_id = (runs[-1].get("details") or {}).get("event_id")
-            if event_id:
-                poll_events(api_client=self.api_client, project_name=self.project_name, event_id=event_id)
+        poll_events(api_client=self.api_client, project_name=self.project_name, event_id=res.get("details", {}).get("event_id"))
 
     def rerun_config(self, config_name: str, pod: str, run_type: Optional[str] = None) -> dict:
         """Rerun all saved runs and poll the last submitted event; the API detects the type."""
