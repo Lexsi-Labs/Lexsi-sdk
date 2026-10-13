@@ -213,6 +213,7 @@ RUN_CURATION_URI = f"{API_VERSION_V2}/ai-models/run_curation"
 LIST_CURATION_RUNS_URI = f"{API_VERSION_V2}/ai-models/curation_runs"
 PRUNING_MODEL_URI = f"{API_VERSION_V2}/ai-models/run_pruning_on_model"
 MODEL_LOGS_URI = f"{API_VERSION_V2}/ai-models/get_model_logs"
+LOGS_URI = f"{API_VERSION_V2}/ai-models/get_logs"
 
 GUARDRAILS_LIB = f"guardrails/library"
 GUARDRAILS_RUN = f"guardrails/run-parallel"
