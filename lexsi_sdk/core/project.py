@@ -232,12 +232,6 @@ class Project(BaseModel):
         }
         :return: response
         """
-        custom_servers = self.api_client.get(AVAILABLE_CUSTOM_SERVERS_URI)
-        Validate.value_against_list(
-            "server_type",
-            server_type,
-            [server["name"] for server in custom_servers],
-        )
 
         server_config = server_config or {}
         server_config["start"] = normalize_time(server_config.get("start"))
