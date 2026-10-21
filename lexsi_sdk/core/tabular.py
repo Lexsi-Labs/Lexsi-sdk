@@ -2297,7 +2297,8 @@ class TabularProject(Project):
 
     def model_inference(
         self,
-        pod: str,
+        compute_type: str,
+        region: Optional[str] = None,
         tag: Optional[str] = None,
         file_name: Optional[str] = None,
         model_name: Optional[str] = None,
@@ -2307,7 +2308,7 @@ class TabularProject(Project):
         :param tag: data tag for running inference
         :param file_name: data file name for running inference
         :param model_name: name of the model, defaults to active model for the project
-        :param pod: pod for running inference
+        :param compute_type: type of compute resource to use for inference
         :return: model inference dataframe
         :rtype: pd.DataFrame
         """
@@ -2357,11 +2358,13 @@ class TabularProject(Project):
             "project_name": self.project_name,
             "model_name": model,
             "tags": tag,
-            "instance_type": pod,
+            "instance_type": compute_type,
         }
         if filepath:
             run_model_payload["filepath"] = filepath
 
+        if region:
+            run_model_payload["region"] = region
         run_model_res = self.api_client.post(RUN_MODEL_ON_DATA_URI, run_model_payload)
 
         if not run_model_res["success"]:
@@ -2409,6 +2412,7 @@ class TabularProject(Project):
         training_strategy: str,
         model: Union[List[str], str],
         compute_type: str,
+        region: Optional[str] = None,
         data_config: Optional[DataConfig] = None,
         model_config: Optional[Union[XGBoostParams, LightGBMParams, CatBoostParams, RandomForestParams, FoundationalModelParams]] = None,
         tunning_config: Optional[TuningParams] = None,
@@ -2766,6 +2770,8 @@ class TabularProject(Project):
 
         if compute_type:
             payload["instance_type"] = compute_type
+        if region:
+            payload["region"] = region
 
         print("Config :-")
         print(json.dumps(payload["metadata"], indent=1))
