@@ -388,25 +388,46 @@ class TabularProject(Project):
             res = self.api_client.get(AVAILABLE_CUSTOM_SERVERS_URI)
             cpu_gpu_dict = split_cpu_gpu_servers(res)
             custom_gpu_servers = cpu_gpu_dict["gpu_servers"]            
-            if config.get("model_name") and config.get("model_name") in ["TabPFN","TabICL","TabDPT","OrionMSP", "OrionBix","Mitra", "ContextTab"] and not compute_type:
-                valid_list = [
-                    server["instance_name"]
-                    for server in custom_gpu_servers
-                ]
-                self.delete_file(uploaded_path)
-                raise Exception(f"For Foundational models compute_type is mandatory. select from \n {valid_list}")
-
-            if tunning_strategy != "inference" and compute_type and "gova" not in compute_type:
-                Validate.value_against_list(
-                    "pod",
-                    compute_type,
-                    [
+            if config.get("model_name") and config.get("model_name") in ["TabPFN","TabICL","TabDPT","OrionMSP", "OrionBix","Mitra", "ContextTab"]:
+                if not compute_type:
+                    valid_list = [
                         server["instance_name"]
                         for server in custom_gpu_servers
-                    ],
-                    lambda: self.delete_file(uploaded_path),
-                )
-
+                    ]
+                    self.delete_file(uploaded_path)
+                    raise Exception(f"For Foundational models compute_type is mandatory. select from \n {valid_list}")
+                elif tunning_strategy != "inference" and compute_type and "gova" not in compute_type:
+                    Validate.value_against_list(
+                        "pod",
+                        compute_type,
+                        [
+                            server["instance_name"]
+                            for server in custom_gpu_servers
+                        ],
+                        lambda: self.delete_file(uploaded_path),
+                    )
+            else:
+                custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
+                available_custom_batch_servers = custom_batch_servers.get("details", [])
+                
+                if not compute_type:
+                    valid_list = [
+                        server["instance_name"]
+                        for server in available_custom_batch_servers
+                    ]
+                    self.delete_file(uploaded_path)
+                    raise Exception(f"For Classic ML models compute_type is mandatory. select from \n {valid_list}")
+                else:
+                    self.delete_file(uploaded_path)
+                    Validate.value_against_list(
+                        "compute_type",
+                        compute_type,
+                        [
+                            server["instance_name"]
+                            for server in available_custom_batch_servers
+                        ],
+                        lambda: self.delete_file(uploaded_path),
+                    )
             payload = {
                 "project_name": self.project_name,
                 "unique_identifier": config["unique_identifier"],
@@ -683,26 +704,49 @@ class TabularProject(Project):
                     ["labelencode", "countencode", "onehotencode"],
                 )
 
-            custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
-            available_custom_batch_servers = custom_batch_servers.get("details", []) + custom_batch_servers.get("available_gpu_custom_servers", [])
-            
-            if config.get("model_name") and config.get("model_name") in ["TabPFN","TabICL","TabDPT","OrionMSP", "OrionBix","Mitra", "ContextTab"] and not compute_type:
-                valid_list = [
-                    server["instance_name"]
-                    for server in available_custom_batch_servers
-                ]
-                self.delete_file(uploaded_path)
-                raise Exception(f"For Foundational models compute_type is mandatory. select from \n {valid_list}")
-
-            if tunning_strategy != "inference" and compute_type and "gova" not in compute_type:
-                Validate.value_against_list(
-                    "pod",
-                    compute_type,
-                    [
+            res = self.api_client.get(AVAILABLE_CUSTOM_SERVERS_URI)
+            cpu_gpu_dict = split_cpu_gpu_servers(res)
+            custom_gpu_servers = cpu_gpu_dict["gpu_servers"]            
+            if config.get("model_name") and config.get("model_name") in ["TabPFN","TabICL","TabDPT","OrionMSP", "OrionBix","Mitra", "ContextTab"]:
+                if not compute_type:
+                    valid_list = [
+                        server["instance_name"]
+                        for server in custom_gpu_servers
+                    ]
+                    self.delete_file(uploaded_path)
+                    raise Exception(f"For Foundational models compute_type is mandatory. select from \n {valid_list}")
+                elif tunning_strategy != "inference" and compute_type and "gova" not in compute_type:
+                    Validate.value_against_list(
+                        "pod",
+                        compute_type,
+                        [
+                            server["instance_name"]
+                            for server in custom_gpu_servers
+                        ],
+                        lambda: self.delete_file(uploaded_path),
+                    )
+            else:
+                custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
+                available_custom_batch_servers = custom_batch_servers.get("details", [])
+                
+                if not compute_type:
+                    valid_list = [
                         server["instance_name"]
                         for server in available_custom_batch_servers
-                    ],
-                )
+                    ]
+                    self.delete_file(uploaded_path)
+                    raise Exception(f"For Classic ML models compute_type is mandatory. select from \n {valid_list}")
+                else:
+                    self.delete_file(uploaded_path)
+                    Validate.value_against_list(
+                        "compute_type",
+                        compute_type,
+                        [
+                            server["instance_name"]
+                            for server in available_custom_batch_servers
+                        ],
+                        lambda: self.delete_file(uploaded_path),
+                    )
 
             payload = {
                 "project_name": self.project_name,
