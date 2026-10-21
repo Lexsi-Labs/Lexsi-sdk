@@ -205,7 +205,8 @@ class TabularProject(Project):
         processor_config: Optional[ProcessorParams] = None,
         finetune_mode: Optional[str] = None,
         tunning_strategy: Optional[str] = None,
-        compute_type: Optional[str] = None
+        compute_type: Optional[str] = None,
+        region: Optional[str] = None
     ) -> str:
         """
         Upload dataset(s) to the project and triggers model training.
@@ -450,6 +451,8 @@ class TabularProject(Project):
                 payload["metadata"]["finetune_mode"] = finetune_mode
             if tunning_strategy:
                 payload["metadata"]["tunning_strategy"] = tunning_strategy
+            if region:
+                payload["region"] =region
             res = self.api_client.post(UPLOAD_DATA_WITH_CHECK_URI, payload)
 
             if not res["success"]:
