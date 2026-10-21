@@ -2409,6 +2409,7 @@ class TabularProject(Project):
         training_strategy: str,
         model: Union[List[str], str],
         compute_type: str,
+        region: Optional[str] = None,
         data_config: Optional[DataConfig] = None,
         model_config: Optional[Union[XGBoostParams, LightGBMParams, CatBoostParams, RandomForestParams, FoundationalModelParams]] = None,
         tunning_config: Optional[TuningParams] = None,
@@ -2766,6 +2767,8 @@ class TabularProject(Project):
 
         if compute_type:
             payload["instance_type"] = compute_type
+        if region:
+            payload["region"] = region
 
         print("Config :-")
         print(json.dumps(payload["metadata"], indent=1))
