@@ -388,7 +388,7 @@ class TabularProject(Project):
             res = self.api_client.get(AVAILABLE_CUSTOM_SERVERS_URI)
             cpu_gpu_dict = split_cpu_gpu_servers(res)
             custom_gpu_servers = cpu_gpu_dict["gpu_servers"]            
-            if config.get("model_name") and config.get("model_name") in ["TabPFN","TabICL","TabDPT","OrionMSP", "OrionBix","Mitra", "ContextTab"]:
+            if config.get("model_name") and config.get("model_name") in [ "TabPFN", "TabICL", "TabDPT", "OrionMSP", "OrionBix", "Mitra", "ContextTab", "TabPFNv26", "TabICLv2", "OrionMSPv1.5", "Limix", "TabPFNv3", "TabFM", "EXAONETabular", "ILTM", "XRFM"]:
                 if not compute_type:
                     valid_list = [
                         server["instance_name"]
@@ -403,8 +403,7 @@ class TabularProject(Project):
                         [
                             server["instance_name"]
                             for server in custom_gpu_servers
-                        ],
-                        lambda: self.delete_file(uploaded_path),
+                        ]
                     )
             else:
                 custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
@@ -425,8 +424,7 @@ class TabularProject(Project):
                         [
                             server["instance_name"]
                             for server in available_custom_batch_servers
-                        ],
-                        lambda: self.delete_file(uploaded_path),
+                        ]
                     )
             payload = {
                 "project_name": self.project_name,
@@ -723,8 +721,7 @@ class TabularProject(Project):
                         [
                             server["instance_name"]
                             for server in custom_gpu_servers
-                        ],
-                        lambda: self.delete_file(uploaded_path),
+                        ]
                     )
             else:
                 custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
