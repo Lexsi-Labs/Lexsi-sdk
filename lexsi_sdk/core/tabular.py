@@ -432,7 +432,6 @@ class TabularProject(Project):
                 "project_name": self.project_name,
                 "unique_identifier": config["unique_identifier"],
                 "true_label": config["true_label"],
-                "pred_label": config.get("pred_label"),
                 "metadata": {
                     "path": uploaded_path,
                     "tag": tag,
@@ -451,6 +450,8 @@ class TabularProject(Project):
                 "instance_type": compute_type,
                 "sample_percentage": config.get("sample_percentage", None),
             }
+            if config.get("pred_label"):
+                payload["pred_label"] = config.get("pred_label")
             if config.get("model"):
                 payload["metadata"]["model"] = config.get("model")
 
