@@ -13,7 +13,9 @@ class APIClient(BaseModel):
     base_url: str = ""
     access_token: str = ""
     auth_token: str = ""
-    headers: dict = {}
+    headers: dict = {
+        "Lexsi-Client": "Lexsi-SDK"
+    }
 
     def __init__(self, **kwargs):
         """Initialize the API client with provided configuration.
@@ -55,6 +57,7 @@ class APIClient(BaseModel):
         Encapsulates a small unit of SDK logic and returns the computed result."""
         self.set_auth_token(auth_token)
         self.headers = {
+            **self.headers,
             "Authorization": f"Bearer {self.auth_token}",
         }
 
