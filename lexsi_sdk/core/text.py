@@ -695,6 +695,7 @@ class TextProject(Project):
         quantization_type: str,
         qbit: int,
         node: str,
+        region: Optional[str] = None,
         tag: Optional[str] = None,
         input_column: Optional[str] = None,
         no_of_samples: Optional[int] = None,
@@ -746,6 +747,7 @@ class TextProject(Project):
             "quantization_type": quantization_type,
             "qbit": qbit,
             "instance_type": node,
+            "region": region,
             "tag": tag,
             "assets": assets,
             "max_seq_len": max_seq_len,
@@ -1031,6 +1033,7 @@ class TextProject(Project):
         self,
         model_name: str,
         node: DedicatedGPUNodeValues,
+        region: Optional[str] = None,
         assets: Optional[dict] = None,
         config: Optional[dict] = None,
         plot: bool = True,
@@ -1053,7 +1056,8 @@ class TextProject(Project):
             "assets": assets,
             "config": config,
             "compute": {
-                "node": node
+                "node": node,
+                "region": region
             }
         }
         res = self.api_client.post(FINETUNE_MODEL_URI, payload)
@@ -1295,6 +1299,7 @@ class TextProject(Project):
         self,
         model_name: str,
         node: DedicatedGPUNodeValues,
+        region: Optional[str] = None,
         assets: Optional[dict] = None,
         config: Optional[dict] = None,
     ):
@@ -1302,7 +1307,8 @@ class TextProject(Project):
             "project_name": self.project_name,
             "model_name": model_name,
             "assets": assets,
-            "instance_type": node
+            "instance_type": node,
+            "region": region
         }
         if config:
             payload.update({k: v for k, v in config.items() if v is not None})

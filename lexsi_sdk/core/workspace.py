@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from typing import Optional
 from lexsi_sdk.client.client import APIClient
 from lexsi_sdk.common.enums import UserRole
-from lexsi_sdk.common.types import CustomServerConfig
+from lexsi_sdk.common.types import CustomServerConfig, DeploymentConfig
 from lexsi_sdk.common.utils import normalize_time
 from lexsi_sdk.common.validation import Validate
 from lexsi_sdk.common.xai_uris import (
@@ -184,7 +184,8 @@ class Workspace(BaseModel):
         modality: str,
         project_type: Optional[str] = '',
         server_type: Optional[str] = None,
-        server_config: Optional[CustomServerConfig] = CustomServerConfig()
+        server_config: Optional[CustomServerConfig] = CustomServerConfig(),
+        deployment_config: Optional[DeploymentConfig] = DeploymentConfig(),
     ) -> Project:
         """Create a new project within the workspace. Requires project_name, modality (e.g., tabular, text, image), project_type (e.g., classification), and optional project_sub_type and server_type. Returns the created Project object.
 
@@ -221,18 +222,14 @@ class Workspace(BaseModel):
             payload["project_type"] = project_type
 
         if server_type:
-            custom_servers = self.api_client.get(AVAILABLE_CUSTOM_SERVERS_URI)
-            Validate.value_against_list(
-                "server_type",
-                server_type,
-                [server["name"] for server in custom_servers],
-            )
-
             payload["instance_type"] = server_type
             if server_config and server_config.get("start", None) and server_config.get("stop", None):
                 server_config["start"] = normalize_time(server_config.get("start"))
                 server_config["stop"] = normalize_time(server_config.get("stop"))
             payload["server_config"] = server_config if server_config else {}
+
+            if deployment_config:
+                payload["deployment_config"] = deployment_config 
 
         res = self.api_client.post(CREATE_PROJECT_URI, payload)
 
@@ -313,7 +310,12 @@ class Workspace(BaseModel):
 
         return res["message"]
 
-    def update_server(self, server_type: str, server_config: Optional[CustomServerConfig] = CustomServerConfig()) -> str:
+    def update_server(
+        self, 
+        server_type: str, 
+        server_config: Optional[CustomServerConfig] = CustomServerConfig(),
+        deployment_config: Optional[DeploymentConfig] = DeploymentConfig(),
+    ) -> str:
         """Change the compute instance type for the workspace by specifying a new server_type. Valid values depend on available custom servers.
         :param server_type: dedicated instance to run workloads
             for all available instances check lexsi.available_node_servers()
@@ -331,13 +333,6 @@ class Workspace(BaseModel):
         }
         :return: response
         """
-        custom_servers = self.api_client.get(AVAILABLE_CUSTOM_SERVERS_URI)
-        Validate.value_against_list(
-            "server_type",
-            server_type,
-            [server["name"] for server in custom_servers],
-        )
-
         server_config = server_config or {}
         server_config["start"] = normalize_time(server_config.get("start"))
         server_config["stop"] = normalize_time(server_config.get("stop"))
@@ -363,6 +358,7 @@ class Workspace(BaseModel):
                 "update_workspace": {
                     "workspace_name": self.user_workspace_name,
                     "instance_type": server_type,
+                    "deployment_config": deployment_config,
                 },
                 "update_operational_hours": server_config if server_config else {},
             },
