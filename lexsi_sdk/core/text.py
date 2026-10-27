@@ -8,7 +8,6 @@ from urllib.parse import urlencode
 import httpx
 from lexsi_sdk.common.types import BatchCPUInstanceType, DedicatedGPUNodeValues, InferenceCompute, InferenceSettings
 from pydantic import BaseModel
-from pydantic import BaseModel
 import plotly.graph_objects as go
 import base64
 from PIL import Image
@@ -51,7 +50,26 @@ from lexsi_sdk.common.xai_uris import (
     GUARDRAILS_APPLY_TO_MODEL,
     GUARDRAILS_RUN,
     GUARDRAILS_REMOVE_FROM_MODEL,
-
+    CATALOG_URI,
+    CATALOG_SCORERS_URI,
+    CATALOG_ADAPTERS_URI,
+    CATALOG_ANNOTATORS_URI,
+    CATALOG_GUARD_PROFILES_URI,
+    EVALS_RUN_URI,
+    EVALS_REJUDGE_URI,
+    EVALS_ADD_MODEL_URI,
+    EVALS_VALIDATE_URI,
+    EVALS_CONFIGS_URI,
+    EVALS_CONFIG_URI,
+    RUNS_URI,
+    RUNS_STATUS_URI,
+    RUNS_PREDICTIONS_URI,
+    COMPARE_URI,
+    BENCHMARKS_URI,
+    BENCHMARKS_RUN_URI,
+    EVALS_RUN_ALL_URI,
+    EVALS_SETTINGS_URI,
+    BENCHMARKS_RUN_ALL_URI,
 )
 from lexsi_sdk.core.project import Project
 import pandas as pd
@@ -1345,6 +1363,591 @@ class TextProject(Project):
         metrics = fetch_event_metrics(self.api_client, self.project_name, event_id, plot=plot)
         if return_metrics:
             return metrics
+
+    def get_full_catalog(self) -> pd.DataFrame:
+        """Return the full catalog of scorers, adapters, annotators, and guard profiles.
+
+        :return: a DataFrame containing all catalog items with a 'type' column
+        """
+        res = self.api_client.get(CATALOG_URI)
+        if not res["success"]:
+            raise Exception(res.get("details"))
+        details = res.get("details", {})
+        dfs = [
+            pd.DataFrame(items).assign(type=cat_type)
+            for cat_type, items in details.items()
+            if isinstance(items, list) and items
+        ]
+        return pd.concat(dfs, ignore_index=True) if dfs else pd.DataFrame()
+
+    def get_scorers(self) -> pd.DataFrame:
+        """Return a DataFrame listing all registered scorers.
+
+        :return: a DataFrame containing scorer details
+        """
+        res = self.api_client.get(CATALOG_SCORERS_URI)
+        if not res["success"]:
+            raise Exception(res.get("details"))
+        return pd.DataFrame(res.get("details"))
+
+    def get_adapters(self) -> pd.DataFrame:
+        """Return a DataFrame listing all registered adapters.
+
+        :return: a DataFrame containing adapter details
+        """
+        res = self.api_client.get(CATALOG_ADAPTERS_URI)
+        if not res["success"]:
+            raise Exception(res.get("details"))
+        return pd.DataFrame(res.get("details"))
+
+    def get_annotators(self) -> pd.DataFrame:
+        """Return a DataFrame listing all registered annotators.
+
+        :return: a DataFrame containing annotator details
+        """
+        res = self.api_client.get(CATALOG_ANNOTATORS_URI)
+        if not res["success"]:
+            raise Exception(res.get("details"))
+        return pd.DataFrame(res.get("details"))
+
+    def get_guard_profiles(self) -> pd.DataFrame:
+        """Return a DataFrame listing all available guard profiles.
+
+        :return: a DataFrame containing guard profile details
+        """
+        res = self.api_client.get(CATALOG_GUARD_PROFILES_URI)
+        if not res["success"]:
+            raise Exception(res.get("details"))
+        return pd.DataFrame(res.get("details"))
+
+    def run_eval(
+        self,
+        config: dict,
+        pod: str,
+        samples: Optional[List[Dict[str, Any]]] = None,
+        tag: Optional[str] = None,
+        input_column: Optional[str] = None,
+        target_column: Optional[str] = None,
+        actual_output_column: Optional[str] = None,
+        choices_column: Optional[str] = None,
+        retrieval_context_column: Optional[str] = None,
+        task_column: Optional[str] = None,
+        adapter_file: Optional[Union[str, List[str]]] = None,
+        annotator_file: Optional[Union[str, List[str]]] = None,
+        custom_adapter_name: Optional[Union[str, List[str]]] = None,
+        custom_annotator_name: Optional[Union[str, List[str]]] = None,
+        adapter_files: Optional[Dict[str, str]] = None,
+        annotator_files: Optional[Dict[str, str]] = None,
+        scorer_file: Optional[Union[str, List[str]]] = None,
+        custom_scorer_name: Optional[Union[str, List[str]]] = None,
+        scorer_files: Optional[Dict[str, str]] = None,
+    ) -> dict:
+        """Start an evaluation run. Waits and returns run_id, event_id, status, and existing_run.
+
+        :param config: Evaluation configuration dictionary.
+            ``model_name`` may be a single string **or a list of strings** —
+            when a list is given the API creates one run per model and returns
+            a list of results.
+        :param pod: The pod type for evaluation
+        :param samples: Optional list of sample dictionaries for evaluation
+        :param adapter_files: Map registered adapter names to local Python file paths.
+            Uploaded custom adapters run separately when adapter is omitted or "custom".
+            Use config["adapters"] for per-custom-adapter params; built-in adapter stays single.
+        :param annotator_files: Map annotator names to Python paths. Set names and
+            per-annotator params in config["annotators"].
+        :param adapter_file: A local Python path or list of paths, paired with custom_adapter_name.
+        :param annotator_file: A local Python path or list of paths, paired with custom_annotator_name.
+        :param custom_adapter_name: Adapter name or list of names, in the same order as adapter_file.
+        :param custom_annotator_name: Annotator name or list of names, in the same order as annotator_file.
+        :param scorer_file: Python file or list of files defining AuditKit metrics or decorated scorers.
+        :param custom_scorer_name: Scorer name or matching ordered list of names.
+        :param scorer_files: Alternative map of scorer names to local Python paths.
+        :return: dict with run_id, event_id, status, and existing_run
+        """
+        if not isinstance(config.get("config_name"), str) or not config["config_name"].strip():
+            raise ValueError("config_name is required")
+        from pathlib import Path
+        payload = {**config, "compute": {"pod": pod}, "project_name": self.project_name}
+        component_uploads = []
+        for field, paths, name_key, names in (
+            ("adapter_file", adapter_file, "custom_adapter_name", custom_adapter_name),
+            ("annotator_file", annotator_file, "custom_annotator_name", custom_annotator_name),
+            ("scorer_file", scorer_file, "custom_scorer_name", custom_scorer_name),
+        ):
+            if paths is None:
+                if names is not None:
+                    raise ValueError(f"{name_key} requires {field}")
+                continue
+            paths = paths if isinstance(paths, list) else [paths]
+            if not paths:
+                raise ValueError(f"{field} must not be empty")
+            names = ([Path(path).stem for path in paths] if names is None
+                     else names if isinstance(names, list) else [names])
+            if len(names) != len(paths):
+                raise ValueError(f"{name_key} and {field} must have the same length")
+            if any(not isinstance(name, str) or not name.strip() for name in names):
+                raise ValueError(f"{name_key} must contain non-empty names")
+            if len(set(names)) != len(names):
+                raise ValueError(f"{name_key} must contain unique names")
+            payload[name_key] = names if len(names) > 1 else names[0]
+            component_uploads.extend((field, path) for path in paths)
+        if samples is not None:
+            payload["samples"] = samples
+        if tag:
+            payload["tag"] = tag
+        if input_column:
+            payload["input_column"] = input_column
+        if target_column:
+            payload["target_column"] = target_column
+        if actual_output_column:
+            payload["actual_output_column"] = actual_output_column
+        if choices_column:
+            payload["choices_column"] = choices_column
+        if retrieval_context_column:
+            payload["retrieval_context_column"] = retrieval_context_column
+        if task_column:
+            payload["task_column"] = task_column
+
+        file_paths = {}
+
+        for key, paths in (("adapter_files", adapter_files), ("annotator_files", annotator_files), ("scorer_files", scorer_files)):
+            if paths:
+                payload[key] = {}
+                for index, (name, path) in enumerate(paths.items()):
+                    field = f"{key}_{index}"
+                    payload[key][name] = field
+                    file_paths[field] = path
+
+        if file_paths or component_uploads:
+            from contextlib import ExitStack
+            if "data" in file_paths:
+                raise ValueError("data is reserved for the JSON configuration")
+            with ExitStack() as stack:
+                files = [("data", (None, json.dumps(payload)))]
+                for field, path in [*component_uploads, *file_paths.items()]:
+                    files.append((field, (Path(path).name, stack.enter_context(open(path, "rb")), "text/x-python")))
+                if len({field for field, _ in files}) == len(files):
+                    files = dict(files)
+                res = self.api_client.file(EVALS_RUN_URI, files)
+        else:
+            res = self.api_client.post(EVALS_RUN_URI, payload=payload)
+        if not res["success"]:
+            raise Exception(res.get("details"))
+        if res.get("details", {}).get("existing_run", False):
+            return res
+        poll_events(
+            api_client=self.api_client,
+            project_name=self.project_name,
+            event_id=res.get("details", {}).get("event_id"),
+        )
+
+    def run_benchmark(
+        self,
+        config: dict,
+        config_name: str,
+        pod: Optional[str] = None,
+        model_name: Optional[str] = None,
+    ) -> dict:
+        """Start a benchmark run using lm-eval. Waits and returns run_id, event_id, status, and existing_run.
+
+        :param config: dict with task, num_fewshot, limit, etc. task accepts a
+            string or list of benchmark names. The backend executes each task
+            sequentially using the same parameters and stores separate results.
+        :param pod: CPU custom server name from the compute registry.
+        :param model_name: Model name registered in the project
+        :param config_name: Required label for the run.
+        :return: dict with run_id, event_id, status, and existing_run
+        """
+        if not model_name:
+            raise ValueError("model_name is required")
+        if not isinstance(config_name, str) or not config_name.strip():
+            raise ValueError("config_name is required")
+        payload = {
+            **config,
+            "model_name": model_name,
+            "project_name": self.project_name,
+            "compute": {
+                "pod": pod
+            }
+        }
+        if config_name:
+            payload["config_name"] = config_name
+        res = self.api_client.post(BENCHMARKS_RUN_URI, payload=payload)
+        if not res["success"]:
+            raise Exception(res.get("details"))
+        if res.get("details", {}).get("existing_run", False):
+            return res
+        poll_events(
+            api_client=self.api_client,
+            project_name=self.project_name,
+            event_id=res.get("details", {}).get("event_id"),
+        )
+
+    def update_config_settings(
+        self,
+        config: dict,
+        pod: Optional[str] = None,
+        samples: Optional[List[Dict[str, Any]]] = None,
+    ) -> dict:
+        """Update supplied settings and rerun; omitted fields retain saved values."""
+        if not isinstance(config.get("config_name"), str) or not config["config_name"].strip():
+            raise ValueError("config_name is required")
+        if pod is not None and (not isinstance(pod, str) or not pod.strip() or pod.strip().lower() == "local"):
+            raise ValueError("pod must be a valid compute node; local is not supported")
+        payload = {**config, "project_name": self.project_name}
+        if pod is not None:
+            payload["compute"] = {"pod": pod}
+        if samples is not None:
+            payload["samples"] = samples
+        res = self.api_client.put(EVALS_SETTINGS_URI, payload=payload)
+        if not res["success"]:
+            raise Exception(res.get("details"))
+        poll_events(api_client=self.api_client, project_name=self.project_name, event_id=res.get("details", {}).get("event_id"))
+
+    def rerun_config(self, config_name: str, pod: str, run_type: Optional[str] = None) -> dict:
+        """Rerun all saved runs and poll the last submitted event; the API detects the type."""
+        if not isinstance(pod, str) or not pod.strip() or pod.strip().lower() == "local":
+            raise ValueError("pod must be a valid compute node; local is not supported")
+        if run_type is None:
+            run_type = "eval"  # The API resolves the saved config type.
+        if run_type not in {"eval", "benchmark"}:
+            raise ValueError("run_type must be 'eval' or 'benchmark'")
+        uri = EVALS_RUN_ALL_URI if run_type == "eval" else BENCHMARKS_RUN_ALL_URI
+        res = self.api_client.post(uri, payload={
+            "project_name": self.project_name,
+            "config_name": config_name,
+            "compute": {"pod": pod},
+        })
+        if not res["success"]:
+            raise Exception(res.get("details"))
+        runs = (res.get("details") or {}).get("runs", [])
+        if runs:
+            event_id = (runs[-1].get("details") or {}).get("event_id")
+            if event_id:
+                poll_events(api_client=self.api_client, project_name=self.project_name, event_id=event_id)
+
+    def rejudge_config(
+        self,
+        config_name: str,
+        scorers: list,
+        model_name: Optional[Union[str, List[str]]] = None,
+        pod: Optional[str] = None,
+        annotators: Optional[list] = None,
+        extract_with: Optional[str] = None,
+        execution_mode: Optional[str] = None,
+        adapter: Optional[str] = None,
+        adapter_params: Optional[dict] = None,
+        run_config: Optional[dict] = None,
+    ) -> dict:
+        """Re-run an eval with different scorers and/or a different model.
+
+        Calls ``POST /evals/rejudge``. Finds the latest run under the given
+        config_name, loads its predictions, and re-runs the evaluation pipeline
+        with the supplied scorers. When *model_name* is given the model-under-test
+        is replaced and outputs are regenerated; otherwise the original predictions
+        are re-scored in precomputed mode.
+
+        :param config_name: Config name to rejudge. The latest run under this config is used as source.
+        :param scorers: New list of scorer names/dicts (required).
+        :param model_name: Optional new model name (str) or list of model names.
+        :param pod: Compute pod override.
+        :param annotators: Optional new annotators list.
+        :param extract_with: Optional extract_with value.
+        :param execution_mode: Override execution_mode ("precomputed" | "generate").
+        :param adapter: Override adapter name.
+        :param workspace_name: Optional workspace scope for the source run.
+        :return: dict with run_id from the new evaluation.
+        """
+        payload: Dict[str, Any] = {
+            "project_name": self.project_name,
+            "config_name": config_name,
+            "scorers": scorers,
+        }
+        if model_name is not None:
+            payload["model_name"] = model_name
+        if pod:
+            payload["compute"] = {"pod": pod}
+        if annotators is not None:
+            payload["annotators"] = annotators
+        if extract_with is not None:
+            payload["extract_with"] = extract_with
+        if execution_mode is not None:
+            payload["execution_mode"] = execution_mode
+        if adapter is not None:
+            payload["adapter"] = adapter
+        if adapter_params is not None:
+            payload["adapter_params"] = adapter_params
+        if run_config is not None:
+            payload["run_config"] = run_config
+        res = self.api_client.post(EVALS_REJUDGE_URI, payload=payload)
+        if not res["success"]:
+            raise Exception(res.get("details"))
+        if res.get("details", {}).get("existing_run", False):
+            return res
+        poll_events(
+            api_client=self.api_client,
+            project_name=self.project_name,
+            event_id=res.get("details", {}).get("event_id"),
+        )
+
+    def add_model_to_config(self, config_name: str, model_name: Union[str, List[str]], pod: str) -> dict:
+        """'+ Add model' — run a new model on the latest run for a config_name.
+
+        Calls ``POST /evals/add-model``. Fetches the source run's samples and
+        config, then launches a fresh evaluation with the new model.
+
+        :param config_name: Config name to re-run. The latest run under this config is used as source.
+        :param model_name: New model name (str) or list of model names.
+        :param pod: Compute pod type.
+        :return: dict with run_id, event_id, status, and existing_run.
+        """
+        payload: Dict[str, Any] = {
+            "project_name": self.project_name,
+            "config_name": config_name,
+            "model_name": model_name,
+            "pod": pod,
+        }
+        res = self.api_client.post(EVALS_ADD_MODEL_URI, payload=payload)
+        if not res["success"]:
+            raise Exception(res.get("details"))
+        if res.get("details", {}).get("existing_run", False):
+            return res
+        poll_events(
+            api_client=self.api_client,
+            project_name=self.project_name,
+            event_id=res.get("details", {}).get("event_id"),
+        )
+
+    def list_evals(self) -> pd.DataFrame:
+        """List all saved eval configurations for this project.
+
+        :return: DataFrame of saved configs with run counts.
+        """
+        res = self.api_client.get(f"{EVALS_CONFIGS_URI}?project_name={self.project_name}")
+        if not res["success"]:
+            raise Exception(res.get("details"))
+        return pd.DataFrame(res.get("details"))
+
+    def stop_eval_run(self, run_id: str) -> dict:
+        """Stop evaluation run.
+
+        :param run_id: The unique identifier of the run to stop.
+        :return: dict with confirmation of the stop action.
+        """
+        res = self.api_client.post(STOP_EVENT_URI, payload={"event_id": run_id})
+        if not res["success"]:
+            raise Exception(res.get("details", "Failed to stop the training job"))
+        return res.get("details")
+
+    def validate_eval_config(
+        self,
+        config: dict,
+        samples: Optional[list] = [],
+        tag: Optional[str] = None,
+        input_column: Optional[str] = None,
+        target_column: Optional[str] = None,
+        actual_output_column: Optional[str] = None,
+        choices_column: Optional[str] = None,
+        retrieval_context_column: Optional[str] = None,
+        task_column: Optional[str] = None
+    ) -> dict:
+        """Validate an evaluation configuration without running it.
+
+        :param config: Evaluation configuration dictionary to validate
+        :param samples: List of sample dictionaries for validation
+        :param tag: Optional tag to associate with the evaluation
+        :param input_column: Optional input column name from the dataset
+        :param target_column: Optional target column name from the dataset
+        :param actual_output_column: Optional actual output column name from the dataset
+        :param choices_column: Optional choices column name from the dataset
+        :param retrieval_context_column: Optional retrieval context column name from the dataset
+        :param task_column: Optional task column name from the dataset
+        :return: validation results including warnings
+        """
+        payload = {**config, "project_name": self.project_name, "samples": samples}
+        if tag:
+            payload["tag"] = tag
+        if input_column:
+            payload["input_column"] = input_column
+        if target_column:
+            payload["target_column"] = target_column
+        if actual_output_column:
+            payload["actual_output_column"] = actual_output_column
+        if choices_column:
+            payload["choices_column"] = choices_column
+        if retrieval_context_column:
+            payload["retrieval_context_column"] = retrieval_context_column
+        if task_column:
+            payload["task_column"] = task_column
+        res = self.api_client.post(EVALS_VALIDATE_URI, payload=payload)
+        if not res["success"]:
+            raise Exception(res.get("details"))
+        return res.get("details")
+
+    def list_runs(self, config_name: str, include_stuck: bool = False) -> pd.DataFrame:
+        """Return a DataFrame listing all evaluation runs for this project.
+
+        :param config_name: Optional filter — only return runs with this config_name label.
+        :param include_stuck: Include pending/running rows without fingerprints (also includes active jobs).
+        :return: a DataFrame containing run summaries (run_id, config_name, model_spec, headline, etc.)
+        """
+        params = f"project_name={self.project_name}"
+        if config_name:
+            params += f"&config_name={config_name}"
+        res = self.api_client.get(f"{RUNS_URI}?{params}")
+        if not res["success"]:
+            raise Exception(res.get("details"))
+        rows = res.get("details") or []
+        if not include_stuck:
+            rows = [r for r in rows if not (r.get("status") == "running" and not r.get("fingerprint"))]
+        return pd.DataFrame(rows)
+
+    def get_all_evaluations(self) -> pd.DataFrame:
+        """Return a DataFrame of unique config_names with run metadata.
+
+        Covers both evals and benchmarks. Each row includes:
+        - config_name: the label
+        - type: "eval" or "benchmark"
+        - run_count: how many runs share this config_name
+        - latest_run_id: the most recent run_id
+        - latest_headline: headline metrics from the latest run
+        - latest_created_at: timestamp of the latest run
+
+        :return: DataFrame with one row per (config_name, type).
+        """
+        params = f"project_name={self.project_name}"
+        res = self.api_client.get(f"{RUNS_URI}/configs?{params}")
+        if not res["success"]:
+            raise Exception(res.get("details"))
+        return pd.DataFrame(res.get("details"))
+
+    def get_config(self, config_name: str) -> dict:
+        """Get the latest run for a given config_name.
+
+        :param config_name: The config name to fetch.
+        :return: dict with the latest run details.
+        """
+        params = f"project_name={self.project_name}&config_name={config_name}"
+        res = self.api_client.get(f"{EVALS_CONFIG_URI}?{params}")
+        if not res["success"]:
+            raise Exception(res.get("details"))
+        return res.get("details")
+
+    def get_run_status(self, event_id: str) -> dict:
+        """Poll the status of a long-running evaluation job.
+
+        :param event_id: The event ID returned by run_eval
+        :return: status information including progress and logs
+        """
+        res = self.api_client.get(f"{RUNS_STATUS_URI}/{event_id}")
+        if not res["success"]:
+            raise Exception(res.get("details"))
+        return res.get("details")
+
+    def get_run(self, run_id: str) -> dict:
+        """Get a run; full=True includes raw stats.values for AuditKit reconstruction.
+
+        include_predictions=False omits the answer rows. Supply config_name when
+        the same run content exists in multiple configurations.
+        """
+        params = {
+            "project_name": self.project_name, 
+            "include_predictions": True,
+            "full": True
+        }
+        res = self.api_client.get(f"{RUNS_URI}/{run_id}?{urlencode(params)}")
+        if not res["success"]:
+            raise Exception(res.get("details"))
+        return res.get("details")
+
+    def get_run_predictions(
+        self,
+        run_id: str,
+        correct: Optional[bool] = None,
+        offset: int = 0,
+        limit: int = 100,
+    ) -> dict:
+        """Return paginated predictions/answers for a specific run.
+
+        :param run_id: The unique identifier of the run
+        :param correct: Optional filter for correct/incorrect predictions
+        :param offset: Pagination offset
+        :param limit: Maximum number of predictions to return
+        :return: paginated predictions data
+        """
+        params = f"project_name={self.project_name}&offset={offset}&limit={limit}"
+        if correct is not None:
+            params += f"&correct={str(correct).lower()}"
+        res = self.api_client.get(f"{RUNS_URI}/{run_id}/predictions?{params}")
+        if not res["success"]:
+            raise Exception(res.get("details"))
+        return res.get("details")
+
+    def run_comparison(
+        self,
+        run_ids: list,
+        metric: Optional[str] = None,
+    ) -> dict:
+        """Compare multiple runs — pairwise or leaderboard.
+
+        All runs must share the same config_name. The config_name is auto-detected
+        from the runs and used to store the comparison.
+
+        - **2 run_ids**: returns pairwise comparison (deltas, grade, retention, significance).
+        - **3+ run_ids**: returns a leaderboard sorted by *metric* (or the first headline metric).
+
+        :param run_ids: List of run_ids to compare (at least 2).
+        :param metric: Optional metric name to sort the leaderboard by.
+        :return: comparison results or leaderboard.
+        """
+        if not run_ids or len(run_ids) < 2:
+            raise ValueError("At least 2 run_ids are required.")
+        payload = {
+            "project_name": self.project_name,
+            "run_ids": run_ids,
+        }
+        if metric:
+            payload["metric"] = metric
+        res = self.api_client.post(COMPARE_URI, payload=payload)
+        if not res["success"]:
+            raise Exception(res.get("details"))
+        return res.get("details")
+
+    def list_comparisons(self, config_name: Optional[str] = None) -> pd.DataFrame:
+        """Return a DataFrame listing all saved comparisons for this project.
+
+        :param config_name: Optional config_name to filter comparisons.
+        :return: a DataFrame containing comparison summaries with headline metrics.
+        """
+        params = f"project_name={self.project_name}"
+        if config_name:
+            params += f"&config_name={config_name}"
+        res = self.api_client.get(f"{COMPARE_URI}?{params}")
+        if not res["success"]:
+            raise Exception(res.get("details"))
+        return pd.DataFrame(res.get("details"))
+
+    def get_comparison(self, comparison_id: str) -> dict:
+        """Get full comparison result including leaderboard or pairwise deltas.
+
+        :param comparison_id: The comparison ID from run_comparison or list_comparisons.
+        :return: dict with full comparison result.
+        """
+        params = f"project_name={self.project_name}"
+        res = self.api_client.get(f"{COMPARE_URI}/{comparison_id}?{params}")
+        if not res["success"]:
+            raise Exception(res.get("details"))
+        return res.get("details")
+
+    def available_benchmarks(self) -> pd.DataFrame:
+        """Return a DataFrame listing all available benchmark tasks.
+
+        :return: a DataFrame containing benchmark task details
+        """
+        res = self.api_client.get(BENCHMARKS_URI)
+        if not res["success"]:
+            raise Exception(res.get("details"))
+        return pd.DataFrame(res.get("details"))
 
 
 class CaseText(BaseModel):
