@@ -1049,8 +1049,9 @@ class TextProject(Project):
         pod: BatchCPUInstanceType,
         models: Optional[dict] = None,
         output_tag: Optional[str] = None,
+        resume_from_task_id: Optional[str] = None,
         plot: bool = True,
-    ) -> dict:
+    ) -> None:
         """Run a CuratorKIT data-curation job on an AWS Batch CPU pod.
 
         Curation reads a source dataset (an uploaded Lexsi ``tag`` or a Hugging
@@ -1063,9 +1064,9 @@ class TextProject(Project):
             (``"tag"`` with ``config["tag"]``, or ``"huggingface"`` with
             ``config["hf_dataset"]``). Other common keys: ``generation_task``,
             ``dedup``, ``schema_gate``, ``hallucination_threshold``,
-            ``reward_threshold``, ``export_formats``, ``max_samples``,
-            ``enable_checkpoint``. Do not put API keys here — models are
-            resolved server-side from ``models``.
+            ``reward_threshold``, ``export_formats``, ``max_samples_input``,
+            ``max_samples_output``, ``enable_checkpoint``. Do not put API keys
+            here — models are resolved server-side from ``models``.
         :param pod: Batch CPU pod size for the job (e.g. ``"small"``,
             ``"medium"``, ``"large"``). Curation is orchestration + API calls,
             so a CPU pod is correct; LLM inference runs on the selected models'
@@ -1074,16 +1075,30 @@ class TextProject(Project):
             name, e.g. ``{"generator": "...", "judge": "...", "reward": "..."}``.
             The backend resolves each to its endpoint/key. Required when
             ``config["generation_task"]`` or any LLM gate is set.
-        :param output_tag: Tag for the curated output dataset. Auto-derived from
-            the source when omitted.
+        :param output_tag: Tag for the curated output dataset. Required; this
+            value is injected into the config (the API reads
+            ``config["output_tag"]``, no underscores allowed) and overrides any
+            ``output_tag`` already present in ``config``.
+        :param resume_from_task_id: Optional ``task_id`` of a previous failed or
+            stopped run to resume from its checkpoints. The source run must have
+            been started with ``enable_checkpoint``; source fields are locked to
+            the original run server-side. Injected into the config, where the
+            backend expects it.
         :param plot: When True (default), the job's live progress/metrics are
             plotted in notebook environments; when False, summaries are printed.
-        :return: response with curation details, including the ``event_id`` that
-            :meth:`curation_status` can re-attach to.
+        :return: None. The ``event_id`` is printed as soon as the job is
+            accepted (before the logs stream) and can be passed to
+            :meth:`curation_status` to re-attach later.
         """
+        payload_config = dict(config)
+        if output_tag:
+            payload_config["output_tag"] = output_tag
+        if resume_from_task_id:
+            payload_config["resume_from_task_id"] = str(resume_from_task_id)
+
         payload = {
             "project_name": self.project_name,
-            "config": config,
+            "config": payload_config,
             "models": models or {},
             "output_tag": output_tag,
             "instance_type": pod,
@@ -1093,9 +1108,10 @@ class TextProject(Project):
         if not res["success"]:
             raise Exception(res.get("details", "Data Curation Failed"))
 
-        poll_events(self.api_client, self.project_name, res["event_id"], plot=plot)
+        event_id = res["event_id"]
+        print(f"event_id: {event_id}")
 
-        return res
+        poll_events(self.api_client, self.project_name, event_id, plot=plot)
 
     def list_curation_runs(self) -> pd.DataFrame:
         """List all curation runs for this project.
