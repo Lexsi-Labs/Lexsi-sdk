@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 import io
 import json
 from typing import Dict, List, Optional, Union
+from urllib.parse import urlencode
 import httpx
 import pandas as pd
 from lexsi_sdk.core.alert import Alert
@@ -11,11 +12,11 @@ from lexsi_sdk.common.monitoring import BiasMonitoringPayload, DataDriftPayload,
 from lexsi_sdk.common.types import CatBoostParams, DataConfig, DistillationConfig, EnsembleConfg, FoundationalModelParams, InferenceCompute, LeaderboardConfig, LightGBMParams, PEFTParams, ProcessorParams, ProjectConfig, RandomForestParams, SyntheticDataConfig, SyntheticModelHyperParams, TuningParams, XGBoostParams
 from lexsi_sdk.common.utils import normalize_time, poll_events
 from lexsi_sdk.common.validation import Validate
-from lexsi_sdk.common.xai_uris import ALL_DATA_FILE_URI, AVAILABLE_BATCH_SERVERS_URI, AVAILABLE_SYNTHETIC_CUSTOM_SERVERS_URI, CASE_DTREE_URI, CASE_INFO_TEXT_URI, CASE_INFO_URI, CREATE_OBSERVATION_URI, CREATE_POLICY_URI, CREATE_SYNTHETIC_PROMPT_URI, DELETE_CASE_URI, DELETE_SYNTHETIC_MODEL_URI, DELETE_SYNTHETIC_TAG_URI, DOWNLOAD_DASHBOARD_LOGS_URI, DOWNLOAD_SYNTHETIC_DATA_URI, DOWNLOAD_TAG_DATA_URI, DUPLICATE_OBSERVATION_URI, DUPLICATE_POLICY_URI, GENERATE_DASHBOARD_URI, GET_CASES_URI, GET_DASHBOARD_SCORE_URI, GET_DATA_DIAGNOSIS_URI, GET_DATA_DRIFT_DIAGNOSIS_URI, GET_DATA_SUMMARY_URI, GET_FEATURE_IMPORTANCE_URI, GET_LABELS_URI, GET_MODELS_URI, GET_OBSERVATION_PARAMS_URI, GET_OBSERVATIONS_URI, GET_POLICIES_URI, GET_POLICY_PARAMS_URI, GET_PROJECT_CONFIG, GET_SYNTHETIC_DATA_TAGS_URI, GET_SYNTHETIC_MODEL_DETAILS_URI, GET_SYNTHETIC_MODEL_PARAMS_URI, GET_SYNTHETIC_MODELS_URI, GET_SYNTHETIC_PROMPT_URI, LIST_DATA_CONNECTORS, MODEL_INFERENCE_SETTINGS_URI, MODEL_INFERENCES_URI, MODEL_PARAMETERS_URI, MODEL_SUMMARY_URI, PROJECT_OVERVIEW_TEXT_URI, RUN_DATA_DRIFT_DIAGNOSIS_URI, RUN_MODEL_ON_DATA_URI, SEARCH_CASE_URI, TABULAR_ML, TEXT_MODEL_INFERENCE_SETTINGS_URI, TRAIN_MODEL_URI, TRAIN_SYNTHETIC_MODEL_URI, UPDATE_ACTIVE_INFERENCE_MODEL_URI, UPDATE_OBSERVATION_URI, UPDATE_POLICY_URI, UPDATE_SYNTHETIC_PROMPT_URI, UPLOAD_DATA_FILE_URI, UPLOAD_DATA_PROJECT_URI, UPLOAD_DATA_URI, UPLOAD_FILE_DATA_CONNECTORS, AVAILABLE_BATCH_SERVERS_URI, CREATE_TRIGGER_URI, DASHBOARD_LOGS_URI, DELETE_TRIGGER_URI, DUPLICATE_MONITORS_URI, EXECUTED_TRIGGER_URI, GENERATE_DASHBOARD_URI, GET_DASHBOARD_SCORE_URI, GET_DASHBOARD_URI, GET_EXECUTED_TRIGGER_INFO, GET_MODEL_TYPES_URI, GET_MODELS_URI, GET_MONITORS_ALERTS, GET_PROJECT_CONFIG, GET_TRIGGERS_URI, LIST_DATA_CONNECTORS, MODEL_PARAMETERS_URI, MODEL_PERFORMANCE_DASHBOARD_URI, UPLOAD_DATA_FILE_INFO_URI, UPLOAD_DATA_FILE_URI, UPLOAD_DATA_URI, UPLOAD_DATA_WITH_CHECK_URI, UPLOAD_FILE_DATA_CONNECTORS, UPLOAD_MODEL_URI, EXPLAINABILITY_SUMMARY, GET_TRIGGERS_DAYS_URI
+from lexsi_sdk.common.xai_uris import ALL_DATA_FILE_URI, AVAILABLE_BATCH_SERVERS_URI, AVAILABLE_CUSTOM_SERVERS_URI, AVAILABLE_SYNTHETIC_CUSTOM_SERVERS_URI, CASE_DTREE_URI, CASE_INFO_TEXT_URI, CASE_INFO_URI, CREATE_OBSERVATION_URI, CREATE_POLICY_URI, CREATE_SYNTHETIC_PROMPT_URI, DELETE_CASE_URI, DELETE_SYNTHETIC_MODEL_URI, DELETE_SYNTHETIC_TAG_URI, DOWNLOAD_DASHBOARD_LOGS_URI, DOWNLOAD_SYNTHETIC_DATA_URI, DOWNLOAD_TAG_DATA_URI, DUPLICATE_OBSERVATION_URI, DUPLICATE_POLICY_URI, GENERATE_DASHBOARD_URI, GET_CASES_URI, GET_DASHBOARD_SCORE_URI, GET_DATA_DIAGNOSIS_URI, GET_DATA_DRIFT_DIAGNOSIS_URI, GET_DATA_SUMMARY_URI, GET_FEATURE_IMPORTANCE_URI, GET_LABELS_URI, GET_MODELS_URI, GET_OBSERVATION_PARAMS_URI, GET_OBSERVATIONS_URI, GET_POLICIES_URI, GET_POLICY_PARAMS_URI, GET_PROJECT_CONFIG, GET_SYNTHETIC_DATA_TAGS_URI, GET_SYNTHETIC_MODEL_DETAILS_URI, GET_SYNTHETIC_MODEL_PARAMS_URI, GET_SYNTHETIC_MODELS_URI, GET_SYNTHETIC_PROMPT_URI, LIST_DATA_CONNECTORS, LOGS_URI, MODEL_INFERENCE_SETTINGS_URI, MODEL_INFERENCES_URI, MODEL_PARAMETERS_URI, MODEL_SUMMARY_URI, PROJECT_OVERVIEW_TEXT_URI, RUN_DATA_DRIFT_DIAGNOSIS_URI, RUN_MODEL_ON_DATA_URI, SEARCH_CASE_URI, TABULAR_ML, TEXT_MODEL_INFERENCE_SETTINGS_URI, TRAIN_MODEL_URI, TRAIN_SYNTHETIC_MODEL_URI, UPDATE_ACTIVE_INFERENCE_MODEL_URI, UPDATE_OBSERVATION_URI, UPDATE_POLICY_URI, UPDATE_SYNTHETIC_PROMPT_URI, UPLOAD_DATA_FILE_URI, UPLOAD_DATA_PROJECT_URI, UPLOAD_DATA_URI, UPLOAD_FILE_DATA_CONNECTORS, AVAILABLE_BATCH_SERVERS_URI, CREATE_TRIGGER_URI, DASHBOARD_LOGS_URI, DELETE_TRIGGER_URI, DUPLICATE_MONITORS_URI, EXECUTED_TRIGGER_URI, GENERATE_DASHBOARD_URI, GET_DASHBOARD_SCORE_URI, GET_DASHBOARD_URI, GET_EXECUTED_TRIGGER_INFO, GET_MODEL_TYPES_URI, GET_MODELS_URI, GET_MONITORS_ALERTS, GET_PROJECT_CONFIG, GET_TRIGGERS_URI, LIST_DATA_CONNECTORS, MODEL_PARAMETERS_URI, MODEL_PERFORMANCE_DASHBOARD_URI, UPLOAD_DATA_FILE_INFO_URI, UPLOAD_DATA_FILE_URI, UPLOAD_DATA_URI, UPLOAD_DATA_WITH_CHECK_URI, UPLOAD_FILE_DATA_CONNECTORS, UPLOAD_MODEL_URI, EXPLAINABILITY_SUMMARY, GET_TRIGGERS_DAYS_URI
 from lexsi_sdk.core.dashboard import DASHBOARD_TYPES, Dashboard
 from lexsi_sdk.core.project import Project, build_expression, generate_expression, validate_configuration
 from lexsi_sdk.core.synthetic import SyntheticDataTag, SyntheticModel, SyntheticPrompt
-from lexsi_sdk.core.utils import build_list_data_connector_url
+from lexsi_sdk.core.utils import build_list_data_connector_url, split_cpu_gpu_servers
 from pydantic import BaseModel, ConfigDict
 import plotly.graph_objects as go
 from IPython.display import SVG, display
@@ -204,7 +205,8 @@ class TabularProject(Project):
         processor_config: Optional[ProcessorParams] = None,
         finetune_mode: Optional[str] = None,
         tunning_strategy: Optional[str] = None,
-        compute_type: Optional[str] = None
+        compute_type: Optional[str] = None,
+        region: Optional[str] = None
     ) -> str:
         """
         Upload dataset(s) to the project and triggers model training.
@@ -383,32 +385,51 @@ class TabularProject(Project):
                     list(feature_encodings.values()),
                     ["labelencode", "countencode", "onehotencode"],
                 )
-            custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
-            available_custom_batch_servers = custom_batch_servers.get("details", []) + custom_batch_servers.get("available_gpu_custom_servers", [])
-            
-            if config.get("model_name") and config.get("model_name") in ["TabPFN","TabICL","TabDPT","OrionMSP", "OrionBix","Mitra", "ContextTab"] and not compute_type:
-                valid_list = [
-                    server["instance_name"]
-                    for server in available_custom_batch_servers
-                ]
-                self.delete_file(uploaded_path)
-                raise Exception(f"For Foundational models compute_type is mandatory. select from \n {valid_list}")
-
-            if tunning_strategy != "inference" and compute_type and "gova" not in compute_type:
-                Validate.value_against_list(
-                    "pod",
-                    compute_type,
-                    [
+            res = self.api_client.get(AVAILABLE_CUSTOM_SERVERS_URI)
+            cpu_gpu_dict = split_cpu_gpu_servers(res)
+            custom_gpu_servers = cpu_gpu_dict["gpu_servers"]            
+            if config.get("model_name") and config.get("model_name") in [ "TabPFN", "TabICL", "TabDPT", "OrionMSP", "OrionBix", "Mitra", "ContextTab", "TabPFNv26", "TabICLv2", "OrionMSPv1.5", "Limix", "TabPFNv3", "TabFM", "EXAONETabular", "ILTM", "XRFM"]:
+                if not compute_type:
+                    valid_list = [
+                        server["instance_name"]
+                        for server in custom_gpu_servers
+                    ]
+                    self.delete_file(uploaded_path)
+                    raise Exception(f"For Foundational models compute_type is mandatory. select from \n {valid_list}")
+                elif tunning_strategy != "inference" and compute_type and "gova" not in compute_type:
+                    Validate.value_against_list(
+                        "pod",
+                        compute_type,
+                        [
+                            server["instance_name"]
+                            for server in custom_gpu_servers
+                        ]
+                    )
+            else:
+                custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
+                available_custom_batch_servers = custom_batch_servers.get("details", [])
+                
+                if not compute_type:
+                    valid_list = [
                         server["instance_name"]
                         for server in available_custom_batch_servers
-                    ],
-                )
-
+                    ]
+                    self.delete_file(uploaded_path)
+                    raise Exception(f"For Classic ML models compute_type is mandatory. select from \n {valid_list}")
+                else:
+                    self.delete_file(uploaded_path)
+                    Validate.value_against_list(
+                        "compute_type",
+                        compute_type,
+                        [
+                            server["instance_name"]
+                            for server in available_custom_batch_servers
+                        ]
+                    )
             payload = {
                 "project_name": self.project_name,
                 "unique_identifier": config["unique_identifier"],
                 "true_label": config["true_label"],
-                "pred_label": config.get("pred_label"),
                 "metadata": {
                     "path": uploaded_path,
                     "tag": tag,
@@ -427,6 +448,8 @@ class TabularProject(Project):
                 "instance_type": compute_type,
                 "sample_percentage": config.get("sample_percentage", None),
             }
+            if config.get("pred_label"):
+                payload["pred_label"] = config.get("pred_label")
             if config.get("model"):
                 payload["metadata"]["model"] = config.get("model")
 
@@ -449,6 +472,8 @@ class TabularProject(Project):
                 payload["metadata"]["finetune_mode"] = finetune_mode
             if tunning_strategy:
                 payload["metadata"]["tunning_strategy"] = tunning_strategy
+            if region:
+                payload["region"] =region
             res = self.api_client.post(UPLOAD_DATA_WITH_CHECK_URI, payload)
 
             if not res["success"]:
@@ -678,26 +703,48 @@ class TabularProject(Project):
                     ["labelencode", "countencode", "onehotencode"],
                 )
 
-            custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
-            available_custom_batch_servers = custom_batch_servers.get("details", []) + custom_batch_servers.get("available_gpu_custom_servers", [])
-            
-            if config.get("model_name") and config.get("model_name") in ["TabPFN","TabICL","TabDPT","OrionMSP", "OrionBix","Mitra", "ContextTab"] and not compute_type:
-                valid_list = [
-                    server["instance_name"]
-                    for server in available_custom_batch_servers
-                ]
-                self.delete_file(uploaded_path)
-                raise Exception(f"For Foundational models compute_type is mandatory. select from \n {valid_list}")
-
-            if tunning_strategy != "inference" and compute_type and "gova" not in compute_type:
-                Validate.value_against_list(
-                    "pod",
-                    compute_type,
-                    [
+            res = self.api_client.get(AVAILABLE_CUSTOM_SERVERS_URI)
+            cpu_gpu_dict = split_cpu_gpu_servers(res)
+            custom_gpu_servers = cpu_gpu_dict["gpu_servers"]            
+            if config.get("model_name") and config.get("model_name") in ["TabPFN","TabICL","TabDPT","OrionMSP", "OrionBix","Mitra", "ContextTab"]:
+                if not compute_type:
+                    valid_list = [
+                        server["instance_name"]
+                        for server in custom_gpu_servers
+                    ]
+                    self.delete_file(uploaded_path)
+                    raise Exception(f"For Foundational models compute_type is mandatory. select from \n {valid_list}")
+                elif tunning_strategy != "inference" and compute_type and "gova" not in compute_type:
+                    Validate.value_against_list(
+                        "pod",
+                        compute_type,
+                        [
+                            server["instance_name"]
+                            for server in custom_gpu_servers
+                        ]
+                    )
+            else:
+                custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
+                available_custom_batch_servers = custom_batch_servers.get("details", [])
+                
+                if not compute_type:
+                    valid_list = [
                         server["instance_name"]
                         for server in available_custom_batch_servers
-                    ],
-                )
+                    ]
+                    self.delete_file(uploaded_path)
+                    raise Exception(f"For Classic ML models compute_type is mandatory. select from \n {valid_list}")
+                else:
+                    self.delete_file(uploaded_path)
+                    Validate.value_against_list(
+                        "compute_type",
+                        compute_type,
+                        [
+                            server["instance_name"]
+                            for server in available_custom_batch_servers
+                        ],
+                        lambda: self.delete_file(uploaded_path),
+                    )
 
             payload = {
                 "project_name": self.project_name,
@@ -2297,7 +2344,8 @@ class TabularProject(Project):
 
     def model_inference(
         self,
-        pod: str,
+        compute_type: str,
+        region: Optional[str] = None,
         tag: Optional[str] = None,
         file_name: Optional[str] = None,
         model_name: Optional[str] = None,
@@ -2307,7 +2355,7 @@ class TabularProject(Project):
         :param tag: data tag for running inference
         :param file_name: data file name for running inference
         :param model_name: name of the model, defaults to active model for the project
-        :param pod: pod for running inference
+        :param compute_type: type of compute resource to use for inference
         :return: model inference dataframe
         :rtype: pd.DataFrame
         """
@@ -2357,11 +2405,13 @@ class TabularProject(Project):
             "project_name": self.project_name,
             "model_name": model,
             "tags": tag,
-            "instance_type": pod,
+            "instance_type": compute_type,
         }
         if filepath:
             run_model_payload["filepath"] = filepath
 
+        if region:
+            run_model_payload["region"] = region
         run_model_res = self.api_client.post(RUN_MODEL_ON_DATA_URI, run_model_payload)
 
         if not run_model_res["success"]:
@@ -2409,6 +2459,7 @@ class TabularProject(Project):
         training_strategy: str,
         model: Union[List[str], str],
         compute_type: str,
+        region: Optional[str] = None,
         data_config: Optional[DataConfig] = None,
         model_config: Optional[Union[XGBoostParams, LightGBMParams, CatBoostParams, RandomForestParams, FoundationalModelParams]] = None,
         tunning_config: Optional[TuningParams] = None,
@@ -2766,6 +2817,8 @@ class TabularProject(Project):
 
         if compute_type:
             payload["instance_type"] = compute_type
+        if region:
+            payload["region"] = region
 
         print("Config :-")
         print(json.dumps(payload["metadata"], indent=1))
@@ -2778,8 +2831,31 @@ class TabularProject(Project):
         print("\nTraining Initiated")
         poll_events(self.api_client, self.project_name, res["event_id"])
 
-        return "Model Trained Successfully"
 
+    def logs(
+        self,
+        model_name: Optional[str] = None,
+        return_logs: Optional[bool] = False,
+    ) -> str | None:
+        """Fetch logs for model build.
+        :param model_name: Name of the model.
+        :param return_logs: When True, return the logs as a string. When False
+            (default), print them line by line.
+        :return: Logs as a string when ``return_logs`` is True, otherwise None.
+        """
+        params = {"project_name": self.project_name}
+        if model_name:
+            params["model_name"] = model_name
+        res = self.api_client.get(f"{LOGS_URI}?{urlencode(params)}")
+        if not res["success"]:
+            raise Exception(res.get("details", "Failed to fetch logs"))
+
+        details = res.get("details") or {}
+        logs = details.get("logs", "No logs found") if isinstance(details, dict) else str(details)
+        if return_logs:
+            return logs
+        for line in str(logs).split("\n"):
+            print(line)
 
     def cases(
         self,

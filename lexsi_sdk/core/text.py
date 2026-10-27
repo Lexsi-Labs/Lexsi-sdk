@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 import io
 from io import BytesIO
 from typing import Optional, List, Dict, Any, Union, Literal
+from urllib.parse import urlencode
 
 import httpx
 from lexsi_sdk.common.types import BatchCPUInstanceType, DedicatedGPUNodeValues, InferenceCompute, InferenceSettings
@@ -28,6 +29,7 @@ from lexsi_sdk.common.xai_uris import (
     GET_GUARDRAILS_URI,
     INITIALIZE_TEXT_MODEL_URI,
     LIST_DATA_CONNECTORS,
+    LOGS_URI,
     MESSAGES_URI,
     MODEL_LOGS_URI,
     PRUNING_MODEL_URI,
@@ -1230,6 +1232,47 @@ class TextProject(Project):
         for line in logs.split("\n"):
             print(line)
 
+    def logs(
+        self,
+        model_name: Optional[str] = None,
+        task_id: Optional[str] = None,
+        run_id: Optional[str] = None,
+        return_logs: Optional[bool] = False,
+    ) -> str | None:
+        """Fetch logs for any long-running text task from the monitoring_text service.
+
+        Pass the identifier you have — the task is fetched from the task queue
+        and inferred from it:
+
+        - ``pruning``, ``quantization``, ``finetuning`` → ``model_name``
+        - ``curation`` → ``task_id``
+        - ``evals``, ``benchmark`` → ``run_id`` (or the run's ``event_id``)
+
+        :param model_name: Name of the model (pruning/quantization/finetuning).
+        :param task_id: Curation task id.
+        :param run_id: Run id for evals/benchmark.
+        :param return_logs: When True, return the logs as a string. When False
+            (default), print them line by line.
+        :return: Logs as a string when ``return_logs`` is True, otherwise None.
+        """
+        params = {"project_name": self.project_name}
+        if model_name:
+            params["model_name"] = model_name
+        if task_id:
+            params["task_id"] = task_id
+        if run_id:
+            params["run_id"] = run_id
+        res = self.api_client.get(f"{LOGS_URI}?{urlencode(params)}")
+        if not res["success"]:
+            raise Exception(res.get("details", "Failed to fetch logs"))
+
+        details = res.get("details") or {}
+        logs = details.get("logs", "No logs found") if isinstance(details, dict) else str(details)
+        if return_logs:
+            return logs
+        for line in str(logs).split("\n"):
+            print(line)
+
     def prune_model(
         self,
         model_name: str,
@@ -1259,15 +1302,17 @@ class TextProject(Project):
         return_metrics: Optional[bool] = False,
         plot: bool = True,
     ) -> dict | None:
-        """Fetch and plot the system and model metrics for a finetuned model.
+        """Fetch and plot the system and model metrics for a model.
 
-        Mirrors :meth:`model_logs` but for metrics: it locates the finetuning
-        event for ``model_name`` and replays its metrics from the ``events/poll``
-        stream (the same source used for live metrics during training), then
-        renders the system and model metric charts — one subplot per metric — in
-        a notebook, or prints the final values otherwise.
+        Mirrors :meth:`model_logs` but for metrics: it locates the model's job
+        event (fine-tuning, quantization or pruning — inferred from the task
+        queue via ``model_name``) and replays its metrics from the
+        ``events/poll`` stream (the same source used for live metrics during
+        training), then renders the system and model metric charts — one
+        subplot per metric — in a notebook, or prints the final values
+        otherwise.
 
-        :param model_name: Name of the finetuned model to retrieve metrics for.
+        :param model_name: Name of the finetuned/quantized/pruned model to retrieve metrics for.
         :param return_metrics: When True, return the metrics dict for
             programmatic use. Defaults to False so notebooks show only the charts
             instead of also echoing the raw series.
@@ -1279,10 +1324,10 @@ class TextProject(Project):
         """
         res = self.api_client.post(
             FETCH_EVENTS,
-            {"project_name": self.project_name, "task_name": ["fine_tune_model"]},
+            {"project_name": self.project_name, "model_name": model_name},
         )
         if not res["success"]:
-            raise Exception(res.get("details", "Failed to fetch finetuning events"))
+            raise Exception(res.get("details", "Failed to fetch model events"))
 
         # Events come back newest-first; match the finetuning event for this model.
         event_id = next(
@@ -1295,7 +1340,7 @@ class TextProject(Project):
             None,
         )
         if not event_id:
-            raise Exception(f"No finetuning event found for model '{model_name}'")
+            raise Exception(f"No training event found for model '{model_name}'")
 
         metrics = fetch_event_metrics(self.api_client, self.project_name, event_id, plot=plot)
         if return_metrics:
