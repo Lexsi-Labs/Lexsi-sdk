@@ -1790,11 +1790,10 @@ class TextProject(Project):
             raise Exception(res.get("details"))
         return res.get("details")
 
-    def list_runs(self, config_name: str, include_stuck: bool = False) -> pd.DataFrame:
+    def list_runs(self, config_name: str) -> pd.DataFrame:
         """Return a DataFrame listing all evaluation runs for this project.
 
         :param config_name: Optional filter — only return runs with this config_name label.
-        :param include_stuck: Include pending/running rows without fingerprints (also includes active jobs).
         :return: a DataFrame containing run summaries (run_id, config_name, model_spec, headline, etc.)
         """
         params = f"project_name={self.project_name}"
@@ -1804,8 +1803,6 @@ class TextProject(Project):
         if not res["success"]:
             raise Exception(res.get("details"))
         rows = res.get("details") or []
-        if not include_stuck and rows:
-            rows = [r for r in rows if not (r.get("status") == "running" and not r.get("fingerprint"))]
         return pd.DataFrame(rows)
 
     def get_all_evaluations(self) -> pd.DataFrame:
