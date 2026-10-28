@@ -1804,7 +1804,7 @@ class TextProject(Project):
         if not res["success"]:
             raise Exception(res.get("details"))
         rows = res.get("details") or []
-        if not include_stuck:
+        if not include_stuck and rows:
             rows = [r for r in rows if not (r.get("status") == "running" and not r.get("fingerprint"))]
         return pd.DataFrame(rows)
 
