@@ -1724,12 +1724,12 @@ class TextProject(Project):
             event_id=res.get("details", {}).get("event_id"),
         )
 
-    def list_evals(self) -> pd.DataFrame:
+    def list_evals(self, page: Optional[int] = 1) -> pd.DataFrame:
         """List all saved eval configurations for this project.
-
+        :param page: Optional page number for pagination.
         :return: DataFrame of saved configs with run counts.
         """
-        res = self.api_client.get(f"{EVALS_CONFIGS_URI}?project_name={self.project_name}")
+        res = self.api_client.get(f"{EVALS_CONFIGS_URI}?project_name={self.project_name}&page={page}")
         if not res["success"]:
             raise Exception(res.get("details"))
         return pd.DataFrame(res.get("details"))
@@ -1790,13 +1790,14 @@ class TextProject(Project):
             raise Exception(res.get("details"))
         return res.get("details")
 
-    def list_runs(self, config_name: str) -> pd.DataFrame:
+    def list_runs(self, config_name: str, page: Optional[int] = 1) -> pd.DataFrame:
         """Return a DataFrame listing all evaluation runs for this project.
 
-        :param config_name: Optional filter — only return runs with this config_name label.
+        :param config_name: only return runs with this config_name label.
+        :param page: Optional page number for pagination.   
         :return: a DataFrame containing run summaries (run_id, config_name, model_spec, headline, etc.)
         """
-        params = f"project_name={self.project_name}"
+        params = f"project_name={self.project_name}&page={page}"
         if config_name:
             params += f"&config_name={config_name}"
         res = self.api_client.get(f"{RUNS_URI}?{params}")
