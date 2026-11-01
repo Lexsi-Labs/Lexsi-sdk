@@ -8,6 +8,7 @@ from lexsi_sdk.core.project import Project
 from openinference.instrumentation.langchain import get_current_span
 from opentelemetry import trace
 from langchain_core.messages import AIMessage
+import langchain_core.runnables.config  # noqa: F401  get_current_span() raises without it
 from .guard_template import Guard
 
 

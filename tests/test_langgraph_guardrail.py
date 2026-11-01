@@ -4,7 +4,6 @@ import pytest
 
 pytest.importorskip("langchain_core")
 
-import langchain_core.runnables.config  # noqa: F401  every LangGraph run loads it, get_current_span() needs it
 from langchain_core.messages import AIMessage, HumanMessage
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor
