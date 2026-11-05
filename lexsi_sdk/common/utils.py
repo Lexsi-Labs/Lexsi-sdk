@@ -86,6 +86,23 @@ def _normalize_metrics(metrics: dict) -> dict:
     }
 
 
+def raise_with_cleanup(primary: BaseException, cleanup: Optional[Callable] = None) -> None:
+    """Raise ``primary`` after running optional ``cleanup``.
+
+    If ``cleanup`` fails, attach that error via exception chaining so the
+    original ``primary`` failure is not lost (issue #2160).
+
+    :param primary: The error that must reach the caller.
+    :param cleanup: Optional best-effort cleanup (e.g. delete uploaded file).
+    """
+    try:
+        if cleanup is not None:
+            cleanup()
+    except Exception as cleanup_err:
+        raise primary from cleanup_err
+    raise primary
+
+
 def poll_events(
     api_client: APIClient,
     project_name: str,
@@ -189,9 +206,10 @@ def poll_events(
                 print(f"{progress_message}: {progress}%")
             # display(HTML(f"<progress style='width:100%' value='{progress}' max='100'></progress>"))
         if details.get("status") in ("failed", "terminated"):
+            primary = Exception(details.get("message"))
             if handle_failed_event:
-                handle_failed_event()
-            raise Exception(details.get("message"))
+                raise_with_cleanup(primary, handle_failed_event)
+            raise primary
 
 
 def _emit_metric_rows(label: str, metrics: dict, x_label: str, last_x):

@@ -12,7 +12,7 @@ import plotly.graph_objects as go
 import base64
 from PIL import Image
 from lexsi_sdk.common.types import InferenceCompute, InferenceSettings
-from lexsi_sdk.common.utils import fetch_event_metrics, normalize_time, poll_events
+from lexsi_sdk.common.utils import fetch_event_metrics, normalize_time, poll_events, raise_with_cleanup
 from lexsi_sdk.common.xai_uris import (
     AVAILABLE_GUARDRAILS_URI,
     CONFIGURE_GUARDRAILS_URI,
@@ -592,8 +592,10 @@ class TextProject(Project):
         res = self.api_client.post(UPLOAD_DATA_URI, payload)
 
         if not res["success"]:
-            self.delete_file(uploaded_path)
-            raise Exception(res.get("details"))
+            raise_with_cleanup(
+                Exception(res.get("details")),
+                lambda: self.delete_file(uploaded_path),
+            )
 
         return res.get("details")
 
@@ -683,8 +685,10 @@ class TextProject(Project):
         res = self.api_client.post(UPLOAD_DATA_URI, payload)
 
         if not res["success"]:
-            self.delete_file(uploaded_path)
-            raise Exception(res.get("details"))
+            raise_with_cleanup(
+                Exception(res.get("details")),
+                lambda: self.delete_file(uploaded_path),
+            )
 
         return res.get("details")
 
