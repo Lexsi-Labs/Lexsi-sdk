@@ -103,6 +103,22 @@ def raise_with_cleanup(primary: BaseException, cleanup: Optional[Callable] = Non
     raise primary
 
 
+def extract_uploaded_path(res: dict) -> str:
+    """Return ``metadata.filepath`` from a successful file-step response.
+
+    Raises a clear error when the response has no usable path instead of
+    failing later with AttributeError/TypeError (issue #2161).
+
+    :param res: File-step response body.
+    :return: Server-side filepath.
+    """
+    metadata = res.get("metadata") if isinstance(res, dict) else None
+    path = metadata.get("filepath") if isinstance(metadata, dict) else None
+    if not path:
+        raise Exception("File upload step returned no file path")
+    return path
+
+
 def poll_events(
     api_client: APIClient,
     project_name: str,
