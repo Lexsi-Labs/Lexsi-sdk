@@ -356,6 +356,8 @@ class Project(BaseModel):
         :return: current active model dataframe
         """
         staged_models_df = self.models()
+        if type(staged_models_df) == str:
+            return staged_models_df
         active_model = staged_models_df[staged_models_df["status"] == "active"]
         return active_model
 
@@ -382,10 +384,10 @@ class Project(BaseModel):
         :return: Dataframe with details of all models
         """
         res = self.api_client.get(f"{GET_MODELS_URI}?project_name={self.project_name}")
-
         if not res["success"]:
             raise Exception(res["details"])
-
+        if not res.get("details") or not res["details"].get("staged"):
+            return "No models found for the project."
         staged_models = res["details"]["staged"]
 
         staged_models_df = pd.DataFrame(staged_models)

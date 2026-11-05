@@ -4,7 +4,7 @@ import io
 import json
 from typing import Dict, List, Union, Optional
 import httpx
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, StrictBool, validate_call
 import pandas as pd
 import plotly.graph_objects as go
 from lexsi_sdk.common.constants import MODEL_PERF_DASHBOARD_REQUIRED_FIELDS, MODEL_TYPES
@@ -540,7 +540,8 @@ class ImageProject(Project):
             lambda: self.delete_file(uploaded_path),
         )
 
-    def update_inference_model_status(self, model_name: str, activate: bool) -> str:
+    @validate_call
+    def update_inference_model_status(self, model_name: str, activate: StrictBool) -> str:
         """Sets the provided model to active for inferencing
 
         :param model_name: name of the model

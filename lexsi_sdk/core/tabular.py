@@ -17,7 +17,7 @@ from lexsi_sdk.core.dashboard import DASHBOARD_TYPES, Dashboard
 from lexsi_sdk.core.project import Project, build_expression, generate_expression, validate_configuration
 from lexsi_sdk.core.synthetic import SyntheticDataTag, SyntheticModel, SyntheticPrompt
 from lexsi_sdk.core.utils import build_list_data_connector_url, split_cpu_gpu_servers
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, StrictBool, validate_call
 import plotly.graph_objects as go
 from IPython.display import SVG, display
 from lexsi_sdk.client.client import APIClient
@@ -2344,7 +2344,7 @@ class TabularProject(Project):
 
     def model_inference(
         self,
-        compute_type: str,
+        pod: str,
         region: Optional[str] = None,
         tag: Optional[str] = None,
         file_name: Optional[str] = None,
@@ -2355,7 +2355,7 @@ class TabularProject(Project):
         :param tag: data tag for running inference
         :param file_name: data file name for running inference
         :param model_name: name of the model, defaults to active model for the project
-        :param compute_type: type of compute resource to use for inference
+        :param pod: type of pod resource to use for inference
         :return: model inference dataframe
         :rtype: pd.DataFrame
         """
@@ -2405,7 +2405,7 @@ class TabularProject(Project):
             "project_name": self.project_name,
             "model_name": model,
             "tags": tag,
-            "instance_type": compute_type,
+            "instance_type": pod,
         }
         if filepath:
             run_model_payload["filepath"] = filepath
@@ -3039,7 +3039,9 @@ class TabularProject(Project):
 
         return available_models
 
-    def update_inference_model_status(self, model_name: str, activate: bool) -> str:
+
+    @validate_call
+    def update_inference_model_status(self, model_name: str, activate: StrictBool) -> str:
         """Sets the provided model to active for inferencing
 
         :param model_name: name of the model

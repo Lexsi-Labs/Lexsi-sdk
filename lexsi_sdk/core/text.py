@@ -7,7 +7,7 @@ from urllib.parse import urlencode
 
 import httpx
 from lexsi_sdk.common.types import BatchCPUInstanceType, DedicatedGPUNodeValues, InferenceCompute, InferenceSettings
-from pydantic import BaseModel
+from pydantic import BaseModel, StrictBool, validate_call
 import plotly.graph_objects as go
 import base64
 from PIL import Image
@@ -960,8 +960,9 @@ class TextProject(Project):
         if not res.get("success"):
             raise Exception(res.get("details"))
         return res
-    
-    def update_inference_model_status(self, model_name: str, activate: bool) -> str:
+
+    @validate_call
+    def update_inference_model_status(self, model_name: str, activate: StrictBool) -> str:
         """Sets the provided model to active for inferencing
 
         :param model_name: name of the model
@@ -970,6 +971,7 @@ class TextProject(Project):
                      - False: Deactivates the model inference.
         :return: response
         """
+        print(type(activate))
         payload = {
             "project_name": self.project_name,
             "model_name": model_name,
@@ -1727,12 +1729,38 @@ class TextProject(Project):
     def list_evals(self, page: Optional[int] = 1) -> pd.DataFrame:
         """List all saved eval configurations for this project.
         :param page: Optional page number for pagination.
-        :return: DataFrame of saved configs with run counts.
+        :return: DataFrame of saved configs with run counts and pagination info.
         """
         res = self.api_client.get(f"{EVALS_CONFIGS_URI}?project_name={self.project_name}&page={page}")
         if not res["success"]:
             raise Exception(res.get("details"))
-        return pd.DataFrame(res.get("details"))
+
+        details = res.get("details")
+        if isinstance(details, dict):
+            configs = details.get("configs") or []
+            curr_page = details.get("page", page)
+            total_page = details.get("total_page", details.get("total_pages"))
+        elif isinstance(details, list):
+            configs = details
+            curr_page = page
+            total_page = 1
+        else:
+            configs = []
+            curr_page = page
+            total_page = None
+
+        rows = []
+        for cfg in configs:
+            if isinstance(cfg, dict):
+                rows.append({
+                    "page": curr_page,
+                    "total_page": total_page,
+                    "config_name": cfg.get("config_name"),
+                    "type": cfg.get("type"),
+                    "config": cfg,
+                })
+
+        return pd.DataFrame(rows, columns=["page", "total_page", "config_name", "type", "config"])
 
     def stop_eval_run(self, run_id: str) -> dict:
         """Stop evaluation run.
@@ -1803,8 +1831,32 @@ class TextProject(Project):
         res = self.api_client.get(f"{RUNS_URI}?{params}")
         if not res["success"]:
             raise Exception(res.get("details"))
-        rows = res.get("details") or []
-        return pd.DataFrame(rows)
+
+        details = res.get("details")
+        if isinstance(details, dict):
+            runs = details.get("runs") or []
+            curr_page = details.get("page", page)
+            total_page = details.get("total_page", details.get("total_pages"))
+        elif isinstance(details, list):
+            runs = details
+            curr_page = page
+            total_page = 1
+        else:
+            runs = []
+            curr_page = page
+            total_page = None
+
+        rows = []
+        for run in runs:
+            if isinstance(run, dict):
+                rows.append({
+                    "page": curr_page,
+                    "total_page": total_page,
+                    "run_id": run.get("run_id"),
+                    "run_details": run,
+                })
+
+        return pd.DataFrame(rows, columns=["page", "total_page", "run_id", "run_details"])
 
     def get_all_evaluations(self) -> pd.DataFrame:
         """Return a DataFrame of unique config_names with run metadata.
