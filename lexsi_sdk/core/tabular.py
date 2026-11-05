@@ -1436,7 +1436,8 @@ class TabularProject(Project):
         raw_data = self.api_client.get(
             f"{MODEL_PERFORMANCE_DASHBOARD_URI}{raw_data_query_params}"
         )
-
+        if not raw_data.get("success"):
+            raise Exception(raw_data.get("details", "Failed to get model performance data"))
         return Dashboard(
             config={},
             query_params=dashboard_query_params,
