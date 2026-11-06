@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "lexsi-sdk"
 description = "Full stack ML Observability with Lexsi.ai"
 readme = "readme.md"
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 dynamic = ["version", "dependencies"]  # 👈 version comes ONLY from setuptools-scm
 
 authors = [
