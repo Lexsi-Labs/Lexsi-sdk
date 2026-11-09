@@ -2,7 +2,7 @@ import pandas as pd
 from pydantic import BaseModel
 from typing import Dict, List, Literal, Optional , Any
 from lexsi_sdk.client.client import APIClient
-from lexsi_sdk.common.utils import normalize_time
+from lexsi_sdk.common.utils import normalize_schedule_times, normalize_time
 from lexsi_sdk.common.validation import Validate
 from lexsi_sdk.common.xai_uris import (
     AVAILABLE_CUSTOM_SERVERS_URI,
@@ -196,8 +196,11 @@ class Organization(BaseModel):
         if server_type:
             payload["instance_type"] = server_type
             if server_config and server_config.get("start", None) and server_config.get("stop", None):
-                server_config["start"] = normalize_time(server_config.get("start"))
-                server_config["stop"] = normalize_time(server_config.get("stop"))
+                server_config = {
+                    **server_config,
+                    "start": normalize_time(server_config["start"]),
+                    "stop": normalize_time(server_config["stop"]),
+                }
             payload["server_config"] = server_config if server_config else {}
 
             if deployment_config:

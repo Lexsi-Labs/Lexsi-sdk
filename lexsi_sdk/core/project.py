@@ -15,7 +15,7 @@ from lexsi_sdk.common.types import (
 )
 from lexsi_sdk.common.utils import (
     fetch_submitted_training_config,
-    normalize_time,
+    normalize_schedule_times,
     parse_datetime,
     parse_float,
     poll_events,
@@ -59,7 +59,6 @@ from lexsi_sdk.common.xai_uris import (
 import io
 from lexsi_sdk.core.alert import Alert
 from lexsi_sdk.core.dashboard import DASHBOARD_TYPES, Dashboard
-from datetime import datetime, timedelta
 from lexsi_sdk.core.model_summary import ModelSummary
 from lexsi_sdk.core.utils import build_url, build_list_data_connector_url
 
@@ -233,24 +232,8 @@ class Project(BaseModel):
         :return: response
         """
 
-        server_config = server_config or {}
-        server_config["start"] = normalize_time(server_config.get("start"))
-        server_config["stop"] = normalize_time(server_config.get("stop"))
-        if server_config["start"] and not server_config["stop"]:
-            raise ValueError("If start is provided, stop cannot be None.")
+        server_config = normalize_schedule_times(server_config)
 
-        if server_config["stop"] and not server_config["start"]:
-            raise ValueError("If stop is provided, start cannot be None.")
-
-        if server_config["start"] and server_config["stop"]:
-            start_dt = datetime.fromisoformat(server_config["start"])
-            stop_dt = datetime.fromisoformat(server_config["stop"])
-
-            if stop_dt - start_dt < timedelta(minutes=15):
-                raise ValueError("Stop time must be at least 15 minutes greater than start time.")
-
-            if not server_config.get("op_hours") and server_config.get("auto_start"):
-                server_config["op_hours"] = True
         payload = {
             "project_name": self.project_name,
             "modify_req": {

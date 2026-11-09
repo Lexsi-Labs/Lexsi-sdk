@@ -372,7 +372,12 @@ def normalize_time(
     if isinstance(value, str):
         match = TIME_RE.match(value)
         if not match:
-            raise ValueError("Time must be HH:MM, HH:MM±HH:MM, or HH:MMZ")
+            try:
+                return datetime.fromisoformat(value).isoformat()
+            except ValueError:
+                raise ValueError(
+                    "Time must be HH:MM, HH:MM±HH:MM, HH:MMZ, or an ISO timestamp"
+                )
 
         hour = int(match.group("h"))
         minute = int(match.group("m"))
@@ -393,3 +398,35 @@ def normalize_time(
         return dt.isoformat()
 
     raise ValueError("Invalid time value")
+
+
+def normalize_schedule_times(server_config: Optional[dict]) -> dict:
+    """Return a copy of the schedule dictionary with ``start``/``stop``
+    normalized and validated. The caller's dictionary is never modified, so a
+    stored schedule can safely be passed again (e.g. to retry after a dropped
+    connection).
+
+    :param server_config: schedule dictionary with optional ``start`` and ``stop``
+    :return: a new dictionary with normalized ``start``/``stop``
+    """
+    config = dict(server_config) if server_config else {}
+    config["start"] = normalize_time(config.get("start"))
+    config["stop"] = normalize_time(config.get("stop"))
+
+    if config["start"] and not config["stop"]:
+        raise ValueError("If start is provided, stop cannot be None.")
+
+    if config["stop"] and not config["start"]:
+        raise ValueError("If stop is provided, start cannot be None.")
+
+    if config["start"] and config["stop"]:
+        start_dt = datetime.fromisoformat(config["start"])
+        stop_dt = datetime.fromisoformat(config["stop"])
+
+        if stop_dt - start_dt < timedelta(minutes=15):
+            raise ValueError("Stop time must be at least 15 minutes greater than start time.")
+
+        if not config.get("op_hours") and config.get("auto_start"):
+            config["op_hours"] = True
+
+    return config

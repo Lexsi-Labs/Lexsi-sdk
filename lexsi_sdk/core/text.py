@@ -12,7 +12,7 @@ import plotly.graph_objects as go
 import base64
 from PIL import Image
 from lexsi_sdk.common.types import InferenceCompute, InferenceSettings
-from lexsi_sdk.common.utils import fetch_event_metrics, normalize_time, poll_events
+from lexsi_sdk.common.utils import fetch_event_metrics, normalize_schedule_times, poll_events
 from lexsi_sdk.common.xai_uris import (
     AVAILABLE_GUARDRAILS_URI,
     CONFIGURE_GUARDRAILS_URI,
@@ -361,24 +361,8 @@ class TextProject(Project):
             data["source_project_name"] = source_project["project_name"]
         if inference_compute:
             if inference_compute.get("custom_server_config", {}):
-                server_config = inference_compute.get("custom_server_config", {})
-                server_config["start"] = normalize_time(server_config.get("start"))
-                server_config["stop"] = normalize_time(server_config.get("stop"))
-                if server_config["start"] and not server_config["stop"]:
-                    raise ValueError("If start is provided, stop cannot be None.")
-
-                if server_config["stop"] and not server_config["start"]:
-                    raise ValueError("If stop is provided, start cannot be None.")
-
-                if server_config["start"] and server_config["stop"]:
-                    start_dt = datetime.fromisoformat(server_config["start"])
-                    stop_dt = datetime.fromisoformat(server_config["stop"])
-
-                    if stop_dt - start_dt < timedelta(minutes=15):
-                        raise ValueError("Stop time must be at least 15 minutes greater than start time.")
-
-                    if not server_config.get("op_hours") and server_config.get("auto_start"):
-                        server_config["op_hours"] = True
+                server_config = normalize_schedule_times(inference_compute["custom_server_config"])
+                inference_compute = {**inference_compute, "custom_server_config": server_config}
             data["inference_compute"] = {**inference_compute, "instance_type": inference_compute.get("compute_type")}
 
         payload ={
@@ -489,24 +473,11 @@ class TextProject(Project):
 
         :return: a response indicating the result of the inference settings configuration
         """
-        server_config = inference_compute.get("custom_server_config", {})
-        server_config["start"] = normalize_time(server_config.get("start"))
-        server_config["stop"] = normalize_time(server_config.get("stop"))
-        if server_config["start"] and not server_config["stop"]:
-            raise ValueError("If start is provided, stop cannot be None.")
-
-        if server_config["stop"] and not server_config["start"]:
-            raise ValueError("If stop is provided, start cannot be None.")
-
-        if server_config["start"] and server_config["stop"]:
-            start_dt = datetime.fromisoformat(server_config["start"])
-            stop_dt = datetime.fromisoformat(server_config["stop"])
-
-            if stop_dt - start_dt < timedelta(minutes=15):
-                raise ValueError("Stop time must be at least 15 minutes greater than start time.")
-
-            if not server_config.get("op_hours") and server_config.get("auto_start"):
-                server_config["op_hours"] = True
+        if "custom_server_config" in inference_compute:
+            inference_compute = {
+                **inference_compute,
+                "custom_server_config": normalize_schedule_times(inference_compute["custom_server_config"]),
+            }
 
         data = {
             "model_name": model_name,
