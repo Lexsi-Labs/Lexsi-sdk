@@ -2,8 +2,11 @@ import requests
 import httpx
 from lexsi_sdk.common.xai_uris import LOGIN_URI
 import jwt
+import threading
 from pydantic import BaseModel
 import json
+
+_TOKEN_REFRESH_LOCK = threading.Lock()
 
 
 class APIClient(BaseModel):
@@ -61,16 +64,36 @@ class APIClient(BaseModel):
             "Authorization": f"Bearer {self.auth_token}",
         }
 
+    def _token_expired(self) -> bool:
+        """Cheap local check for token expiry (no network call).
+
+        :raises jwt.exceptions.DecodeError: if the token is malformed
+        :return: True when the token exists and is expired
+        """
+        if not self.auth_token:
+            return False
+        try:
+            jwt.decode(
+                self.auth_token,
+                options={"verify_signature": False, "verify_exp": True},
+            )
+            return False
+        except jwt.exceptions.ExpiredSignatureError:
+            return True
+
     def refresh_bearer_token(self):
         """Refresh the bearer token if the current token is expired.
-        Encapsulates a small unit of SDK logic and returns the computed result."""
-        try:
-            if self.auth_token:
-                jwt.decode(
-                    self.auth_token,
-                    options={"verify_signature": False, "verify_exp": True},
-                )
-        except jwt.exceptions.ExpiredSignatureError as e:
+
+        Single-flight: concurrent callers that find the token expired share
+        one login — the first takes the lock and logs in, the rest wait,
+        re-check expiry and reuse the fresh token. The common unexpired
+        path never takes the lock.
+        """
+        if not self._token_expired():
+            return
+        with _TOKEN_REFRESH_LOCK:
+            if not self._token_expired():
+                return
             response = self.base_request(
                 "POST", LOGIN_URI, {"access_token": self.access_token}
             ).json()
