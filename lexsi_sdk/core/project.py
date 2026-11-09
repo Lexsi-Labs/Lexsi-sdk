@@ -536,10 +536,18 @@ class Project(BaseModel):
     def get_tag_data(
         self,
         tag: str,
+        dtype=str,
+        keep_default_na: bool = False,
     ) -> pd.DataFrame:
-        """Run model inference on data
+        """Download data for a tag
+
+        Values are read as text by default, so identifiers with leading
+        zeros (00123) and literal NA/null strings survive. Pass dtype=None
+        and keep_default_na=True to restore pandas type inference.
 
         :param tag: data tag for downloading
+        :param dtype: pandas read_csv dtype (default str)
+        :param keep_default_na: pandas read_csv keep_default_na (default False)
         :return: dataframe
         """
 
@@ -556,7 +564,9 @@ class Project(BaseModel):
 
         tag_data = self.api_client.base_request("GET", uri)
 
-        tag_data_df = pd.read_csv(io.StringIO(tag_data.text))
+        tag_data_df = pd.read_csv(
+            io.StringIO(tag_data.text), dtype=dtype, keep_default_na=keep_default_na
+        )
 
         return tag_data_df
 
