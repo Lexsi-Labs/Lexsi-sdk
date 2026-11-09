@@ -1,12 +1,57 @@
-import requests
+import atexit
+import os
 import httpx
 from lexsi_sdk.common.xai_uris import LOGIN_URI
 import jwt
 import threading
+from typing import Optional
 from pydantic import BaseModel
 import json
 
 _TOKEN_REFRESH_LOCK = threading.Lock()
+_HTTP_CLIENT_LOCK = threading.Lock()
+_http_client: Optional[httpx.Client] = None
+_http_client_pid: Optional[int] = None
+
+_HTTP_LIMITS = httpx.Limits(
+    max_connections=100,
+    max_keepalive_connections=20,
+    keepalive_expiry=30.0,
+)
+
+
+def get_http_client() -> httpx.Client:
+    """Return the process-wide httpx client, creating it on first use.
+
+    Lazy on purpose: importing the SDK must not open sockets or build a pool.
+    """
+    global _http_client, _http_client_pid
+    pid = os.getpid()
+    with _HTTP_CLIENT_LOCK:
+        if _http_client is not None and _http_client_pid != pid:
+            _http_client = None
+        if _http_client is None:
+            _http_client = httpx.Client(
+                http2=True,
+                timeout=None,
+                limits=_HTTP_LIMITS,
+            )
+            _http_client_pid = pid
+        return _http_client
+
+
+def close_http_client() -> None:
+    """Close the shared pool. It is recreated on the next request."""
+    global _http_client, _http_client_pid
+    with _HTTP_CLIENT_LOCK:
+        client, _http_client = _http_client, None
+        _http_client_pid = None
+    if client is not None:
+        client.close()
+
+
+atexit.register(close_http_client)
+
 
 
 class APIClient(BaseModel):
@@ -24,6 +69,29 @@ class APIClient(BaseModel):
         """Initialize the API client with provided configuration.
         Stores configuration and prepares the object for use."""
         super().__init__(**kwargs)
+
+    @property
+    def client(self) -> httpx.Client:
+        """The shared HTTP client used for all requests.
+
+        Exposed as a property (not a pydantic field) because ``httpx.Client``
+        holds locks and cannot be validated/serialised by pydantic.
+        """
+        return get_http_client()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc, tb):
+        self.close()
+
+    def close(self):
+        """Close the shared HTTP connection pool.
+
+        The pool is recreated lazily on the next request, so this does not
+        permanently break other clients in the process.
+        """
+        close_http_client()
 
     def get_auth_token(self) -> str:
         """get jwt auth token value
@@ -109,25 +177,15 @@ class APIClient(BaseModel):
         """
         url = f"{self.base_url}/{uri}"
         try:
-            # response = requests.request(
-            #     method,
-            #     url,
-            #     headers=self.headers,
-            #     json=payload,
-            #     files=files,
-            #     stream=stream,
-            # )
-
-            with httpx.Client(http2=True, timeout=None) as client:
-                response = client.request(
-                    method=method,
-                    url=url,
-                    headers=self.headers,
-                    json=payload,
-                    files=files or None,
-                )
-                # response.raise_for_status()
-                # return response
+            request_kwargs = {
+                "method": method,
+                "url": url,
+                "headers": self.headers,
+                "files": files or None,
+            }
+            if payload or method.upper() not in ("GET", "HEAD"):
+                request_kwargs["json"] = payload
+            response = self.client.request(**request_kwargs)
 
             res = None
             try:
@@ -208,22 +266,21 @@ class APIClient(BaseModel):
         # if SSE, this header helps
         headers = {**self.headers, "Accept": "text/event-stream"}
 
-        with httpx.Client(http2=True, timeout=None) as client:
-            # streaming MUST be consumed inside the context
-            with client.stream(method, url, headers=headers, json=payload) as response:
-                if response.status_code >= 400:
-                    try:
-                        error_body = response.read().decode()
-                    except Exception:
-                        error_body = "Something went wrong while streaming response"
-                    raise Exception(error_body)
-                for line in response.iter_lines():  # no decode_unicode arg in httpx
-                    if not line:
-                        continue
-                    if line.startswith("data: "):  # typical SSE prefix
-                        if line.strip() == "data: [DONE]":
-                            break
-                        yield json.loads(line[6:])
+        # streaming MUST be consumed inside the context
+        with self.client.stream(method, url, headers=headers, json=payload) as response:
+            if response.status_code >= 400:
+                try:
+                    error_body = response.read().decode()
+                except Exception:
+                    error_body = "Something went wrong while streaming response"
+                raise Exception(error_body)
+            for line in response.iter_lines():  # no decode_unicode arg in httpx
+                if not line:
+                    continue
+                if line.startswith("data: "):  # typical SSE prefix
+                    if line.strip() == "data: [DONE]":
+                        break
+                    yield json.loads(line[6:])
 
     def file(self, uri, files):
         """makes multipart request to send files
