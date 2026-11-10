@@ -1978,24 +1978,55 @@ class TextProject(Project):
 
 
 class CaseText(BaseModel):
-    """Explainability view for text-based cases. Supports token-level importance, attention visualization, and LLM output analysis."""
+    """Explainability view for text-based cases. Supports token-level importance, attention visualization, and LLM output analysis.
+
+    ``prompt`` and ``output`` are returned exactly as the platform stored them:
+    plain strings for cases recorded from explainable inference, and a chat message
+    list / raw response object for cases recorded by ``chat_completion`` on a
+    Lexsi-served model. Use ``prompt_text`` and ``output_text`` to read both shapes
+    as plain strings.
+    """
 
     model_name: str
     status: str
-    prompt: str
-    output: str
+    prompt: Union[str, List[Dict[str, Any]]]
+    output: Union[str, Dict[str, Any], List[Dict[str, Any]]]
     explainability: Optional[Dict] = {}
     audit_trail: Optional[Dict] = {}
 
-    def prompt(self):
-        """Get prompt
-        Encapsulates a small unit of SDK logic and returns the computed result."""
-        return self.prompt
+    def prompt_text(self) -> str:
+        """Get the prompt as a plain string, whatever shape the case was recorded in."""
+        if isinstance(self.prompt, str):
+            return self.prompt
+        if isinstance(self.prompt, list):
+            parts = []
+            for message in self.prompt:
+                if isinstance(message, dict) and message.get("content") is not None:
+                    role = message.get("role")
+                    part = str(message["content"])
+                    parts.append(f"{role}: {part}" if role is not None else part)
+                else:
+                    parts.append(str(message))
+            return "\n".join(parts)
+        return str(self.prompt)
 
-    def output(self):
-        """Get output
-        Encapsulates a small unit of SDK logic and returns the computed result."""
-        return self.output
+    def output_text(self) -> str:
+        """Get the model output as a plain string, whatever shape the case was recorded in."""
+        if isinstance(self.output, str):
+            return self.output
+        if isinstance(self.output, dict):
+            choices = self.output.get("choices") or []
+            if choices and isinstance(choices[0], dict):
+                message = choices[0].get("message") or {}
+                content = message.get("content")
+                if content is not None:
+                    return str(content)
+                completion = choices[0].get("text")
+                if completion is not None:
+                    return str(completion)
+        if isinstance(self.output, list):
+            return "\n".join(str(item) for item in self.output)
+        return str(self.output)
 
     def xai_raw_data(self) -> pd.DataFrame:
         """Return the raw data used for the case as a DataFrame, with feature names and values.

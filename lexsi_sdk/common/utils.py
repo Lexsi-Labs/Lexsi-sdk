@@ -365,68 +365,79 @@ def normalize_time(
         return None
     base_date = base_date or datetime.utcnow().date()
     if isinstance(value, datetime):
-        if value.tzinfo is None:
-            value = value.replace(tzinfo=timezone.utc)
-        return value.isoformat()
+        return value.replace(tzinfo=None).isoformat()
 
     if isinstance(value, str):
         match = TIME_RE.match(value)
         if not match:
             try:
-                return datetime.fromisoformat(value).isoformat()
+                dt = datetime.fromisoformat(value)
             except ValueError:
                 raise ValueError(
                     "Time must be HH:MM, HH:MM±HH:MM, HH:MMZ, or an ISO timestamp"
                 )
+            return dt.replace(tzinfo=None).isoformat()
 
         hour = int(match.group("h"))
         minute = int(match.group("m"))
-        tz_part = match.group("tz")
-        tzinfo = timezone.utc
-
-        if tz_part:
-            if tz_part == "Z":
-                tzinfo = timezone.utc
-            else:
-                sign = 1 if tz_part[0] == "+" else -1
-                tzh, tzm = map(int, tz_part[1:].split(":"))
-                tzinfo = timezone(
-                    sign * timedelta(hours=tzh, minutes=tzm)
-                )
-
-        dt = datetime.combine(base_date, time(hour, minute, tzinfo=tzinfo))
+        dt = datetime.combine(base_date, time(hour, minute))
         return dt.isoformat()
 
     raise ValueError("Invalid time value")
 
 
 def normalize_schedule_times(server_config: Optional[dict]) -> dict:
-    """Return a copy of the schedule dictionary with ``start``/``stop``
-    normalized and validated. The caller's dictionary is never modified, so a
-    stored schedule can safely be passed again (e.g. to retry after a dropped
-    connection).
+    """Return a **flat** schedule dictionary matching the platform API contract
+    for ``update_operational_hours`` and ``server_config`` payloads. The
+    caller's dictionary is never modified, so a stored schedule can safely be
+    passed again (e.g. to retry after a dropped connection).
+
+    Accepts both shapes used across the SDK:
+
+    - nested: ``{"custom_server_config": {"start": ..., "stop": ..., ...}}``
+    - flat:   ``{"start": ..., "stop": ...}``
+
+    ``start``/``stop`` may be ``"HH:MM"``, ``"HH:MM±HH:MM"``, ``"HH:MMZ"``,
+    ISO timestamps, ``datetime`` objects or ``None``; they are normalized to
+    naive ISO datetime strings without timezone (today's date is assumed for
+    bare ``HH:MM``). When a start/stop schedule is provided and ``op_hours``
+    is not explicitly set, it defaults to ``True`` — the API only persists a
+    schedule when ``op_hours`` is an explicit boolean.
 
     :param server_config: schedule dictionary with optional ``start`` and ``stop``
-    :return: a new dictionary with normalized ``start``/``stop``
+    :return: a new flat dictionary with normalized schedule fields
     """
     config = dict(server_config) if server_config else {}
-    config["start"] = normalize_time(config.get("start"))
-    config["stop"] = normalize_time(config.get("stop"))
 
-    if config["start"] and not config["stop"]:
+    nested = config.pop("custom_server_config", None)
+    if isinstance(nested, dict):
+        config = {**config, **nested}
+
+    start = normalize_time(config.get("start"))
+    stop = normalize_time(config.get("stop"))
+
+    if start and not stop:
         raise ValueError("If start is provided, stop cannot be None.")
 
-    if config["stop"] and not config["start"]:
+    if stop and not start:
         raise ValueError("If stop is provided, start cannot be None.")
 
-    if config["start"] and config["stop"]:
-        start_dt = datetime.fromisoformat(config["start"])
-        stop_dt = datetime.fromisoformat(config["stop"])
+    shutdown_after = config.get("shutdown_after")
+    if shutdown_after is not None:
+        if isinstance(shutdown_after, bool) or not isinstance(shutdown_after, int) or not 1 <= shutdown_after <= 24:
+            raise ValueError("shutdown_after must be an integer between 1 and 24 hours.")
+
+    if start and stop:
+        start_dt = datetime.fromisoformat(start)
+        stop_dt = datetime.fromisoformat(stop)
 
         if stop_dt - start_dt < timedelta(minutes=15):
             raise ValueError("Stop time must be at least 15 minutes greater than start time.")
 
-        if not config.get("op_hours") and config.get("auto_start"):
+        if config.get("op_hours") is None:
             config["op_hours"] = True
+
+    config["start"] = start
+    config["stop"] = stop
 
     return config

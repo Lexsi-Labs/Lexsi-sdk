@@ -4,7 +4,7 @@ from typing import Optional
 from lexsi_sdk.client.client import APIClient
 from lexsi_sdk.common.enums import UserRole
 from lexsi_sdk.common.types import CustomServerConfig, DeploymentConfig
-from lexsi_sdk.common.utils import normalize_schedule_times, normalize_time
+from lexsi_sdk.common.utils import normalize_schedule_times
 from lexsi_sdk.common.validation import Validate
 from lexsi_sdk.common.xai_uris import (
     AVAILABLE_CUSTOM_SERVERS_URI,
@@ -222,13 +222,8 @@ class Workspace(BaseModel):
 
         if server_type:
             payload["instance_type"] = server_type
-            if server_config and server_config.get("start", None) and server_config.get("stop", None):
-                server_config = {
-                    **server_config,
-                    "start": normalize_time(server_config["start"]),
-                    "stop": normalize_time(server_config["stop"]),
-                }
-            payload["server_config"] = server_config if server_config else {}
+            server_config = normalize_schedule_times(server_config)
+            payload["server_config"] = server_config
 
             if deployment_config:
                 payload["deployment_config"] = deployment_config 
