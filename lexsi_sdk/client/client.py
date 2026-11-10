@@ -2,7 +2,7 @@ import requests
 import httpx
 from lexsi_sdk.common.xai_uris import LOGIN_URI
 import jwt
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 import json
 
 
@@ -11,11 +11,9 @@ class APIClient(BaseModel):
 
     debug: bool = False
     base_url: str = ""
-    access_token: str = ""
-    auth_token: str = ""
-    headers: dict = {
-        "Lexsi-Client": "Lexsi-SDK"
-    }
+    access_token: str = Field("", repr=False)
+    auth_token: str = Field("", repr=False)
+    headers: dict = Field(default={"Lexsi-Client": "Lexsi-SDK"}, repr=False)
 
     def __init__(self, **kwargs):
         """Initialize the API client with provided configuration.
