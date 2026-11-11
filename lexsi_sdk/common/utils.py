@@ -352,9 +352,54 @@ def fetch_submitted_training_config(
     return None
 
 
-TIME_RE = re.compile(
+UTC_TIME_RE = re.compile(
     r"^(?P<h>\d{2}):(?P<m>\d{2})(?P<tz>Z|[+-]\d{2}:\d{2})?$"
 )
+
+
+def to_utc_z(
+    value: Optional[Union[str, datetime]],
+    base_date: Optional[date] = None,
+) -> Optional[str]:
+    """Convert a time value to a UTC timestamp string ``YYYY-MM-DDTHH:MM:SS.000Z``.
+
+    "HH:MM" is assumed UTC on ``base_date`` (today by default). Offset forms such
+    as "14:30+05:30" are converted to UTC ("09:00" for IST). Full ISO timestamps
+    are converted to UTC keeping their own date; timezone-naive values are
+    treated as UTC.
+
+    :param value: time to convert ("HH:MM", "HH:MMZ", "HH:MM±HH:MM", ISO timestamp or datetime)
+    :param base_date: date to use for bare "HH:MM" inputs
+    :return: UTC timestamp string with millisecond precision and Z suffix
+    """
+    if value is None:
+        return None
+    if isinstance(value, datetime):
+        dt = value if value.tzinfo else value.replace(tzinfo=timezone.utc)
+        return dt.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.000Z")
+    if isinstance(value, str):
+        match = UTC_TIME_RE.match(value)
+        if match:
+            hour = int(match.group("h"))
+            minute = int(match.group("m"))
+            tz_part = match.group("tz")
+            tzinfo = timezone.utc
+            if tz_part and tz_part != "Z":
+                sign = 1 if tz_part[0] == "+" else -1
+                tzh, tzm = map(int, tz_part[1:].split(":"))
+                tzinfo = timezone(sign * timedelta(hours=tzh, minutes=tzm))
+            base_date = base_date or datetime.now(timezone.utc).date()
+            dt = datetime.combine(base_date, time(hour, minute, tzinfo=tzinfo))
+        else:
+            try:
+                dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
+            except ValueError:
+                raise ValueError(f"Invalid time value: {value!r}")
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=timezone.utc)
+        return dt.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.000Z")
+    raise ValueError(f"Invalid time value: {value!r}")
+
 
 def normalize_time(
     value: Optional[Union[str, datetime]],
@@ -363,27 +408,12 @@ def normalize_time(
 
     if value is None:
         return None
-    base_date = base_date or datetime.utcnow().date()
-    if isinstance(value, datetime):
-        return value.replace(tzinfo=None).isoformat()
-
-    if isinstance(value, str):
-        match = TIME_RE.match(value)
-        if not match:
-            try:
-                dt = datetime.fromisoformat(value)
-            except ValueError:
-                raise ValueError(
-                    "Time must be HH:MM, HH:MM±HH:MM, HH:MMZ, or an ISO timestamp"
-                )
-            return dt.replace(tzinfo=None).isoformat()
-
-        hour = int(match.group("h"))
-        minute = int(match.group("m"))
-        dt = datetime.combine(base_date, time(hour, minute))
-        return dt.isoformat()
-
-    raise ValueError("Invalid time value")
+    try:
+        return to_utc_z(value, base_date)
+    except ValueError:
+        raise ValueError(
+            "Time must be HH:MM, HH:MM±HH:MM, HH:MMZ, or an ISO timestamp"
+        )
 
 
 def normalize_schedule_times(server_config: Optional[dict]) -> dict:
@@ -399,8 +429,9 @@ def normalize_schedule_times(server_config: Optional[dict]) -> dict:
 
     ``start``/``stop`` may be ``"HH:MM"``, ``"HH:MM±HH:MM"``, ``"HH:MMZ"``,
     ISO timestamps, ``datetime`` objects or ``None``; they are normalized to
-    naive ISO datetime strings without timezone (today's date is assumed for
-    bare ``HH:MM``). When a start/stop schedule is provided and ``op_hours``
+    UTC timestamps in ``YYYY-MM-DDTHH:MM:SS.000Z`` form (offset forms such as
+    "14:30+05:30" are converted to UTC, i.e. "09:00"; bare ``HH:MM`` is assumed
+    UTC on today's date). When a start/stop schedule is provided and ``op_hours``
     is not explicitly set, it defaults to ``True`` — the API only persists a
     schedule when ``op_hours`` is an explicit boolean.
 

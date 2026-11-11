@@ -245,7 +245,7 @@ class Project(BaseModel):
                 "update_operational_hours": server_config if server_config else {},
             },
         }
-
+        print(f"Payload for updating server: {json.dumps(payload, indent=2)}")  # Debugging line
         res = self.api_client.post(UPDATE_PROJECT_URI, payload)
 
         if not res["success"]:
