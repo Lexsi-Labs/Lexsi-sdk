@@ -407,27 +407,36 @@ class TextProject(Project):
 
         :param model_name: optional model name to filter/search for
         :param key: optional API key for the provider (uses configured key if not provided)
-        :param limit: maximum number of models to return (default 500)
+        :param limit: maximum number of models to return (default 500, non-negative)
         :param url: optional server URL, required for Self Hosted provider
         :return: a DataFrame of matching models
         """
-        query_params = f"provider_name={provider_name}&limit={limit}"
-        if model_name:
-            query_params += f"&model_name={model_name}"
-        if key:
-            query_params += f"&key={key}"
-        if url:
-            query_params += f"&url={url}"
-        if provider_name == "Lexsi":
-            query_params += f"&project_name={self.project_name}"
-            if self.organization_id:
-                query_params += f"&organization_id={self.organization_id}"
+        if isinstance(limit, bool) or not isinstance(limit, int) or limit < 1:
+            raise ValueError("limit must be a non-negative positive integer.")
 
-        res = self.api_client.get(f"{SEARCH_TEXT_MODELS_URI}?{query_params}")
+        query_params = {
+            "provider_name": provider_name,
+            "limit": limit,
+        }
+        if model_name:
+            query_params["model_name"] = model_name
+        if key:
+            query_params["key"] = key
+        if url:
+            query_params["url"] = url
+        if provider_name == "Lexsi":
+            query_params["project_name"] = self.project_name
+            if self.organization_id:
+                query_params["organization_id"] = self.organization_id
+
+        res = self.api_client.get(f"{SEARCH_TEXT_MODELS_URI}?{urlencode(query_params)}")
         if not res["success"]:
             raise Exception(res.get("details", "Failed to search models"))
 
-        return pd.DataFrame(res.get("details", []))
+        df = pd.DataFrame(res.get("details", []))
+        if len(df) > limit:
+            df = df.head(limit)
+        return df
 
     def model_inference_settings(
         self,
