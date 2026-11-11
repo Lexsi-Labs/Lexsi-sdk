@@ -7,12 +7,12 @@ from urllib.parse import urlencode
 
 import httpx
 from lexsi_sdk.common.types import BatchCPUInstanceType, DedicatedGPUNodeValues, InferenceCompute, InferenceSettings
-from pydantic import BaseModel
+from pydantic import BaseModel, StrictBool, validate_call
 import plotly.graph_objects as go
 import base64
 from PIL import Image
 from lexsi_sdk.common.types import InferenceCompute, InferenceSettings
-from lexsi_sdk.common.utils import fetch_event_metrics, normalize_time, poll_events
+from lexsi_sdk.common.utils import fetch_event_metrics, normalize_schedule_times, poll_events
 from lexsi_sdk.common.xai_uris import (
     AVAILABLE_GUARDRAILS_URI,
     CONFIGURE_GUARDRAILS_URI,
@@ -361,24 +361,8 @@ class TextProject(Project):
             data["source_project_name"] = source_project["project_name"]
         if inference_compute:
             if inference_compute.get("custom_server_config", {}):
-                server_config = inference_compute.get("custom_server_config", {})
-                server_config["start"] = normalize_time(server_config.get("start"))
-                server_config["stop"] = normalize_time(server_config.get("stop"))
-                if server_config["start"] and not server_config["stop"]:
-                    raise ValueError("If start is provided, stop cannot be None.")
-
-                if server_config["stop"] and not server_config["start"]:
-                    raise ValueError("If stop is provided, start cannot be None.")
-
-                if server_config["start"] and server_config["stop"]:
-                    start_dt = datetime.fromisoformat(server_config["start"])
-                    stop_dt = datetime.fromisoformat(server_config["stop"])
-
-                    if stop_dt - start_dt < timedelta(minutes=15):
-                        raise ValueError("Stop time must be at least 15 minutes greater than start time.")
-
-                    if not server_config.get("op_hours") and server_config.get("auto_start"):
-                        server_config["op_hours"] = True
+                server_config = normalize_schedule_times(inference_compute["custom_server_config"])
+                inference_compute = {**inference_compute, "custom_server_config": server_config}
             data["inference_compute"] = {**inference_compute, "instance_type": inference_compute.get("compute_type")}
 
         payload ={
@@ -423,27 +407,36 @@ class TextProject(Project):
 
         :param model_name: optional model name to filter/search for
         :param key: optional API key for the provider (uses configured key if not provided)
-        :param limit: maximum number of models to return (default 500)
+        :param limit: maximum number of models to return (default 500, non-negative)
         :param url: optional server URL, required for Self Hosted provider
         :return: a DataFrame of matching models
         """
-        query_params = f"provider_name={provider_name}&limit={limit}"
-        if model_name:
-            query_params += f"&model_name={model_name}"
-        if key:
-            query_params += f"&key={key}"
-        if url:
-            query_params += f"&url={url}"
-        if provider_name == "Lexsi":
-            query_params += f"&project_name={self.project_name}"
-            if self.organization_id:
-                query_params += f"&organization_id={self.organization_id}"
+        if isinstance(limit, bool) or not isinstance(limit, int) or limit < 1:
+            raise ValueError("limit must be a non-negative positive integer.")
 
-        res = self.api_client.get(f"{SEARCH_TEXT_MODELS_URI}?{query_params}")
+        query_params = {
+            "provider_name": provider_name,
+            "limit": limit,
+        }
+        if model_name:
+            query_params["model_name"] = model_name
+        if key:
+            query_params["key"] = key
+        if url:
+            query_params["url"] = url
+        if provider_name == "Lexsi":
+            query_params["project_name"] = self.project_name
+            if self.organization_id:
+                query_params["organization_id"] = self.organization_id
+
+        res = self.api_client.get(f"{SEARCH_TEXT_MODELS_URI}?{urlencode(query_params)}")
         if not res["success"]:
             raise Exception(res.get("details", "Failed to search models"))
 
-        return pd.DataFrame(res.get("details", []))
+        df = pd.DataFrame(res.get("details", []))
+        if len(df) > limit:
+            df = df.head(limit)
+        return df
 
     def model_inference_settings(
         self,
@@ -489,24 +482,11 @@ class TextProject(Project):
 
         :return: a response indicating the result of the inference settings configuration
         """
-        server_config = inference_compute.get("custom_server_config", {})
-        server_config["start"] = normalize_time(server_config.get("start"))
-        server_config["stop"] = normalize_time(server_config.get("stop"))
-        if server_config["start"] and not server_config["stop"]:
-            raise ValueError("If start is provided, stop cannot be None.")
-
-        if server_config["stop"] and not server_config["start"]:
-            raise ValueError("If stop is provided, start cannot be None.")
-
-        if server_config["start"] and server_config["stop"]:
-            start_dt = datetime.fromisoformat(server_config["start"])
-            stop_dt = datetime.fromisoformat(server_config["stop"])
-
-            if stop_dt - start_dt < timedelta(minutes=15):
-                raise ValueError("Stop time must be at least 15 minutes greater than start time.")
-
-            if not server_config.get("op_hours") and server_config.get("auto_start"):
-                server_config["op_hours"] = True
+        if "custom_server_config" in inference_compute:
+            inference_compute = {
+                **inference_compute,
+                "custom_server_config": normalize_schedule_times(inference_compute["custom_server_config"]),
+            }
 
         data = {
             "model_name": model_name,
@@ -960,8 +940,9 @@ class TextProject(Project):
         if not res.get("success"):
             raise Exception(res.get("details"))
         return res
-    
-    def update_inference_model_status(self, model_name: str, activate: bool) -> str:
+
+    @validate_call
+    def update_inference_model_status(self, model_name: str, activate: StrictBool) -> str:
         """Sets the provided model to active for inferencing
 
         :param model_name: name of the model
@@ -970,6 +951,7 @@ class TextProject(Project):
                      - False: Deactivates the model inference.
         :return: response
         """
+        print(type(activate))
         payload = {
             "project_name": self.project_name,
             "model_name": model_name,
@@ -1727,12 +1709,38 @@ class TextProject(Project):
     def list_evals(self, page: Optional[int] = 1) -> pd.DataFrame:
         """List all saved eval configurations for this project.
         :param page: Optional page number for pagination.
-        :return: DataFrame of saved configs with run counts.
+        :return: DataFrame of saved configs with run counts and pagination info.
         """
         res = self.api_client.get(f"{EVALS_CONFIGS_URI}?project_name={self.project_name}&page={page}")
         if not res["success"]:
             raise Exception(res.get("details"))
-        return pd.DataFrame(res.get("details"))
+
+        details = res.get("details")
+        if isinstance(details, dict):
+            configs = details.get("configs") or []
+            curr_page = details.get("page", page)
+            total_page = details.get("total_page", details.get("total_pages"))
+        elif isinstance(details, list):
+            configs = details
+            curr_page = page
+            total_page = 1
+        else:
+            configs = []
+            curr_page = page
+            total_page = None
+
+        rows = []
+        for cfg in configs:
+            if isinstance(cfg, dict):
+                rows.append({
+                    "page": curr_page,
+                    "total_page": total_page,
+                    "config_name": cfg.get("config_name"),
+                    "type": cfg.get("type"),
+                    "config": cfg,
+                })
+
+        return pd.DataFrame(rows, columns=["page", "total_page", "config_name", "type", "config"])
 
     def stop_eval_run(self, run_id: str) -> dict:
         """Stop evaluation run.
@@ -1803,8 +1811,32 @@ class TextProject(Project):
         res = self.api_client.get(f"{RUNS_URI}?{params}")
         if not res["success"]:
             raise Exception(res.get("details"))
-        rows = res.get("details") or []
-        return pd.DataFrame(rows)
+
+        details = res.get("details")
+        if isinstance(details, dict):
+            runs = details.get("runs") or []
+            curr_page = details.get("page", page)
+            total_page = details.get("total_page", details.get("total_pages"))
+        elif isinstance(details, list):
+            runs = details
+            curr_page = page
+            total_page = 1
+        else:
+            runs = []
+            curr_page = page
+            total_page = None
+
+        rows = []
+        for run in runs:
+            if isinstance(run, dict):
+                rows.append({
+                    "page": curr_page,
+                    "total_page": total_page,
+                    "run_id": run.get("run_id"),
+                    "run_details": run,
+                })
+
+        return pd.DataFrame(rows, columns=["page", "total_page", "run_id", "run_details"])
 
     def get_all_evaluations(self) -> pd.DataFrame:
         """Return a DataFrame of unique config_names with run metadata.
@@ -1955,24 +1987,55 @@ class TextProject(Project):
 
 
 class CaseText(BaseModel):
-    """Explainability view for text-based cases. Supports token-level importance, attention visualization, and LLM output analysis."""
+    """Explainability view for text-based cases. Supports token-level importance, attention visualization, and LLM output analysis.
+
+    ``prompt`` and ``output`` are returned exactly as the platform stored them:
+    plain strings for cases recorded from explainable inference, and a chat message
+    list / raw response object for cases recorded by ``chat_completion`` on a
+    Lexsi-served model. Use ``prompt_text`` and ``output_text`` to read both shapes
+    as plain strings.
+    """
 
     model_name: str
     status: str
-    prompt: str
-    output: str
+    prompt: Union[str, List[Dict[str, Any]]]
+    output: Union[str, Dict[str, Any], List[Dict[str, Any]]]
     explainability: Optional[Dict] = {}
     audit_trail: Optional[Dict] = {}
 
-    def prompt(self):
-        """Get prompt
-        Encapsulates a small unit of SDK logic and returns the computed result."""
-        return self.prompt
+    def prompt_text(self) -> str:
+        """Get the prompt as a plain string, whatever shape the case was recorded in."""
+        if isinstance(self.prompt, str):
+            return self.prompt
+        if isinstance(self.prompt, list):
+            parts = []
+            for message in self.prompt:
+                if isinstance(message, dict) and message.get("content") is not None:
+                    role = message.get("role")
+                    part = str(message["content"])
+                    parts.append(f"{role}: {part}" if role is not None else part)
+                else:
+                    parts.append(str(message))
+            return "\n".join(parts)
+        return str(self.prompt)
 
-    def output(self):
-        """Get output
-        Encapsulates a small unit of SDK logic and returns the computed result."""
-        return self.output
+    def output_text(self) -> str:
+        """Get the model output as a plain string, whatever shape the case was recorded in."""
+        if isinstance(self.output, str):
+            return self.output
+        if isinstance(self.output, dict):
+            choices = self.output.get("choices") or []
+            if choices and isinstance(choices[0], dict):
+                message = choices[0].get("message") or {}
+                content = message.get("content")
+                if content is not None:
+                    return str(content)
+                completion = choices[0].get("text")
+                if completion is not None:
+                    return str(completion)
+        if isinstance(self.output, list):
+            return "\n".join(str(item) for item in self.output)
+        return str(self.output)
 
     def xai_raw_data(self) -> pd.DataFrame:
         """Return the raw data used for the case as a DataFrame, with feature names and values.

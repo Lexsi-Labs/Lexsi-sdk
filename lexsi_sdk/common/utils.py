@@ -352,9 +352,54 @@ def fetch_submitted_training_config(
     return None
 
 
-TIME_RE = re.compile(
+UTC_TIME_RE = re.compile(
     r"^(?P<h>\d{2}):(?P<m>\d{2})(?P<tz>Z|[+-]\d{2}:\d{2})?$"
 )
+
+
+def to_utc_z(
+    value: Optional[Union[str, datetime]],
+    base_date: Optional[date] = None,
+) -> Optional[str]:
+    """Convert a time value to a UTC timestamp string ``YYYY-MM-DDTHH:MM:SS.000Z``.
+
+    "HH:MM" is assumed UTC on ``base_date`` (today by default). Offset forms such
+    as "14:30+05:30" are converted to UTC ("09:00" for IST). Full ISO timestamps
+    are converted to UTC keeping their own date; timezone-naive values are
+    treated as UTC.
+
+    :param value: time to convert ("HH:MM", "HH:MMZ", "HH:MM±HH:MM", ISO timestamp or datetime)
+    :param base_date: date to use for bare "HH:MM" inputs
+    :return: UTC timestamp string with millisecond precision and Z suffix
+    """
+    if value is None:
+        return None
+    if isinstance(value, datetime):
+        dt = value if value.tzinfo else value.replace(tzinfo=timezone.utc)
+        return dt.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.000Z")
+    if isinstance(value, str):
+        match = UTC_TIME_RE.match(value)
+        if match:
+            hour = int(match.group("h"))
+            minute = int(match.group("m"))
+            tz_part = match.group("tz")
+            tzinfo = timezone.utc
+            if tz_part and tz_part != "Z":
+                sign = 1 if tz_part[0] == "+" else -1
+                tzh, tzm = map(int, tz_part[1:].split(":"))
+                tzinfo = timezone(sign * timedelta(hours=tzh, minutes=tzm))
+            base_date = base_date or datetime.now(timezone.utc).date()
+            dt = datetime.combine(base_date, time(hour, minute, tzinfo=tzinfo))
+        else:
+            try:
+                dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
+            except ValueError:
+                raise ValueError(f"Invalid time value: {value!r}")
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=timezone.utc)
+        return dt.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.000Z")
+    raise ValueError(f"Invalid time value: {value!r}")
+
 
 def normalize_time(
     value: Optional[Union[str, datetime]],
@@ -363,33 +408,67 @@ def normalize_time(
 
     if value is None:
         return None
-    base_date = base_date or datetime.utcnow().date()
-    if isinstance(value, datetime):
-        if value.tzinfo is None:
-            value = value.replace(tzinfo=timezone.utc)
-        return value.isoformat()
+    try:
+        return to_utc_z(value, base_date)
+    except ValueError:
+        raise ValueError(
+            "Time must be HH:MM, HH:MM±HH:MM, HH:MMZ, or an ISO timestamp"
+        )
 
-    if isinstance(value, str):
-        match = TIME_RE.match(value)
-        if not match:
-            raise ValueError("Time must be HH:MM, HH:MM±HH:MM, or HH:MMZ")
 
-        hour = int(match.group("h"))
-        minute = int(match.group("m"))
-        tz_part = match.group("tz")
-        tzinfo = timezone.utc
+def normalize_schedule_times(server_config: Optional[dict]) -> dict:
+    """Return a **flat** schedule dictionary matching the platform API contract
+    for ``update_operational_hours`` and ``server_config`` payloads. The
+    caller's dictionary is never modified, so a stored schedule can safely be
+    passed again (e.g. to retry after a dropped connection).
 
-        if tz_part:
-            if tz_part == "Z":
-                tzinfo = timezone.utc
-            else:
-                sign = 1 if tz_part[0] == "+" else -1
-                tzh, tzm = map(int, tz_part[1:].split(":"))
-                tzinfo = timezone(
-                    sign * timedelta(hours=tzh, minutes=tzm)
-                )
+    Accepts both shapes used across the SDK:
 
-        dt = datetime.combine(base_date, time(hour, minute, tzinfo=tzinfo))
-        return dt.isoformat()
+    - nested: ``{"custom_server_config": {"start": ..., "stop": ..., ...}}``
+    - flat:   ``{"start": ..., "stop": ...}``
 
-    raise ValueError("Invalid time value")
+    ``start``/``stop`` may be ``"HH:MM"``, ``"HH:MM±HH:MM"``, ``"HH:MMZ"``,
+    ISO timestamps, ``datetime`` objects or ``None``; they are normalized to
+    UTC timestamps in ``YYYY-MM-DDTHH:MM:SS.000Z`` form (offset forms such as
+    "14:30+05:30" are converted to UTC, i.e. "09:00"; bare ``HH:MM`` is assumed
+    UTC on today's date). When a start/stop schedule is provided and ``op_hours``
+    is not explicitly set, it defaults to ``True`` — the API only persists a
+    schedule when ``op_hours`` is an explicit boolean.
+
+    :param server_config: schedule dictionary with optional ``start`` and ``stop``
+    :return: a new flat dictionary with normalized schedule fields
+    """
+    config = dict(server_config) if server_config else {}
+
+    nested = config.pop("custom_server_config", None)
+    if isinstance(nested, dict):
+        config = {**config, **nested}
+
+    start = normalize_time(config.get("start"))
+    stop = normalize_time(config.get("stop"))
+
+    if start and not stop:
+        raise ValueError("If start is provided, stop cannot be None.")
+
+    if stop and not start:
+        raise ValueError("If stop is provided, start cannot be None.")
+
+    shutdown_after = config.get("shutdown_after")
+    if shutdown_after is not None:
+        if isinstance(shutdown_after, bool) or not isinstance(shutdown_after, int) or not 1 <= shutdown_after <= 24:
+            raise ValueError("shutdown_after must be an integer between 1 and 24 hours.")
+
+    if start and stop:
+        start_dt = datetime.fromisoformat(start)
+        stop_dt = datetime.fromisoformat(stop)
+
+        if stop_dt - start_dt < timedelta(minutes=15):
+            raise ValueError("Stop time must be at least 15 minutes greater than start time.")
+
+        if config.get("op_hours") is None:
+            config["op_hours"] = True
+
+    config["start"] = start
+    config["stop"] = stop
+
+    return config

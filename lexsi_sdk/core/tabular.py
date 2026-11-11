@@ -10,14 +10,14 @@ from lexsi_sdk.core.alert import Alert
 from lexsi_sdk.common.constants import BIAS_MONITORING_DASHBOARD_REQUIRED_FIELDS, DATA_DRIFT_DASHBOARD_REQUIRED_FIELDS, DATA_DRIFT_STAT_TESTS, MODEL_PERF_DASHBOARD_REQUIRED_FIELDS, MODEL_TYPES, SYNTHETIC_MODELS_DEFAULT_HYPER_PARAMS, TARGET_DRIFT_DASHBOARD_REQUIRED_FIELDS, TARGET_DRIFT_STAT_TESTS
 from lexsi_sdk.common.monitoring import BiasMonitoringPayload, DataDriftPayload, ModelPerformancePayload, TargetDriftPayload
 from lexsi_sdk.common.types import CatBoostParams, DataConfig, DistillationConfig, EnsembleConfg, FoundationalModelParams, InferenceCompute, LeaderboardConfig, LightGBMParams, PEFTParams, ProcessorParams, ProjectConfig, RandomForestParams, SyntheticDataConfig, SyntheticModelHyperParams, TuningParams, XGBoostParams
-from lexsi_sdk.common.utils import normalize_time, poll_events
+from lexsi_sdk.common.utils import normalize_schedule_times, poll_events
 from lexsi_sdk.common.validation import Validate
 from lexsi_sdk.common.xai_uris import ALL_DATA_FILE_URI, AVAILABLE_BATCH_SERVERS_URI, AVAILABLE_CUSTOM_SERVERS_URI, AVAILABLE_SYNTHETIC_CUSTOM_SERVERS_URI, CASE_DTREE_URI, CASE_INFO_TEXT_URI, CASE_INFO_URI, CREATE_OBSERVATION_URI, CREATE_POLICY_URI, CREATE_SYNTHETIC_PROMPT_URI, DELETE_CASE_URI, DELETE_SYNTHETIC_MODEL_URI, DELETE_SYNTHETIC_TAG_URI, DOWNLOAD_DASHBOARD_LOGS_URI, DOWNLOAD_SYNTHETIC_DATA_URI, DOWNLOAD_TAG_DATA_URI, DUPLICATE_OBSERVATION_URI, DUPLICATE_POLICY_URI, GENERATE_DASHBOARD_URI, GET_CASES_URI, GET_DASHBOARD_SCORE_URI, GET_DATA_DIAGNOSIS_URI, GET_DATA_DRIFT_DIAGNOSIS_URI, GET_DATA_SUMMARY_URI, GET_FEATURE_IMPORTANCE_URI, GET_LABELS_URI, GET_MODELS_URI, GET_OBSERVATION_PARAMS_URI, GET_OBSERVATIONS_URI, GET_POLICIES_URI, GET_POLICY_PARAMS_URI, GET_PROJECT_CONFIG, GET_SYNTHETIC_DATA_TAGS_URI, GET_SYNTHETIC_MODEL_DETAILS_URI, GET_SYNTHETIC_MODEL_PARAMS_URI, GET_SYNTHETIC_MODELS_URI, GET_SYNTHETIC_PROMPT_URI, LIST_DATA_CONNECTORS, LOGS_URI, MODEL_INFERENCE_SETTINGS_URI, MODEL_INFERENCES_URI, MODEL_PARAMETERS_URI, MODEL_SUMMARY_URI, PROJECT_OVERVIEW_TEXT_URI, RUN_DATA_DRIFT_DIAGNOSIS_URI, RUN_MODEL_ON_DATA_URI, SEARCH_CASE_URI, TABULAR_ML, TEXT_MODEL_INFERENCE_SETTINGS_URI, TRAIN_MODEL_URI, TRAIN_SYNTHETIC_MODEL_URI, UPDATE_ACTIVE_INFERENCE_MODEL_URI, UPDATE_OBSERVATION_URI, UPDATE_POLICY_URI, UPDATE_SYNTHETIC_PROMPT_URI, UPLOAD_DATA_FILE_URI, UPLOAD_DATA_PROJECT_URI, UPLOAD_DATA_URI, UPLOAD_FILE_DATA_CONNECTORS, AVAILABLE_BATCH_SERVERS_URI, CREATE_TRIGGER_URI, DASHBOARD_LOGS_URI, DELETE_TRIGGER_URI, DUPLICATE_MONITORS_URI, EXECUTED_TRIGGER_URI, GENERATE_DASHBOARD_URI, GET_DASHBOARD_SCORE_URI, GET_DASHBOARD_URI, GET_EXECUTED_TRIGGER_INFO, GET_MODEL_TYPES_URI, GET_MODELS_URI, GET_MONITORS_ALERTS, GET_PROJECT_CONFIG, GET_TRIGGERS_URI, LIST_DATA_CONNECTORS, MODEL_PARAMETERS_URI, MODEL_PERFORMANCE_DASHBOARD_URI, UPLOAD_DATA_FILE_INFO_URI, UPLOAD_DATA_FILE_URI, UPLOAD_DATA_URI, UPLOAD_DATA_WITH_CHECK_URI, UPLOAD_FILE_DATA_CONNECTORS, UPLOAD_MODEL_URI, EXPLAINABILITY_SUMMARY, GET_TRIGGERS_DAYS_URI
 from lexsi_sdk.core.dashboard import DASHBOARD_TYPES, Dashboard
 from lexsi_sdk.core.project import Project, build_expression, generate_expression, validate_configuration
 from lexsi_sdk.core.synthetic import SyntheticDataTag, SyntheticModel, SyntheticPrompt
 from lexsi_sdk.core.utils import build_list_data_connector_url, split_cpu_gpu_servers
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, StrictBool, validate_call
 import plotly.graph_objects as go
 from IPython.display import SVG, display
 from lexsi_sdk.client.client import APIClient
@@ -1436,7 +1436,8 @@ class TabularProject(Project):
         raw_data = self.api_client.get(
             f"{MODEL_PERFORMANCE_DASHBOARD_URI}{raw_data_query_params}"
         )
-
+        if not raw_data.get("success"):
+            raise Exception(raw_data.get("details", "Failed to get model performance data"))
         return Dashboard(
             config={},
             query_params=dashboard_query_params,
@@ -2344,7 +2345,7 @@ class TabularProject(Project):
 
     def model_inference(
         self,
-        compute_type: str,
+        pod: str,
         region: Optional[str] = None,
         tag: Optional[str] = None,
         file_name: Optional[str] = None,
@@ -2355,7 +2356,7 @@ class TabularProject(Project):
         :param tag: data tag for running inference
         :param file_name: data file name for running inference
         :param model_name: name of the model, defaults to active model for the project
-        :param compute_type: type of compute resource to use for inference
+        :param pod: type of pod resource to use for inference
         :return: model inference dataframe
         :rtype: pd.DataFrame
         """
@@ -2405,7 +2406,7 @@ class TabularProject(Project):
             "project_name": self.project_name,
             "model_name": model,
             "tags": tag,
-            "instance_type": compute_type,
+            "instance_type": pod,
         }
         if filepath:
             run_model_payload["filepath"] = filepath
@@ -3039,7 +3040,9 @@ class TabularProject(Project):
 
         return available_models
 
-    def update_inference_model_status(self, model_name: str, activate: bool) -> str:
+
+    @validate_call
+    def update_inference_model_status(self, model_name: str, activate: StrictBool) -> str:
         """Sets the provided model to active for inferencing
 
         :param model_name: name of the model
@@ -3081,25 +3084,12 @@ class TabularProject(Project):
         :return: response
         """
         if inference_compute.get("compute_type", None):
-            inference_compute["instance_type"] = inference_compute["compute_type"]
-        server_config = inference_compute.get("custom_server_config", {})
-        server_config["start"] = normalize_time(server_config.get("start"))
-        server_config["stop"] = normalize_time(server_config.get("stop"))
-        if server_config["start"] and not server_config["stop"]:
-            raise ValueError("If start is provided, stop cannot be None.")
-
-        if server_config["stop"] and not server_config["start"]:
-            raise ValueError("If stop is provided, start cannot be None.")
-
-        if server_config["start"] and server_config["stop"]:
-            start_dt = datetime.fromisoformat(server_config["start"])
-            stop_dt = datetime.fromisoformat(server_config["stop"])
-
-            if stop_dt - start_dt < timedelta(minutes=15):
-                raise ValueError("Stop time must be at least 15 minutes greater than start time.")
-
-            if not server_config.get("op_hours") and server_config.get("auto_start"):
-                server_config["op_hours"] = True
+            inference_compute = {**inference_compute, "instance_type": inference_compute["compute_type"]}
+        if "custom_server_config" in inference_compute:
+            inference_compute = {
+                **inference_compute,
+                "custom_server_config": normalize_schedule_times(inference_compute["custom_server_config"]),
+            }
 
         payload = {
             "model_name": model_name,
