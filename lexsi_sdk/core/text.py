@@ -74,7 +74,11 @@ from lexsi_sdk.common.xai_uris import (
 from lexsi_sdk.core.project import Project
 import pandas as pd
 
-from lexsi_sdk.core.utils import build_list_data_connector_url
+from lexsi_sdk.core.utils import (
+    build_list_data_connector_url,
+    _validate_sample_fields,
+    _with_legacy_prediction_fields,
+)
 import json
 from typing import Iterator
 from uuid import UUID
@@ -1496,6 +1500,13 @@ class TextProject(Project):
         if task_column:
             payload["task_column"] = task_column
 
+        _validate_sample_fields(
+            samples,
+            input_column=input_column,
+            target_column=target_column,
+            actual_output_column=actual_output_column,
+        )
+
         file_paths = {}
 
         for key, paths in (("adapter_files", adapter_files), ("annotator_files", annotator_files), ("scorer_files", scorer_files)):
@@ -1905,6 +1916,11 @@ class TextProject(Project):
     ) -> dict:
         """Return paginated predictions/answers for a specific run.
 
+        Each row carries the server's current fields (``prompt`` / ``expected``,
+        per-scorer values in ``metadata.scores``) plus the legacy aliases
+        ``input`` / ``target`` / ``actual_output`` and a ``scores`` dict, so
+        notebooks written against the earlier response keep working.
+
         :param run_id: The unique identifier of the run
         :param correct: Optional filter for correct/incorrect predictions
         :param offset: Pagination offset
@@ -1917,7 +1933,16 @@ class TextProject(Project):
         res = self.api_client.get(f"{RUNS_URI}/{run_id}/predictions?{params}")
         if not res["success"]:
             raise Exception(res.get("details"))
-        return res.get("details")
+        details = res.get("details")
+        if isinstance(details, dict) and isinstance(details.get("predictions"), list):
+            details = {
+                **details,
+                "predictions": [
+                    _with_legacy_prediction_fields(row)
+                    for row in details["predictions"]
+                ],
+            }
+        return details
 
     def run_comparison(
         self,
