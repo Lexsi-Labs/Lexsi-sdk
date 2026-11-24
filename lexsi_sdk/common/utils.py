@@ -1,7 +1,9 @@
 from datetime import date, datetime, time, timedelta, timezone
 import re
+import time as time_module
 import warnings
 from typing import Callable, Optional, Union
+import httpx
 from lexsi_sdk.client.client import APIClient
 
 from lexsi_sdk.common.live_plot import LiveMetricsPlotter, in_notebook
@@ -86,6 +88,54 @@ def _normalize_metrics(metrics: dict) -> dict:
     }
 
 
+def _stream_events(
+    api_client: APIClient,
+    uri: str,
+    max_consecutive_failures: int = 8,
+    initial_delay: float = 2.0,
+    max_delay: float = 15.0,
+):
+    """Yield events from ``uri``, reconnecting when the connection drops.
+
+    Long-lived event streams can be reset mid-run by proxies, pod restarts
+    or HTTP/2 GOAWAY frames (``httpx.ReadError`` / ``Errno 104``). The poll
+    endpoint is stateless and re-sends a full snapshot on every tick, so
+    resuming with the same URI loses nothing.
+
+    Reconnects back off exponentially (``initial_delay`` doubling up to
+    ``max_delay``). The attempt counter resets whenever an event arrives, so
+    a healthy stream is never cut short; after ``max_consecutive_failures``
+    attempts without receiving an event the last transport error is re-raised.
+
+    :param api_client: API client with streaming support.
+    :param uri: Fully-qualified stream URI, including query string.
+    :param max_consecutive_failures: Transport failures tolerated before
+        giving up and re-raising.
+    :param initial_delay: Delay before the first reconnect, in seconds.
+    :param max_delay: Upper bound for the backoff delay, in seconds.
+    :return: Generator of decoded event payloads.
+    :raises httpx.TransportError: When reconnects are exhausted.
+    """
+    attempt = 0
+    while True:
+        try:
+            for event in api_client.stream(uri=uri, method="GET"):
+                attempt = 0
+                yield event
+            return
+        except httpx.TransportError as exc:
+            attempt += 1
+            if attempt >= max_consecutive_failures:
+                raise
+            delay = min(initial_delay * (2 ** (attempt - 1)), max_delay)
+            print(
+                f"Event stream connection lost "
+                f"({exc.__class__.__name__}: {exc}); reconnecting in "
+                f"{delay:.0f}s (attempt {attempt}/{max_consecutive_failures})..."
+            )
+            time_module.sleep(delay)
+
+
 def poll_events(
     api_client: APIClient,
     project_name: str,
@@ -108,7 +158,8 @@ def poll_events(
     :param progress_message: Label used when printing progress.
     :param plot: When False, always print raw metric summaries instead of
         plotting, even in environments where charts could be rendered.
-    :return: None. Raises on failure events.
+    :return: None. Raises on failure events. Reconnects automatically if the
+        stream drops mid-run (the event is resumed by ``event_id``).
     """
     last_message = ""
     log_length = 0
@@ -122,9 +173,9 @@ def poll_events(
         LiveMetricsPlotter("System metrics", "timestamp", mode="lines") if plot_enabled else None
     )
 
-    for event in api_client.stream(
-        uri=f"{POLL_EVENTS}?project_name={project_name}&event_id={event_id}",
-        method="GET",
+    for event in _stream_events(
+        api_client,
+        f"{POLL_EVENTS}?project_name={project_name}&event_id={event_id}",
     ):
         details = event.get("details")
 
@@ -254,7 +305,9 @@ def fetch_event_metrics(
     :param event_id: Identifier of the finetuning event to read metrics from.
     :param plot: When False, always print raw metric summaries instead of
         plotting, even in environments where charts could be rendered.
-    :return: mapping with the final ``model_metrics`` and ``system_metrics`` series.
+    :return: mapping with the final ``model_metrics`` and ``system_metrics``
+        series. Reconnects automatically if the stream drops mid-run (the
+        event is resumed by ``event_id``).
     """
     model_metrics: dict = {}
     system_metrics: dict = {}
@@ -267,9 +320,9 @@ def fetch_event_metrics(
         LiveMetricsPlotter("System metrics", "timestamp", mode="lines") if plot_enabled else None
     )
 
-    for event in api_client.stream(
-        uri=f"{POLL_EVENTS}?project_name={project_name}&event_id={event_id}",
-        method="GET",
+    for event in _stream_events(
+        api_client,
+        f"{POLL_EVENTS}?project_name={project_name}&event_id={event_id}",
     ):
         details = event.get("details")
         if not event.get("success"):
