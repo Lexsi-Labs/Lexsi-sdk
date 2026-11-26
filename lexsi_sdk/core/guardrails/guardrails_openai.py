@@ -19,6 +19,13 @@ from agents import (
 )
 from dataclasses import dataclass
 
+from ._common import (
+    latest_user_text,
+    output_text as _output_text,
+    report_check_failure,
+    validate_on_error,
+)
+
 
 @dataclass
 class GuardrailFunctionOutput:
@@ -26,7 +33,9 @@ class GuardrailFunctionOutput:
 
     output_info: Any
     tripwire_triggered: bool
-    sanitized_content: str
+    # Rewritten text, set only when action="retry" changed the content; None otherwise, so
+    # the runner leaves the input or final output (and its type) as it is.
+    sanitized_content: Optional[str] = None
 
 
 class OpenAIAgentsGuardrail:
@@ -37,7 +46,15 @@ class OpenAIAgentsGuardrail:
         project: Optional[Project],
         model: Optional[Any] = None,
         max_retries: int = 2,
+        on_error: str = "allow",
     ) -> None:
+        """
+        :param on_error: what to do when the checks cannot run (the guardrail group cannot be
+            fetched, has no flows, or the guardrail service fails): "allow" (default) continues
+            without them, "block" trips the guardrail. Either way a warning is logged and the
+            guardrail span is marked as an error.
+        """
+        self.on_error = validate_on_error(on_error)
         if project is not None:
             self.client = project.api_client
             self.project_name = project.project_name
@@ -64,19 +81,12 @@ class OpenAIAgentsGuardrail:
         :return: Callable suitable for OpenAI Agents guardrail hook.
         """
 
-        @input_guardrail
         async def guardrail_function(
             ctx: RunContextWrapper[None],
             agent: Agent,
             input: str | list[TResponseInputItem],
         ) -> GuardrailFunctionOutput:
-            if isinstance(input, list):
-                input_text = " ".join(
-                    str(item.content) if hasattr(item, "content") else str(item)
-                    for item in input
-                ).strip()
-            else:
-                input_text = str(input)
+            input_text = latest_user_text(input)
 
             current_content, tripwire_triggered, output_info = (
                 await self._apply_guardrail_group(
@@ -91,11 +101,12 @@ class OpenAIAgentsGuardrail:
             return GuardrailFunctionOutput(
                 output_info=output_info,
                 tripwire_triggered=tripwire_triggered,
-                sanitized_content=current_content if action == "retry" else input_text,
+                sanitized_content=self._rewritten(action, current_content, input_text),
             )
 
-        guardrail_function.__name__ = name
-        return guardrail_function
+        # The name must be given to the Agents SDK when the guardrail is created; setting
+        # __name__ afterwards leaves it reporting "guardrail_function".
+        return input_guardrail(name=name)(guardrail_function)
 
     def create_output_guardrail(
         self,
@@ -112,16 +123,10 @@ class OpenAIAgentsGuardrail:
         :return: Callable suitable for OpenAI Agents guardrail hook.
         """
 
-        @output_guardrail
         async def guardrail_function(
             ctx: RunContextWrapper, agent: Agent, output: Any
         ) -> GuardrailFunctionOutput:
-            if hasattr(output, "response"):
-                output_text = str(output.response)
-            elif hasattr(output, "content"):
-                output_text = str(output.content)
-            else:
-                output_text = str(output)
+            output_text = _output_text(output)
 
             current_content, tripwire_triggered, output_info = (
                 await self._apply_guardrail_group(
@@ -136,11 +141,25 @@ class OpenAIAgentsGuardrail:
             return GuardrailFunctionOutput(
                 output_info=output_info,
                 tripwire_triggered=tripwire_triggered,
-                sanitized_content=current_content if action == "retry" else output_text,
+                sanitized_content=self._rewritten(action, current_content, output_text),
             )
 
-        guardrail_function.__name__ = name
-        return guardrail_function
+        return output_guardrail(name=name)(guardrail_function)
+
+    @staticmethod
+    def _rewritten(action: str, current_content: Any, checked_text: str) -> Optional[str]:
+        """The rewritten text when action='retry' changed it, else None."""
+        if action == "retry" and isinstance(current_content, str) and current_content != checked_text:
+            return current_content
+        return None
+
+    def _checks_failed(
+        self, span: Any, reason: str, output_info: Dict[str, Any], agent_name: str, guardrail_type: str
+    ) -> bool:
+        """Report that the checks could not run; True when the guardrail must trip."""
+        output_info["execution_error"] = reason
+        span.set_attribute("output.value", f"Guardrail checks did not run: {reason}")
+        return report_check_failure(span, reason, self.on_error, f"{guardrail_type} of agent '{agent_name}'")
 
     async def _apply_guardrail_group(
         self,
@@ -169,23 +188,25 @@ class OpenAIAgentsGuardrail:
                     parent_gr_span.set_attribute("content_type", guardrail_type)
 
                     if not guardrail_group_id:
-                        parent_gr_span.set_attribute("output.value", "No guardrail ID provided")
+                        tripwire_triggered = self._checks_failed(
+                            parent_gr_span, "No guardrail ID provided", output_info, agent_name, guardrail_type
+                        )
                         return current_content, tripwire_triggered, output_info
 
                     while retry_count <= self.max_retries:
                         try:
                             guardrail_flows = self._fetch_guardrail_group(guardrail_group_id)
-                        except ValueError as fetch_err:
-                            parent_gr_span.set_attribute(
-                                "output.value",
-                                str(fetch_err),
+                        except Exception as fetch_err:
+                            tripwire_triggered = self._checks_failed(
+                                parent_gr_span, str(fetch_err), output_info, agent_name, guardrail_type
                             )
                             return current_content, tripwire_triggered, output_info
 
                         if not guardrail_flows:
-                            parent_gr_span.set_attribute(
-                                "output.value",
+                            tripwire_triggered = self._checks_failed(
+                                parent_gr_span,
                                 f"Guardrail group '{guardrail_group_id}' returned no flows",
+                                output_info, agent_name, guardrail_type,
                             )
                             return current_content, tripwire_triggered, output_info
 
@@ -201,11 +222,9 @@ class OpenAIAgentsGuardrail:
 
                         if not response.get("success", False):
                             error_detail = response.get("details") or response.get("message") or "API error"
-                            parent_gr_span.set_attribute(
-                                "output.value",
-                                str(error_detail),
+                            tripwire_triggered = self._checks_failed(
+                                parent_gr_span, str(error_detail), output_info, agent_name, guardrail_type
                             )
-                            output_info["execution_error"] = error_detail
                             return current_content, tripwire_triggered, output_info
 
                         data = response.get("data", {})
@@ -284,10 +303,9 @@ class OpenAIAgentsGuardrail:
                             and retry_count < self.max_retries
                         ):
                             prompt = self._build_sanitize_prompt("combined", current_content, guardrail_type)
-                            try:
-                                current_content = await self._invoke_llm(prompt)
-                            except Exception:
-                                pass
+                            rewritten = await self._invoke_llm(prompt)
+                            if rewritten:  # a failed rewrite keeps the content, never the prompt
+                                current_content = rewritten
                             retry_count += 1
                             await asyncio.sleep(self.retry_delay)
                             continue
@@ -311,7 +329,11 @@ class OpenAIAgentsGuardrail:
             return current_content, tripwire_triggered, output_info
 
         except Exception as e:
-            output_info["error"] = f"Guardrail group execution failed: {str(e)}"
+            reason = f"Guardrail group execution failed: {e}"
+            output_info["error"] = reason
+            tripwire_triggered = report_check_failure(
+                trace.get_current_span(), reason, self.on_error, f"{guardrail_type} of agent '{agent_name}'"
+            ) or tripwire_triggered
             return current_content, tripwire_triggered, output_info
 
     # --------- Group fetch ---------
@@ -361,9 +383,10 @@ class OpenAIAgentsGuardrail:
         )
         return f"{instruction}\n\nContent:\n{content}"
 
-    async def _invoke_llm(self, prompt: str) -> str:
+    async def _invoke_llm(self, prompt: str) -> Optional[str]:
+        """The model's rewrite of ``prompt``, or None when there is no model or the call fails."""
         if self.model is None:
-            return prompt
+            return None
         try:
             data = await self.model.get_response(
                 system_instructions="Based on the input you have to provide the best and accurate results",
@@ -377,7 +400,7 @@ class OpenAIAgentsGuardrail:
             )
             return str(data.output[0].content[0].text)
         except Exception:
-            return prompt
+            return None
 
     @staticmethod
     def _safe_str(value: Any) -> str:
@@ -405,7 +428,7 @@ class OpenAIAgentsGuardrail:
 
 
 def create_guardrail(
-    project: Project, model: Optional[Any] = None
+    project: Project, model: Optional[Any] = None, on_error: str = "allow"
 ) -> OpenAIAgentsGuardrail:
     """Quick factory function to create a guardrail instance with a project."""
-    return OpenAIAgentsGuardrail(project=project, model=model)
+    return OpenAIAgentsGuardrail(project=project, model=model, on_error=on_error)

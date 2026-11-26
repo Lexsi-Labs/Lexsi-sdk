@@ -9,6 +9,7 @@ from openinference.instrumentation.langchain import get_current_span
 from opentelemetry import trace
 from langchain_core.messages import AIMessage
 from .guard_template import Guard
+from ._common import report_check_failure, validate_on_error
 
 
 class LangGraphGuardrail:
@@ -20,7 +21,15 @@ class LangGraphGuardrail:
         default_apply_on: str = "input",
         llm: Optional[Any] = None,
         max_retries: int = 1,
+        on_error: str = "allow",
     ) -> None:
+        """
+        :param on_error: what to do when the checks cannot run (the guardrail group cannot be
+            fetched, has no flows, or the guardrail service fails): "allow" (default) continues
+            without them, "block" stops the graph like a failed check. Either way a warning is
+            logged and the guardrail span is marked as an error.
+        """
+        self.on_error = validate_on_error(on_error)
         if project is not None:
             self.client = project.api_client
             self.project_name = project.project_name
@@ -163,40 +172,29 @@ class LangGraphGuardrail:
                     parent_gr_span.set_attribute("input.value", self._safe_str(current_content))
 
                     if not guardrail_group_id:
-                        parent_gr_span.set_attribute("output.value", "No guardrail ID provided")
+                        self._checks_failed(parent_gr_span, "No guardrail ID provided", node_name, content_type)
                         return content
 
                     retry_count = 0
                     while retry_count <= self.max_retries:
                         try:
                             group_result = self._apply_guardrail_group(current_content, guardrail_group_id)
-                        except ValueError as fetch_err:
-                            parent_gr_span.set_attribute(
-                                "output.value",
-                                str(fetch_err),
-                            )
-                            raise
-                        except Exception as e:
-                            parent_gr_span.set_attribute(
-                                "output.value",
-                                str(e),
-                            )
+                        except Exception as e:  # includes a failed group fetch
+                            self._checks_failed(parent_gr_span, str(e), node_name, content_type)
                             break
 
                         if not group_result.get("success", False):
                             error_detail = group_result.get("details") or group_result.get("message") or "API error"
-                            parent_gr_span.set_attribute(
-                                "output.value",
-                                str(error_detail),
-                            )
+                            self._checks_failed(parent_gr_span, str(error_detail), node_name, content_type)
                             break
 
                         data = group_result.get("data", {})
                         flow_summaries = data.get("flow_summaries", [])
                         if not flow_summaries:
-                            parent_gr_span.set_attribute(
-                                "output.value",
+                            self._checks_failed(
+                                parent_gr_span,
                                 f"Guardrail group '{guardrail_group_id}' returned no flows",
+                                node_name, content_type,
                             )
                             break
 
@@ -296,8 +294,22 @@ class LangGraphGuardrail:
 
         except ValueError:
             raise  # block signal — wrapper handles it
-        except Exception:
-            return content  # swallow unexpected errors only
+        except Exception as e:
+            if report_check_failure(None, str(e), self.on_error, f"{content_type} of node '{node_name}'"):
+                raise ValueError(
+                    f"Guardrail checks could not run for node '{node_name}' in {content_type}: {e}. "
+                    "Operation blocked (on_error='block')."
+                ) from e
+            return content
+
+    def _checks_failed(self, span: Any, reason: str, node_name: str, content_type: str) -> None:
+        """Report that the checks could not run; raises the block signal for on_error='block'."""
+        span.set_attribute("output.value", f"Guardrail checks did not run: {reason}")
+        if report_check_failure(span, reason, self.on_error, f"{content_type} of node '{node_name}'"):
+            raise ValueError(
+                f"Guardrail checks could not run for node '{node_name}' in {content_type}: {reason}. "
+                "Operation blocked (on_error='block')."
+            )
 
     # --------- Block response ---------
 
