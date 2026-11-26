@@ -1,6 +1,7 @@
 import atexit
 import os
 import httpx
+import time as time_module
 from lexsi_sdk.common.xai_uris import LOGIN_URI
 import jwt
 import threading
@@ -258,13 +259,22 @@ class APIClient(BaseModel):
 
         return response.json()
 
-    def stream(self, uri, method, payload=None):
+    def stream(
+        self,
+        uri,
+        method,
+        payload=None,
+        retry=False,
+        max_consecutive_failures=8,
+        initial_delay=2.0,
+        max_delay=15.0,
+    ):
         """Server-Sent Events / line-streaming endpoint.
-        Encapsulates a small unit of SDK logic and returns the computed result."""
-        self.refresh_bearer_token()
+        When ``retry`` is enabled, reconnect after transport failures with
+        exponential backoff. Retries are opt-in so other streaming calls keep
+        their existing behavior.
+        """
         url = f"{self.base_url}/{uri}"
-        # if SSE, this header helps
-        headers = {**self.headers, "Accept": "text/event-stream"}
 
         # streaming MUST be consumed inside the context
         with self.client.stream(method, url, headers=headers, json=payload) as response:
@@ -281,6 +291,42 @@ class APIClient(BaseModel):
                     if line.strip() == "data: [DONE]":
                         break
                     yield json.loads(line[6:])
+
+        attempt = 0
+        while True:
+            try:
+                self.refresh_bearer_token()
+                headers = {**self.headers, "Accept": "text/event-stream"}
+                with self.client.stream(method, url, headers=headers, json=payload) as response:
+                    if response.status_code >= 400:
+                        try:
+                            error_body = response.read().decode()
+                        except Exception:
+                            error_body = "Something went wrong while streaming response"
+                        raise Exception(error_body)
+                    for line in response.iter_lines():
+                        if not line:
+                            continue
+                        if line.startswith("data: "):
+                            if line.strip() == "data: [DONE]":
+                                break
+                            event = json.loads(line[6:])
+                            attempt = 0
+                            yield event
+                return
+            except httpx.TransportError as exc:
+                if not retry:
+                    raise
+                attempt += 1
+                if attempt >= max_consecutive_failures:
+                    raise
+                delay = min(initial_delay * (2 ** (attempt - 1)), max_delay)
+                print(
+                    f"Event stream connection lost "
+                    f"({exc.__class__.__name__}: {exc}); reconnecting in "
+                    f"{delay:.0f}s (attempt {attempt}/{max_consecutive_failures})..."
+                )
+                time_module.sleep(delay)
 
     def file(self, uri, files):
         """makes multipart request to send files
