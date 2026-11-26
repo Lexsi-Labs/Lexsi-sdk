@@ -6,7 +6,7 @@ from lexsi_sdk.common.xai_uris import LOGIN_URI
 import jwt
 import threading
 from typing import Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 import json
 
 _TOKEN_REFRESH_LOCK = threading.Lock()
@@ -55,16 +55,30 @@ atexit.register(close_http_client)
 
 
 
+class LexsiAPIError(Exception):
+    """Raised when the API returns an HTTP error (4xx/5xx), a redirect, or a non-JSON reply.
+
+    Attributes:
+        status_code: HTTP status of the response.
+        detail: parsed error message (backend 'details'/'data'/'detail' when present, else raw text).
+        body: parsed JSON body when available, otherwise None.
+    """
+
+    def __init__(self, status_code, detail, body=None):
+        self.status_code = status_code
+        self.detail = detail
+        self.body = body
+        super().__init__(f"[{status_code}] {detail}")
+
+
 class APIClient(BaseModel):
     """API client to interact with Lexsi.ai services"""
 
     debug: bool = False
     base_url: str = ""
-    access_token: str = ""
-    auth_token: str = ""
-    headers: dict = {
-        "Lexsi-Client": "Lexsi-SDK"
-    }
+    access_token: str = Field("", repr=False)
+    auth_token: str = Field("", repr=False)
+    headers: dict = Field(default={"Lexsi-Client": "Lexsi-SDK"}, repr=False)
 
     def __init__(self, **kwargs):
         """Initialize the API client with provided configuration.
@@ -173,7 +187,7 @@ class APIClient(BaseModel):
 
         :param uri: api uri
         :param method: GET, POST, PUT, DELETE
-        :raises Exception: Request exception
+        :raises LexsiAPIError: HTTP error (4xx/5xx), unexpected redirect, or non-JSON reply
         :return: JSON response
         """
         url = f"{self.base_url}/{uri}"
@@ -188,17 +202,34 @@ class APIClient(BaseModel):
                 request_kwargs["json"] = payload
             response = self.client.request(**request_kwargs)
 
-            res = None
+            status = response.status_code
+            if 300 <= status < 400:
+                location = response.headers.get("location", "")
+                raise LexsiAPIError(
+                    status,
+                    f"Unexpected redirect to {location or 'unknown location'}; expected a JSON response",
+                )
+            if status >= 400:
+                try:
+                    body = response.json()
+                except Exception:
+                    body = None
+                if isinstance(body, dict):
+                    detail = body.get("details") or body.get("data") or body.get("detail") or body
+                elif body is not None:
+                    detail = body
+                else:
+                    detail = response.text
+                raise LexsiAPIError(status, detail, body=body)
             try:
-                res = response.json().get("details") or response.json().get("data") or response.json()
+                response.json()
             except Exception:
-                res = response.text
-            if 400 <= response.status_code < 500:
-                raise Exception(res)
-            elif 500 <= response.status_code < 600:
-                raise Exception(res)
-            else:
-                return response
+                text = response.text
+                raise LexsiAPIError(
+                    status,
+                    f"Expected a JSON response, got non-JSON body: {text[:200] if text else 'empty body'}",
+                )
+            return response
         except Exception as e:
             raise e
 
@@ -283,7 +314,7 @@ class APIClient(BaseModel):
                     error_body = response.read().decode()
                 except Exception:
                     error_body = "Something went wrong while streaming response"
-                raise Exception(error_body)
+                raise LexsiAPIError(response.status_code, error_body)
             for line in response.iter_lines():  # no decode_unicode arg in httpx
                 if not line:
                     continue

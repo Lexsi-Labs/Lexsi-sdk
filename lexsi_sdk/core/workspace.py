@@ -1,11 +1,10 @@
-from datetime import datetime, timedelta
 import pandas as pd
 from pydantic import BaseModel
 from typing import Optional
 from lexsi_sdk.client.client import APIClient
 from lexsi_sdk.common.enums import UserRole
 from lexsi_sdk.common.types import CustomServerConfig, DeploymentConfig
-from lexsi_sdk.common.utils import normalize_time
+from lexsi_sdk.common.utils import normalize_schedule_times
 from lexsi_sdk.common.validation import Validate
 from lexsi_sdk.common.xai_uris import (
     AVAILABLE_CUSTOM_SERVERS_URI,
@@ -223,10 +222,8 @@ class Workspace(BaseModel):
 
         if server_type:
             payload["instance_type"] = server_type
-            if server_config and server_config.get("start", None) and server_config.get("stop", None):
-                server_config["start"] = normalize_time(server_config.get("start"))
-                server_config["stop"] = normalize_time(server_config.get("stop"))
-            payload["server_config"] = server_config if server_config else {}
+            server_config = normalize_schedule_times(server_config)
+            payload["server_config"] = server_config
 
             if deployment_config:
                 payload["deployment_config"] = deployment_config 
@@ -333,25 +330,8 @@ class Workspace(BaseModel):
         }
         :return: response
         """
-        server_config = server_config or {}
-        server_config["start"] = normalize_time(server_config.get("start"))
-        server_config["stop"] = normalize_time(server_config.get("stop"))
-        if server_config["start"] and not server_config["stop"]:
-            raise ValueError("If start is provided, stop cannot be None.")
+        server_config = normalize_schedule_times(server_config)
 
-        if server_config["stop"] and not server_config["start"]:
-            raise ValueError("If stop is provided, start cannot be None.")
-
-        if server_config["start"] and server_config["stop"]:
-            start_dt = datetime.fromisoformat(server_config["start"])
-            stop_dt = datetime.fromisoformat(server_config["stop"])
-
-            if stop_dt - start_dt < timedelta(minutes=15):
-                raise ValueError("Stop time must be at least 15 minutes greater than start time.")
-
-            if not server_config.get("op_hours") and server_config.get("auto_start"):
-                server_config["op_hours"] = True
-        
         payload = {
             "workspace_name": self.workspace_name,
             "modify_req": {
