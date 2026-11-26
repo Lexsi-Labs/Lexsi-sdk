@@ -81,7 +81,7 @@ from lexsi_sdk.core.utils import (
 )
 import json
 from typing import Iterator
-from uuid import UUID
+from uuid import UUID, uuid4
 from IPython.display import SVG, display
 
 class TextProject(Project):
@@ -1433,6 +1433,7 @@ class TextProject(Project):
         scorer_file: Optional[Union[str, List[str]]] = None,
         custom_scorer_name: Optional[Union[str, List[str]]] = None,
         scorer_files: Optional[Dict[str, str]] = None,
+        force_new_run: bool = False,
     ) -> dict:
         """Start an evaluation run. Waits and returns run_id, event_id, status, and existing_run.
 
@@ -1440,6 +1441,9 @@ class TextProject(Project):
             ``model_name`` may be a single string **or a list of strings** —
             when a list is given the API creates one run per model and returns
             a list of results.
+            ``config["run_config"]["fail_on_generate_error"]`` defaults to ``True``:
+            failed generations are stored per-sample and the run is marked failed.
+            Set it to ``False`` to finish the run as ``completed`` instead.
         :param pod: The pod type for evaluation
         :param samples: Optional list of sample dictionaries for evaluation
         :param adapter_files: Map registered adapter names to local Python file paths.
@@ -1454,12 +1458,19 @@ class TextProject(Project):
         :param scorer_file: Python file or list of files defining AuditKit metrics or decorated scorers.
         :param custom_scorer_name: Scorer name or matching ordered list of names.
         :param scorer_files: Alternative map of scorer names to local Python paths.
+        :param force_new_run: Skip fingerprint dedup and guarantee a fresh run_id,
+            even when config, samples and scorers are identical to a previous run.
         :return: dict with run_id, event_id, status, and existing_run
         """
         if not isinstance(config.get("config_name"), str) or not config["config_name"].strip():
             raise ValueError("config_name is required")
         from pathlib import Path
         payload = {**config, "compute": {"pod": pod}, "project_name": self.project_name}
+        if force_new_run:
+            run_config = dict(payload.get("run_config") or {})
+            run_config["force"] = True
+            run_config["run_nonce"] = uuid4().hex
+            payload["run_config"] = run_config
         component_uploads = []
         for field, paths, name_key, names in (
             ("adapter_file", adapter_file, "custom_adapter_name", custom_adapter_name),
@@ -1919,7 +1930,9 @@ class TextProject(Project):
         Each row carries the server's current fields (``prompt`` / ``expected``,
         per-scorer values in ``metadata.scores``) plus the legacy aliases
         ``input`` / ``target`` / ``actual_output`` and a ``scores`` dict, so
-        notebooks written against the earlier response keep working.
+        notebooks written against the earlier response keep working. Failed or
+        empty generations also expose top-level ``error`` / ``status`` /
+        ``empty`` / ``finish_reason`` fields.
 
         :param run_id: The unique identifier of the run
         :param correct: Optional filter for correct/incorrect predictions

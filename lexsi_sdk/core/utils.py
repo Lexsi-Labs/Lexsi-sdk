@@ -113,10 +113,19 @@ def _with_legacy_prediction_fields(row: Dict[str, Any]) -> Dict[str, Any]:
             if isinstance(score, dict) and score.get("value") is not None:
                 compat["score"] = score["value"]
                 break
-    # A failed generation carries the provider error in per-sample metadata.
-    for key in ("error", "status"):
+    # Generation diagnostics (provider errors, empty/truncated answers) live
+    # in per-sample metadata; surface them on the row for notebooks.
+    for key in ("error", "status", "empty", "finish_reason", "reasoning_tokens", "refusal"):
         if compat.get(key) is None and metadata.get(key) is not None:
             compat[key] = metadata[key]
+    # Rows from older/cached runs may have no diagnostic; a blank generation
+    # is still a failed inference, so surface one for the notebook.
+    if "raw_output" in compat and not str(compat.get("raw_output") or "").strip():
+        if compat.get("error") is None:
+            compat["error"] = "No output generated (inference did not produce content)"
+        if compat.get("status") is None:
+            compat["status"] = "empty"
+        compat.setdefault("empty", True)
     return compat
 
 
