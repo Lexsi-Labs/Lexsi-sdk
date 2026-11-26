@@ -108,7 +108,8 @@ def poll_events(
     :param progress_message: Label used when printing progress.
     :param plot: When False, always print raw metric summaries instead of
         plotting, even in environments where charts could be rendered.
-    :return: None. Raises on failure events.
+    :return: None. Raises on failure events. Reconnects automatically if the
+        stream drops mid-run (the event is resumed by ``event_id``).
     """
     last_message = ""
     log_length = 0
@@ -125,6 +126,7 @@ def poll_events(
     for event in api_client.stream(
         uri=f"{POLL_EVENTS}?project_name={project_name}&event_id={event_id}",
         method="GET",
+        retry=True,
     ):
         details = event.get("details")
 
@@ -254,7 +256,9 @@ def fetch_event_metrics(
     :param event_id: Identifier of the finetuning event to read metrics from.
     :param plot: When False, always print raw metric summaries instead of
         plotting, even in environments where charts could be rendered.
-    :return: mapping with the final ``model_metrics`` and ``system_metrics`` series.
+    :return: mapping with the final ``model_metrics`` and ``system_metrics``
+        series. Reconnects automatically if the stream drops mid-run (the
+        event is resumed by ``event_id``).
     """
     model_metrics: dict = {}
     system_metrics: dict = {}
@@ -270,6 +274,7 @@ def fetch_event_metrics(
     for event in api_client.stream(
         uri=f"{POLL_EVENTS}?project_name={project_name}&event_id={event_id}",
         method="GET",
+        retry=True,
     ):
         details = event.get("details")
         if not event.get("success"):
