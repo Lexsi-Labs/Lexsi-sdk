@@ -406,25 +406,17 @@ class TabularProject(Project):
                         ]
                     )
             else:
-                custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
-                available_custom_batch_servers = custom_batch_servers.get("details", [])
-                
-                if not compute_type:
-                    valid_list = [
-                        server["instance_name"]
-                        for server in available_custom_batch_servers
-                    ]
-                    self.delete_file(uploaded_path)
-                    raise Exception(f"For Classic ML models compute_type is mandatory. select from \n {valid_list}")
-                else:
-                    self.delete_file(uploaded_path)
+                if compute_type:
+                    custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
+                    available_custom_batch_servers = custom_batch_servers.get("details", [])
                     Validate.value_against_list(
                         "compute_type",
                         compute_type,
                         [
                             server["instance_name"]
                             for server in available_custom_batch_servers
-                        ]
+                        ],
+                        lambda: self.delete_file(uploaded_path),
                     )
             payload = {
                 "project_name": self.project_name,
@@ -724,18 +716,9 @@ class TabularProject(Project):
                         ]
                     )
             else:
-                custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
-                available_custom_batch_servers = custom_batch_servers.get("details", [])
-                
-                if not compute_type:
-                    valid_list = [
-                        server["instance_name"]
-                        for server in available_custom_batch_servers
-                    ]
-                    self.delete_file(uploaded_path)
-                    raise Exception(f"For Classic ML models compute_type is mandatory. select from \n {valid_list}")
-                else:
-                    self.delete_file(uploaded_path)
+                if compute_type:
+                    custom_batch_servers = self.api_client.get(AVAILABLE_BATCH_SERVERS_URI)
+                    available_custom_batch_servers = custom_batch_servers.get("details", [])
                     Validate.value_against_list(
                         "compute_type",
                         compute_type,
