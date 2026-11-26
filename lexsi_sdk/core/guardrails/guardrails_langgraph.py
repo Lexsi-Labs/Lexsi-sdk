@@ -8,6 +8,7 @@ from lexsi_sdk.core.project import Project
 from openinference.instrumentation.langchain import get_current_span
 from opentelemetry import trace
 from langchain_core.messages import AIMessage
+import langchain_core.runnables.config  # noqa: F401  get_current_span() raises without it
 from .guard_template import Guard
 
 
@@ -150,7 +151,8 @@ class LangGraphGuardrail:
         current_content = content_to_process
 
         try:
-            parent_span = get_current_span()
+            # get_current_span() is None without LangChain tracing, the checks still have to run
+            parent_span = get_current_span() or trace.get_current_span()
             if parent_span is not None:
                 ctx = trace.set_span_in_context(parent_span)
                 with self.tracer.start_as_current_span(
