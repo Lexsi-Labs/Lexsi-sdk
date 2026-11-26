@@ -22,6 +22,11 @@ jobs:
       - name: Fetch all tags
         run: git fetch --tags --force
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
       - name: Detect latest stable version
         run: |
           latest_tag=$(git tag --list --sort=-v:refname | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1)
