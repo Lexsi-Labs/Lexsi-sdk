@@ -308,6 +308,8 @@ class APIClient(BaseModel):
         url = f"{self.base_url}/{uri}"
 
         # streaming MUST be consumed inside the context
+        self.refresh_bearer_token()
+        headers = {**self.headers, "Accept": "text/event-stream"}
         with self.client.stream(method, url, headers=headers, json=payload) as response:
             if response.status_code >= 400:
                 try:
