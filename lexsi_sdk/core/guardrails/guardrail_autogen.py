@@ -7,6 +7,8 @@ from lexsi_sdk.core.project import Project
 from lexsi_sdk.common.xai_uris import GUARDRAILS_GET, GUARDRAILS_RUN_AGENT
 from opentelemetry import trace, context
 
+from ._common import report_check_failure, validate_on_error
+
 
 class GuardrailSupervisor:
     """Coordinator class that applies a guardrail group to AutoGen agents in parallel."""
@@ -19,7 +21,15 @@ class GuardrailSupervisor:
         project: Optional[Project] = None,
         llm: Optional[Any] = None,
         max_retries: int = 1,
+        on_error: str = "allow",
     ):
+        """
+        :param on_error: what to do when the checks cannot run (the guardrail group cannot be
+            fetched, has no flows, or the guardrail service fails): "allow" (default) continues
+            without them, "block" stops the agent like a failed check. Either way a warning is
+            logged and the guardrail span is marked as an error.
+        """
+        self.on_error = validate_on_error(on_error)
         if apply_to not in ["input", "output", "both"]:
             raise ValueError("apply_to must be one of 'input', 'output', 'both'")
         self.apply_to = apply_to
@@ -153,25 +163,20 @@ class GuardrailSupervisor:
                 parent_gr_span.set_attribute("retry_count", retry_count)
 
             if not self.guardrail_group_id:
-                parent_gr_span.set_attribute("output.value", "No guardrail ID provided")
-                return []
+                return self._checks_failed(parent_gr_span, "No guardrail ID provided", agent_id, content_type)
 
             try:
                 try:
                     guardrail_flows = self._fetch_guardrail_group(self.guardrail_group_id)
                 except ValueError as fetch_err:
-                    parent_gr_span.set_attribute(
-                        "output.value",
-                        str(fetch_err),
-                    )
-                    return []
+                    return self._checks_failed(parent_gr_span, str(fetch_err), agent_id, content_type)
 
                 if not guardrail_flows:
-                    parent_gr_span.set_attribute(
-                        "output.value",
+                    return self._checks_failed(
+                        parent_gr_span,
                         f"Guardrail group '{self.guardrail_group_id}' returned no flows",
+                        agent_id, content_type,
                     )
-                    return []
 
                 payload = {"input_data": content, "guardrails": guardrail_flows, "project_name": self.project_name}
 
@@ -181,11 +186,7 @@ class GuardrailSupervisor:
 
                 if not response.get("success", False):
                     error_detail = response.get("details") or response.get("message") or "API error"
-                    parent_gr_span.set_attribute(
-                        "output.value",
-                        str(error_detail),
-                    )
-                    return []
+                    return self._checks_failed(parent_gr_span, str(error_detail), agent_id, content_type)
 
                 data = response.get("data", {})
                 flow_summaries = data.get("flow_summaries", [])
@@ -275,8 +276,20 @@ class GuardrailSupervisor:
             except Exception as e:
                 parent_gr_span.record_exception(e)
                 parent_gr_span.set_attribute("error.message", str(e))
+                return self._checks_failed(parent_gr_span, str(e), agent_id, content_type)
 
         return failed_flows
+
+    def _checks_failed(self, span, reason: str, agent_id: str, content_type: str) -> List[str]:
+        """Report that the checks could not run. Raises the block signal for on_error='block';
+        otherwise returns no failed flows so the agent continues."""
+        span.set_attribute("output.value", f"Guardrail checks did not run: {reason}")
+        if report_check_failure(span, reason, self.on_error, f"{content_type} of agent '{agent_id}'"):
+            raise ValueError(
+                f"Guardrail checks could not run for agent '{agent_id}' in {content_type}: {reason}. "
+                "Operation blocked (on_error='block')."
+            )
+        return []
 
     # --------- Group fetch ---------
 

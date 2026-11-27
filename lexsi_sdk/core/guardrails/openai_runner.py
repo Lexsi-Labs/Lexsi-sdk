@@ -51,6 +51,15 @@ from agents.guardrail import (
 from agents.handoffs import Handoff, HandoffInputFilter, handoff
 
 from typing import Any, cast, Generic
+
+from ._common import (
+    apply_sanitized_input,
+    apply_sanitized_output,
+    require_openai_agents_for_runner,
+)
+
+require_openai_agents_for_runner()
+
 from agents.run import (
     TResponseInputItem,
     TContext,
@@ -368,13 +377,9 @@ class AgentRunner:
                                 context_wrapper,
                             )
                         )
-                        # Update original_input with sanitized content if any guardrail used 'retry'
-                        for result in input_guardrail_results:
-                            if (
-                                hasattr(result.output, "sanitized_content")
-                                and result.output.sanitized_content
-                            ):
-                                original_input = result.output.sanitized_content
+                        # Put back text an input guardrail rewrote (action='retry'), keeping
+                        # the input's type: only the latest user message changes.
+                        original_input = apply_sanitized_input(original_input, input_guardrail_results)
 
                     turn_result = await self._run_single_turn(
                         agent=current_agent,
@@ -402,14 +407,11 @@ class AgentRunner:
                             turn_result.next_step.output,
                             context_wrapper,
                         )
-                        # Use sanitized content as final output if available
-                        final_output = turn_result.next_step.output
-                        for result in output_guardrail_results:
-                            if (
-                                hasattr(result.output, "sanitized_content")
-                                and result.output.sanitized_content
-                            ):
-                                final_output = result.output.sanitized_content
+                        # Put back text an output guardrail rewrote (action='retry'), keeping
+                        # the output's type when it can be parsed back.
+                        final_output = apply_sanitized_output(
+                            turn_result.next_step.output, output_guardrail_results
+                        )
 
                         result = RunResult(
                             input=original_input,
@@ -430,13 +432,8 @@ class AgentRunner:
                         current_agent = cast(
                             Agent[TContext], turn_result.next_step.new_agent
                         )
-                        # Pass sanitized input to the handoff agent
-                        for result in input_guardrail_results:
-                            if (
-                                hasattr(result.output, "sanitized_content")
-                                and result.output.sanitized_content
-                            ):
-                                original_input = result.output.sanitized_content
+                        # Pass the rewritten input (if any) to the handoff agent
+                        original_input = apply_sanitized_input(original_input, input_guardrail_results)
                         current_span.finish(reset_current=True)
                         current_span = None
                         should_run_agent_start_hooks = True
@@ -652,13 +649,8 @@ class AgentRunner:
             raise
 
         streamed_result.input_guardrail_results = guardrail_results
-        # Update streamed_result.input with sanitized content if available
-        for result in guardrail_results:
-            if (
-                hasattr(result.output, "sanitized_content")
-                and result.output.sanitized_content
-            ):
-                streamed_result.input = result.output.sanitized_content
+        # Put back text an input guardrail rewrote (action='retry'), keeping the input's type
+        streamed_result.input = apply_sanitized_input(streamed_result.input, guardrail_results)
 
     @classmethod
     async def _start_streaming(
@@ -777,13 +769,10 @@ class AgentRunner:
 
                     if isinstance(turn_result.next_step, NextStepHandoff):
                         current_agent = turn_result.next_step.new_agent
-                        # Update input with sanitized content from input guardrails for handoff
-                        for result in streamed_result.input_guardrail_results:
-                            if (
-                                hasattr(result.output, "sanitized_content")
-                                and result.output.sanitized_content
-                            ):
-                                streamed_result.input = result.output.sanitized_content
+                        # Pass the rewritten input (if any) to the handoff agent
+                        streamed_result.input = apply_sanitized_input(
+                            streamed_result.input, streamed_result.input_guardrail_results
+                        )
                         current_span.finish(reset_current=True)
                         current_span = None
                         should_run_agent_start_hooks = True
@@ -811,14 +800,10 @@ class AgentRunner:
                         streamed_result.output_guardrail_results = (
                             output_guardrail_results
                         )
-                        # Use sanitized content as final output if available
-                        final_output = turn_result.next_step.output
-                        for result in output_guardrail_results:
-                            if (
-                                hasattr(result.output, "sanitized_content")
-                                and result.output.sanitized_content
-                            ):
-                                final_output = result.output.sanitized_content
+                        # Put back text an output guardrail rewrote (action='retry')
+                        final_output = apply_sanitized_output(
+                            turn_result.next_step.output, output_guardrail_results
+                        )
                         streamed_result.final_output = final_output
                         streamed_result.is_complete = True
 
