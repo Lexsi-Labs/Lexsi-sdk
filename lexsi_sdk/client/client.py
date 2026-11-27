@@ -307,34 +307,19 @@ class APIClient(BaseModel):
         """
         url = f"{self.base_url}/{uri}"
 
-        # streaming MUST be consumed inside the context
-        with self.client.stream(method, url, headers=headers, json=payload) as response:
-            if response.status_code >= 400:
-                try:
-                    error_body = response.read().decode()
-                except Exception:
-                    error_body = "Something went wrong while streaming response"
-                raise LexsiAPIError(response.status_code, error_body)
-            for line in response.iter_lines():  # no decode_unicode arg in httpx
-                if not line:
-                    continue
-                if line.startswith("data: "):  # typical SSE prefix
-                    if line.strip() == "data: [DONE]":
-                        break
-                    yield json.loads(line[6:])
-
         attempt = 0
         while True:
             try:
                 self.refresh_bearer_token()
                 headers = {**self.headers, "Accept": "text/event-stream"}
+                # streaming MUST be consumed inside the context
                 with self.client.stream(method, url, headers=headers, json=payload) as response:
                     if response.status_code >= 400:
                         try:
                             error_body = response.read().decode()
                         except Exception:
                             error_body = "Something went wrong while streaming response"
-                        raise Exception(error_body)
+                        raise LexsiAPIError(response.status_code, error_body)
                     for line in response.iter_lines():
                         if not line:
                             continue
