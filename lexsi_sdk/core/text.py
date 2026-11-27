@@ -1860,25 +1860,6 @@ class TextProject(Project):
 
         return pd.DataFrame(rows, columns=["page", "total_page", "run_id", "run_details"])
 
-    def get_all_evaluations(self) -> pd.DataFrame:
-        """Return a DataFrame of unique config_names with run metadata.
-
-        Covers both evals and benchmarks. Each row includes:
-        - config_name: the label
-        - type: "eval" or "benchmark"
-        - run_count: how many runs share this config_name
-        - latest_run_id: the most recent run_id
-        - latest_headline: headline metrics from the latest run
-        - latest_created_at: timestamp of the latest run
-
-        :return: DataFrame with one row per (config_name, type).
-        """
-        params = f"project_name={self.project_name}"
-        res = self.api_client.get(f"{RUNS_URI}/configs?{params}")
-        if not res["success"]:
-            raise Exception(res.get("details"))
-        return pd.DataFrame(res.get("details"))
-
     def get_config(self, config_name: str) -> dict:
         """Get the latest run for a given config_name.
 
