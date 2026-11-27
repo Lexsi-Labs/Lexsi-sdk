@@ -12,7 +12,7 @@ import plotly.graph_objects as go
 import base64
 from PIL import Image
 from lexsi_sdk.common.types import InferenceCompute, InferenceSettings
-from lexsi_sdk.common.utils import fetch_event_metrics, normalize_schedule_times, poll_events
+from lexsi_sdk.common.utils import fetch_event_metrics, normalize_schedule_times, poll_events, raise_with_cleanup, extract_uploaded_path
 from lexsi_sdk.common.xai_uris import (
     AVAILABLE_GUARDRAILS_URI,
     CONFIGURE_GUARDRAILS_URI,
@@ -561,7 +561,7 @@ class TextProject(Project):
 
             if not res["success"]:
                 raise Exception(res.get("details"))
-            uploaded_path = res.get("metadata").get("filepath")
+            uploaded_path = extract_uploaded_path(res)
 
             return uploaded_path
 
@@ -576,8 +576,10 @@ class TextProject(Project):
         res = self.api_client.post(UPLOAD_DATA_URI, payload)
 
         if not res["success"]:
-            self.delete_file(uploaded_path)
-            raise Exception(res.get("details"))
+            raise_with_cleanup(
+                Exception(res.get("details")),
+                lambda: self.delete_file(uploaded_path),
+            )
 
         return res.get("details")
 
@@ -652,7 +654,7 @@ class TextProject(Project):
             res = self.api_client.post(f"{UPLOAD_FILE_DATA_CONNECTORS}?{query_params}")
             if not res["success"]:
                 raise Exception(res.get("details"))
-            uploaded_path = res.get("metadata").get("filepath")
+            uploaded_path = extract_uploaded_path(res)
 
             return uploaded_path
 
@@ -667,8 +669,10 @@ class TextProject(Project):
         res = self.api_client.post(UPLOAD_DATA_URI, payload)
 
         if not res["success"]:
-            self.delete_file(uploaded_path)
-            raise Exception(res.get("details"))
+            raise_with_cleanup(
+                Exception(res.get("details")),
+                lambda: self.delete_file(uploaded_path),
+            )
 
         return res.get("details")
 

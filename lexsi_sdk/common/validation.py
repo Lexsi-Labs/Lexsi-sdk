@@ -57,7 +57,10 @@ class Validate:
                         )
         except Exception as e:
             if handle_error:
-                handle_error()
+                try:
+                    handle_error()
+                except Exception as cleanup_err:
+                    raise e from cleanup_err
             raise e
 
     @staticmethod
