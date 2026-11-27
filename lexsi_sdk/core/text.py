@@ -955,7 +955,6 @@ class TextProject(Project):
                      - False: Deactivates the model inference.
         :return: response
         """
-        print(type(activate))
         payload = {
             "project_name": self.project_name,
             "model_name": model_name,
